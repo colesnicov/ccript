@@ -181,7 +181,7 @@ int number1 = 0;
 
 delete number1;
 
-float number1 = 2; // ok
+float number1 = 2.3; // ok
  ```
 
  

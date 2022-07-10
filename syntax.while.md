@@ -123,7 +123,7 @@ Ukonci se az 'number1' bude vetsi ne '0' a 'number2' bude mensi nebo rovnat se '
 int number1 = 15;
 int number2 = 10;
 
-while(number1 && (number2 <= 5)) {
+while(number1 & (number2 <= 5)) {
   number1--;
   number2--;
 }
