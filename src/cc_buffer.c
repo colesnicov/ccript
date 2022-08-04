@@ -37,11 +37,11 @@ bool bufferReload(parser_s *_parser) {
 		_parser->buffer->offset = 0;
 	}
 
-	if (fseek(_parser->buffer->fd, (long int)_parser->buffer->offset, SEEK_SET) != 0) {
+	if (fseek(_parser->buffer->fd, (long int) _parser->buffer->offset, SEEK_SET) != 0) {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_IO);
 
-		CC_PRINT("ERROR: can't set position '%lu' in file!\n", _parser->buffer->offset);
+		CC_PRINT("ERROR: can't set position '%u' in file!\n", _parser->buffer->offset);
 
 		return false;
 	}
@@ -52,20 +52,22 @@ bool bufferReload(parser_s *_parser) {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_IO);
 
-		CC_PRINT("ERROR: can't read file at position '%lu'!\n", _parser->buffer->offset);
+		CC_PRINT("ERROR: can't read file at position '%u'!\n", _parser->buffer->offset);
 
 		return false;
 	}
 
-	_parser->buffer->offset = (size_t) ftell(_parser->buffer->fd);
-	if (_parser->buffer->offset < 0) {
+	int offset = ftell(_parser->buffer->fd);
+	if (offset < 0) {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_IO);
 
-		CC_PRINT("ERROR: can't get position '%lu' in file!\n", _parser->buffer->offset);
+		CC_PRINT("ERROR: can't get position '%u' in file!\n", _parser->buffer->offset);
 
 		return false;
 	}
+
+	_parser->buffer->offset = (size_t) offset;
 
 	return true;
 
@@ -83,7 +85,7 @@ bool bufferFill(parser_s *_parser) {
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			parseSetError(_parser, CC_CODE_IO);
 
-			CC_PRINT("ERROR: can't set position '%lu' in file!\n", _parser->buffer->offset);
+			CC_PRINT("ERROR: can't set position '%u' in file!\n", _parser->buffer->offset);
 
 			return false;
 		}
@@ -97,16 +99,17 @@ bool bufferFill(parser_s *_parser) {
 			return false;
 		}
 
-		_parser->buffer->offset = (size_t) ftell(_parser->buffer->fd);
-		if (_parser->buffer->offset < 0) {
+		int offset = (size_t) ftell(_parser->buffer->fd);
+		if (offset < 0) {
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			parseSetError(_parser, CC_CODE_IO);
 
-			CC_PRINT("ERROR: can't get position '%lu' in file!\n", _parser->buffer->offset);
+			CC_PRINT("ERROR: can't get position '%u' in file!\n", _parser->buffer->offset);
 
 			return false;
 		}
 
+		_parser->buffer->offset = (size_t) offset;
 		_parser->buffer->fpos = 0;
 
 		return true;
@@ -119,13 +122,16 @@ bool bufferFill(parser_s *_parser) {
 bool bufferInit(parser_s *_parser, const char *_path, size_t _buffer_size) {
 	FILE *fd = fopen(_path, "r");
 	if (fd == NULL) {
+		parseSetError(_parser, CC_CODE_NO_FILE);
+		CC_PRINT("ERROR: can't open file '%s'.\n", _path);
+
 		return false;
 	}
 
 	buffer_s *buffer = (buffer_s*) CONFIG_CC_MALLOC(sizeof(buffer_s));
 	if (buffer == NULL) {
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memory for 'buffer'! %lu bytes needed.\n", sizeof(buffer_s));
+		CC_PRINT("ERROR: not enough memory for 'buffer'! %u bytes needed.\n", sizeof(buffer_s));
 		fclose(fd);
 
 		_parser->buffer->fd = NULL;
@@ -137,7 +143,7 @@ bool bufferInit(parser_s *_parser, const char *_path, size_t _buffer_size) {
 	char *data = (char*) CONFIG_CC_MALLOC(_buffer_size * sizeof(char));
 	if (data == NULL) {
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memory for 'buffer::data'! %lu bytes needed.\n",
+		CC_PRINT("ERROR: not enough memory for 'buffer::data'! %u bytes needed.\n",
 				_buffer_size * sizeof(char));
 		CONFIG_CC_FREE(buffer);
 		fclose(fd);
@@ -153,6 +159,7 @@ bool bufferInit(parser_s *_parser, const char *_path, size_t _buffer_size) {
 	buffer->fpos = 0;
 	buffer->length = 0;
 	buffer->offset = 0;
+
 	buffer->fd = fd;
 	buffer->data = data;
 

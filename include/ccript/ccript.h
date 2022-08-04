@@ -33,15 +33,14 @@ extern "C" {
 #endif
 
 /**
- * @fn bool cc_init(parser_s*, char*)
+ * @fn bool cc_init(parser_s*, const char*)
  * @brief Provede inicializaci interpretoru.
  *
  * @param _parser Ukazatel na parser.
- * @param _path Uplna cesta k souboru.
  *
  * @return FALSE pri nedostatku pameti, jinak TRUE.
  */
-bool cc_init(parser_s *_parser, char *_path);
+bool cc_init(parser_s *_parser);
 
 /**
  * @fn void cc_deinit(parser_s*)
@@ -66,17 +65,17 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 		cc_fn_prototype _fn);
 
 /**
- * @fn bool cc_parse(parser_s*, char)
+ * @fn bool cc_parse(parser_s*, const char*)
  * @brief Zpracuje script.
  *
  * @param _parser Ukazatel na parser.
- * @param _end_char Ukoncovaci znak.
+ * @param _path Cesta k souboru.
  *
  * @details	doplnit
  *
  * @return FALSE jestli dojde k chybe, jinak TRUE.
  */
-bool cc_parse(parser_s *_parser, char _end_char);
+bool cc_parse(parser_s *_parser, const char *_path);
 
 /**
  * @fn void cc_abort(parser_s*)

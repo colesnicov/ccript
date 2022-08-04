@@ -23,6 +23,19 @@
 extern "C" {
 #endif
 
+/**
+ * @fn bool parseBlock(parser_s*, char)
+ * @brief Zpracuje blok.
+ *
+ * @param _parser Ukazatel na parser.
+ * @param _end_char Ukoncovaci znak.
+ *
+ * @details	doplnit
+ *
+ * @return FALSE jestli dojde k chybe, jinak TRUE.
+ */
+bool parseBlock(parser_s *_parser, char _end_char);
+
 ////////////////////////////////
 //
 // Definice nebo definice a rirazeni promenne

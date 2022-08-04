@@ -51,6 +51,14 @@ bool VarInit(parser_s *_parser);
  */
 void VarDeinit(parser_s *_parser);
 
+/**
+ * @fn void VarClean(parser_s*)
+ * @brief Odstrani vsechny promenne.
+ *
+ * @param _parser Ukazatel na parser.
+ */
+void VarClean(parser_s *_parser);
+
 /**********************************/
 /**********************************/
 /** VYTVARENI/HLEDANI/ODSTRANENI **/

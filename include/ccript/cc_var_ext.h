@@ -27,6 +27,14 @@ extern "C" {
 #endif
 
 /**
+ * @fn void freeVar(void*)
+ * @brief Universalni funkce ktera se muze pouzit pro odstraneni promenne.
+ *
+ * @param item Ukazatel na promennou jako 'void*'
+ */
+void freeVar(void *item);
+
+/**
  * @fn void VarDump(var_s*)
  * @brief Vypise informace o promenne.
  * @details Vypisuje nazev promenne, jestli je inicializovana, jeji rozsah platnosti a prirazena data.

@@ -30,18 +30,16 @@
 #include <stdbool.h>
 #include <string.h>
 
-bool cc_init(parser_s *_parser, char *_path) {
+bool cc_init(parser_s *_parser) {
 
 	do {
-		if (!bufferInit(_parser, _path, CONFIG_CC_BUFFER_SIZE_CAPS)) {
-			break;
-		}
-
 		if (!VarInit(_parser)) {
+			CC_PRINT("ccript error 2!\n");
 			break;
 		}
 
 		if (!funcInit(_parser)) {
+			CC_PRINT("ccript error 3!\n");
 			break;
 		}
 
@@ -60,408 +58,26 @@ void cc_deinit(parser_s *_parser) {
 	bufferClose(_parser);
 }
 
-bool cc_parse(parser_s *_parser, char _end_char) {
+bool cc_parse(parser_s *_parser, const char *_path) {
+	_parser->error = CC_CODE_OK;
+	_parser->error_pos = 0;
 
-	if (cc_errorHas(_parser)) {
+	if (!bufferInit(_parser, _path, CONFIG_CC_BUFFER_SIZE_CAPS)) {
 		return false;
 	}
 
-	/**
-	 * @var char keyword_name[CONFIG_CC_KEYWORD_SIZE_CAPS]
-	 * @brief Nalezeny prvni vyraz ve vete
-	 * @details	Typicky: type(int,string,...), function, command(if,while,...)
-	 *
-	 */
-	char keyword_name[CONFIG_CC_KEYWORD_SIZE_CAPS] = { '\0' };
+	bool ret = parseBlock(_parser, 0);
 
-	char ch = '\0';
+	if (_parser->error >= CC_CODE_ERROR && _parser->error_pos >= _parser->buffer->fsize) {
+		// Kdyz jsme na konci souboru, neni to chyba
+		_parser->error = CC_CODE_OK;
 
-	parseSkipNewLine(_parser);
-
-	bufferGet(_parser, &ch);
-
-	uint8_t scope = _parser->depth;
-
-	while (bufferValid(_parser)) {
-
-		ch = 0; // fixme toto asi netreba. kdyz dojde k chybe s IO tak se musi ukoncit!?
-		memset(keyword_name, '\0', CC_KEYWORD_SIZE);
-		size_t keyword_len = 0;
-
-		parseSkipNewLine(_parser);
-
-		bufferGet(_parser, &ch);
-
-		if (isdigit(ch)) {
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-
-			return false;
-		}
-
-		if (_end_char != 0 && ch == _end_char) {
-			// Zrejme konec bloku
-
-			_parser->depth = scope;
-			parseClearScope(_parser);
-			parseSetError(_parser, CC_CODE_OK); // fixme je toto potreba?
-
-			return true;
-		}
-
-		if (ch == '{') {
-			// Zrejme zanoreny blok
-
-			bufferNext(_parser);
-
-			_parser->depth++;
-
-			if (!cc_parse(_parser, '}')) {
-				return false;
-			}
-
-			_parser->depth = scope;
-			parseClearScope(_parser);
-
-			if (_parser->error == CC_CODE_OK) {
-				bufferNext(_parser);
-
-				continue;
-			}
-
-			else if (_parser->error < CC_CODE_ERROR) {
-				// break/continue/return
-
-				return true;
-			}
-
-			else {
-				// nejaka chyba
-
-				return false;
-			}
-
-		}
-
-		else if (ch == '/') {
-			// komentar
-
-			if (!parseSkipComment(_parser)) {
-				return false;
-			}
-
-			continue;
-
-		}
-
-		else if (ch == '+') {
-			// inkrementace promenne
-			// ++var;
-
-			if (!parseVarIncrementLeft(_parser, keyword_name, keyword_len)) {
-				return false;
-			}
-
-			bufferNext(_parser);
-
-			continue;
-
-		}
-
-		else if (ch == '-') {
-			// dekrementace promenne
-			// --var;
-
-			if (!parseVarDecrementLeft(_parser, keyword_name, keyword_len)) {
-				return false;
-			}
-
-			bufferNext(_parser);
-
-			continue;
-
-		}
-
-		else if (isalpha(ch)) {
-			// promenna, funkce
-
-//			size_t pos = parseGetPos(_parser);
-
-			if (!parseIdentifier(_parser, keyword_name, &keyword_len)) {
-				return false;
-			}
-
-			if (keyword_len == 0) {
-				parseSetError(_parser, CC_CODE_KEYWORD);
-				parseSetErrorPos(_parser, parseGetPos(_parser));
-				return false;
-
-			}
-
-			bufferSkipSpace(_parser);
-
-			if (keyword_len == 4 && strncmp(keyword_name, "bool", keyword_len) == 0) {
-				if (ParseDefineTypeBool(_parser, keyword_name)) {
-					continue;
-				} else {
-
-					return 0;
-				}
-			}
-
-			else if (keyword_len == 3 && strncmp(keyword_name, "int", keyword_len) == 0) {
-				if (ParseDefineTypeInt(_parser)) {
-					continue;
-				} else {
-					return 0;
-				}
-			}
-
-			else if (keyword_len == 5 && strncmp(keyword_name, "float", keyword_len) == 0) {
-				if (ParseDefineTypeFloat(_parser)) {
-					continue;
-				} else {
-					return 0;
-				}
-			}
-
-			else if (keyword_len == 4 && strncmp(keyword_name, "char", keyword_len) == 0) {
-				if (ParseDefineTypeChar(_parser)) {
-					continue;
-				} else {
-					return 0;
-				}
-			}
-
-			else if (keyword_len == 6 && strncmp(keyword_name, "string", keyword_len) == 0) {
-				if (ParseDefineTypeString(_parser)) {
-					continue;
-				} else {
-					return 0;
-				}
-			}
-
-			else if (keyword_len == 6 && strncmp(keyword_name, "delete", keyword_len) == 0) {
-
-				if (parseVarDelete(_parser, keyword_name)) {
-					continue;
-				} else {
-					return 0;
-				}
-			}
-
-			else if (keyword_len == 2 && strncmp(keyword_name, "if", keyword_len) == 0) {
-				_parser->depth++;
-				if (!parseIf(_parser)) {
-					return false;
-				}
-
-				_parser->depth = scope;
-				parseClearScope(_parser);
-
-				if (_parser->error == CC_CODE_BREAK) {
-					// muzu se nachazet ve smycce
-					// break
-
-					return true;
-				}
-
-				else if (_parser->error == CC_CODE_CONTINUE) {
-					// muzu se nachazet ve smycce
-					// continue
-
-					return true;
-				}
-
-				else if (_parser->error == CC_CODE_RETURN) {
-					// muzu se nachazet ve funkci
-					// return
-
-					return true;
-				}
-
-				else if (_parser->error >= CC_CODE_ERROR) {
-					return false;
-				}
-
-				continue;
-
-			}
-
-			else if (keyword_len == 5 && strncmp(keyword_name, "while", keyword_len) == 0) {
-				_parser->inLoop++;
-
-				if (!parseWhile(_parser)) {
-					return false;
-				}
-				_parser->inLoop--;
-
-				continue;
-
-			}
-
-			else if (keyword_len == 5 && strncmp(keyword_name, "break", keyword_len) == 0) {
-				if (!_parser->inLoop) {
-					parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
-
-					return false;
-				}
-
-				parseSetError(_parser, CC_CODE_BREAK);
-
-				return true;
-			}
-
-			else if (keyword_len == 8 && strncmp(keyword_name, "continue", keyword_len) == 0) {
-				if (!_parser->inLoop) {
-					parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
-
-					return false;
-				}
-
-				parseSetError(_parser, CC_CODE_CONTINUE);
-
-				return true;
-			}
-
-			else if (keyword_len == 6 && strncmp(keyword_name, "return", keyword_len) == 0) {
-				CC_PRINT("DEBUG: return\n");
-
-				parseSetError(_parser, CC_CODE_RETURN);
-
-				return true;
-			}
-
-			else {
-				// promenna nebo funkce
-
-				bufferSkipSpace(_parser);
-				bufferGet(_parser, &ch);
-
-				if (ch == '=') {
-					// prirazeni promenne
-
-					if (parseVarAssign(_parser, keyword_name, keyword_len)) {
-						continue;
-					} else {
-						return 0;
-					}
-				}
-
-				else if (ch == '[') {
-					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-					parseSetErrorPos(_parser, parseGetPos(_parser));
-					return false;
-				}
-
-				else if (ch == '(') {
-					// volani funkce
-
-					var_s *var = funcCall(_parser, keyword_name, keyword_len);
-
-					if (var != NULL) {
-						VarDestroy(var);
-					}
-
-					if (_parser->error >= CC_CODE_ERROR) {
-						return false;
-					}
-
-					bufferNext(_parser);
-					bufferSkipSpace(_parser);
-					bufferGet(_parser, &ch);
-
-					if (ch != ';') {
-						parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-						parseSetErrorPos(_parser, parseGetPos(_parser));
-
-						return false;
-					}
-
-					bufferNext(_parser);
-
-					continue;
-				}
-
-				else if (ch == '+') {
-					// inkrementace promenne
-					// var++;
-
-					if (!parseVarIncrementRight(_parser, keyword_name, keyword_len)) {
-						return false;
-					}
-
-					bufferNext(_parser);
-
-					continue;
-
-				}
-
-				else if (ch == '-') {
-					// Decrementace promenne
-					// var--;
-
-					if (!parseVarDecrementRight(_parser, keyword_name, keyword_len)) {
-						return false;
-					}
-
-					bufferNext(_parser);
-
-					continue;
-
-				}
-
-				else if (ch == '/') {
-					// Deleni promenne
-					// var /= 20;
-
-					if (!parseVarDivideRight(_parser, keyword_name, keyword_len)) {
-						return 0;
-					}
-
-					bufferNext(_parser);
-
-					continue;
-
-				}
-
-				else if (ch == '*') {
-					// Nasobeni promenne
-					// var *= 20;
-
-					if (!parseVarMultiplyRight(_parser, keyword_name, keyword_len)) {
-						return 0;
-					}
-
-					bufferNext(_parser);
-
-					continue;
-
-				}
-
-				else {
-					parseSetError(_parser, CC_CODE_KEYWORD);
-					parseSetErrorPos(_parser, parseGetPos(_parser)); // fixme tady se udava spatna pozice.
-					return 0;
-				}
-
-			}
-
-		} else if (_parser->buffer->fsize > _parser->error_pos) {
-			CC_PRINT("ERROR: unexpected symbol '%c'\n", ch);
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			return false;
-		} else {
-
-			return true;
-		}
 	}
 
-	parseSetError(_parser, CC_CODE_LOGIC);
-	parseSetErrorPos(_parser, parseGetPos(_parser));
+	VarClean(_parser);
+	bufferClose(_parser);
 
-	return 0;
-
+	return ret;
 }
 
 cc_code_t cc_errorGetCode(parser_s *_parser) {
@@ -469,13 +85,6 @@ cc_code_t cc_errorGetCode(parser_s *_parser) {
 }
 
 bool cc_errorHas(parser_s *_parser) {
-
-	if (_parser->error == CC_CODE_IO) {
-		// Kdyz dojde na konec souboru, neni to chyba
-
-		return _parser->error_pos < _parser->buffer->fsize;
-	}
-
 	return _parser->error >= CC_CODE_ERROR;
 }
 
@@ -531,6 +140,9 @@ const char* cc_errorToString(cc_code_t _err_code) {
 
 		case CC_CODE_IO:
 			return "CC_CODE_IO";
+
+		case CC_CODE_NO_FILE:
+			return "CC_CODE_NO_FILE";
 
 		case CC_CODE_FUNC_NOT_DEFINED:
 			return "CC_CODE_FUNC_NOT_DEFINED";

@@ -15,7 +15,6 @@
  *
  */
 
-#include <bits/stdint-uintn.h>
 #include <ccript/cc_buffer.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
@@ -23,6 +22,7 @@
 #include <ccript/cc_parser.h>
 #include <ccript/cc_types.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>

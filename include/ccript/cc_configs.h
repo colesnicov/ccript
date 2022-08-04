@@ -19,13 +19,18 @@
 
 ///////////////////////////
 //
-// Tady vlozit hlavicky funkci ktere jsou pouzity v definecich maker.
+// Tady vlozit hlavicky funkci ktere jsou pouzity v definicich maker.
 //
 ///////////////////////////
 
+#include <esp_log.h>
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>
+
+#include <system/mathio.hpp>
+
+#define	LOG_TAG	(char*)"CC"
 
 #define CONFIG_CC_MALLOC(s)		malloc((s))
 #define CONFIG_CC_REALLOC(p, s)	realloc((p),(s))
@@ -78,7 +83,8 @@
  * @brief Funkce pro vypis do konzole.
  *
  */
-#define CONFIG_CC_PRINT(...)	printf(__VA_ARGS__)
+//#define CONFIG_CC_PRINT(...)	printf(__VA_ARGS__)
+#define CONFIG_CC_PRINT(...)	ESP_LOGI(LOG_TAG, __VA_ARGS__)
 
 /**
  * @def CONFIG_CC_PRINT_COMMENT

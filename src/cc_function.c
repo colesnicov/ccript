@@ -37,7 +37,7 @@ bool funcInit(parser_s *_parser) {
 	if (funcs == NULL) {
 
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for functions! %lu bytes needed.\n", sizeof(cvector_s));
+		CC_PRINT("ERROR: not enough memmory for functions! %u bytes needed.\n", sizeof(cvector_s));
 		_parser->funcs = NULL;
 
 		return false;
@@ -49,7 +49,7 @@ bool funcInit(parser_s *_parser) {
 
 	if (!cvector_init(_parser->funcs)) {
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for functions! %lu bytes needed.\n", sizeof(cvector_s));
+		CC_PRINT("ERROR: not enough memmory for functions! %u bytes needed.\n", sizeof(cvector_s));
 
 		CONFIG_CC_FREE(_parser->funcs);
 		_parser->funcs = NULL;

@@ -16,13 +16,13 @@
  */
 
 
-#include <bits/stdint-uintn.h>
 #include <ccript/cc_buffer.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_log.h>
 #include <ccript/cc_parser.h>
 #include <ccript/cc_types.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>

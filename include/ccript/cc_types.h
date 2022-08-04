@@ -17,11 +17,12 @@
 
 #pragma once
 
-#include <bits/types/FILE.h>
+//#include <bits/types/FILE.h>
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+//#include <stdio.h>
 
 #include "ccript/cvector.h"
 #include "ccript/cc_configs.h"
@@ -155,6 +156,13 @@ typedef enum cc_code_ {
 	 *
 	 */
 	CC_CODE_LOGIC, /**< Kod chyby ktery signalizuje logickou chybu. */
+
+	/**
+	 * @var CC_CODE_NO_FILE
+//	 * @brief Kod chyby ktery signalizuje ze soubor nenalezen.
+	 *
+	 */
+	CC_CODE_NO_FILE, /**< Kod chyby ktery signalizuje chybu cteni/zapisu souboru. */
 
 	/**
 	 * @var CC_CODE_IO

@@ -81,7 +81,7 @@ bool parseWhile(parser_s *_parser) {
 			bufferNext(_parser);
 
 			_parser->depth++;
-			if (!cc_parse(_parser, '}')) {
+			if (!parseBlock(_parser, '}')) {
 				_parser->depth = scope;
 				parseClearScope(_parser);
 				return false;

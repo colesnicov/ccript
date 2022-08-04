@@ -531,7 +531,7 @@ bool parseIf(parser_s *_parser) {
 	if (cond_passed) {
 		bufferNext(_parser);
 
-		if (!cc_parse(_parser, '}')) {
+		if (!parseBlock(_parser, '}')) {
 			return false;
 		}
 
@@ -681,7 +681,7 @@ bool parseIf(parser_s *_parser) {
 
 				_parser->depth++;
 
-				if (!cc_parse(_parser, '}')) {
+				if (!parseBlock(_parser, '}')) {
 					return false;
 				}
 
