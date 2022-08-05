@@ -48,7 +48,7 @@ bool parseWhile(parser_s *_parser) {
 
 	size_t pos_condition_o;
 
-	pos_condition_o = parseGetPos(_parser); //(_parser->buffer->offset - _parser->buffer->fpos);
+	pos_condition_o = parseGetPos(_parser);
 
 	if (!parseIfArguments(_parser, &cond_passed)) {
 		return false;
@@ -57,7 +57,7 @@ bool parseWhile(parser_s *_parser) {
 	bufferNext(_parser);
 	parseSkipNewLine(_parser);
 
-	size_t pos_block_o = parseGetPos(_parser); //_parser->buffer->offset - _parser->buffer->fpos;
+	size_t pos_block_o = parseGetPos(_parser);
 
 	bufferGet(_parser, &ch);
 
@@ -96,11 +96,7 @@ bool parseWhile(parser_s *_parser) {
 				_parser->buffer->offset = pos_block_o;
 
 				bufferReload(_parser);
-				bufferGet(_parser, &ch);
-				printf("\nch 8.1 '%c'\n\n", ch);
 				bufferNext(_parser);
-				bufferGet(_parser, &ch);
-				printf("\nch 8.2 '%c'\n\n", ch);
 
 				if (!parserSkipBlock(_parser, '{', '}')) {
 					return false;
@@ -120,8 +116,6 @@ bool parseWhile(parser_s *_parser) {
 				_parser->buffer->offset = pos_condition_o;
 
 				bufferReload(_parser);
-				bufferGet(_parser, &ch);
-				printf("\nch 3 '%c'\n\n", ch);
 
 				if (!parseIfArguments(_parser, &cond_passed)) {
 					return false;
@@ -133,8 +127,6 @@ bool parseWhile(parser_s *_parser) {
 
 				bufferReload(_parser);
 
-				bufferGet(_parser, &ch);
-				printf("\nch 5 '%c'\n\n", ch);
 				continue;
 
 			}
@@ -146,8 +138,6 @@ bool parseWhile(parser_s *_parser) {
 				_parser->buffer->offset = pos_condition_o;
 
 				bufferReload(_parser);
-				bufferGet(_parser, &ch);
-				printf("\nch '%c'\n\n", ch);
 
 				if (!parseIfArguments(_parser, &cond_passed)) {
 					return false;
@@ -156,7 +146,6 @@ bool parseWhile(parser_s *_parser) {
 				// Navrat na zacatek bloku WHILE a overeni jestli podminka prosla
 
 				_parser->buffer->offset = pos_block_o;
-				_parser->buffer->fpos = 0;				//pos_block_p;
 
 				bufferReload(_parser);
 
@@ -178,10 +167,7 @@ bool parseWhile(parser_s *_parser) {
 		} else {
 			//	preskocit blok while
 
-			bufferGet(_parser, &ch);
-			printf("\nch 12 '%c'\n\n", ch);
 			parseSkipNewLine(_parser);
-			bufferGet(_parser, &ch);
 
 			if (!parserSkipBlock(_parser, '{', '}')) {
 				return false;
