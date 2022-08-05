@@ -14,4 +14,7 @@ var2 = var1 | true;
 var1 = true & (true | 1);
 var2 = !var1;
 
+dump(var2);
+dump(var1);
+
 println("SCRIPT END");

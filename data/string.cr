@@ -10,4 +10,7 @@ var1 = var2;
 
 var2 = "world";
 
+dump(var2);
+dump(var1);
+
 println("SCRIPT END");

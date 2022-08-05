@@ -10,4 +10,7 @@ ch1 = ch2;
 
 ch2 = 'D';
 
+dump(ch2);
+dump(ch1);
+
 println("SCRIPT END");

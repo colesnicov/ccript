@@ -26,14 +26,18 @@ var1 = 9 + 0 + 9 + 0 + (9 * 0) + 9;
 //var1 < var2;
 //var2 >= 10.5;
 
-
 {
 	int var3 = var1;
 }
 //var3 += 12.3; // error, undefined variable 'var2'
 
+dump (var1);
+
 delete var1;
 
 int var1 = 9; // ok
+
+dump (var2);
+dump (var1);
 
 println("SCRIPT END");

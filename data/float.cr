@@ -31,8 +31,13 @@ var1 = 9.0 + 0.0 + 9.0 + 0.0 + (9.0 * 0.0) + 9.0;
 }
 //var3 += 12.3; // error, undefined variable 'var2'
 
+dump (var1);
+
 delete var1;
 
 float var1 = 2.9; // ok
 
-print("SCRIPT END");
+dump (var2);
+dump (var1);
+
+println("SCRIPT END");
