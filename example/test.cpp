@@ -46,7 +46,7 @@ extern "C" int main(int argc, char **argv) {
 	}
 
 	parser_s parser = PARSER_DEFAULT();
-	if (!cc_init(&parser, fileName)) {
+	if (!cc_init(&parser)) {
 		cc_deinit(&parser); // fixme to tady byt nemusi. init po sobe musi uklidi!
 		return 2;
 	}
@@ -63,17 +63,13 @@ extern "C" int main(int argc, char **argv) {
 	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen);
 	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat);
 
-	cc_parse(&parser, 0);
+	cc_parse(&parser, fileName);
 
 	if (cc_errorHas(&parser)) {
 		CC_PRINT("script fail at position '%lu' with code: '%s(%d)'\n", cc_errorGetPos(&parser),
 				cc_errorToString(cc_errorGetCode(&parser)), cc_errorGetCode(&parser));
 
 	}
-
-	CC_PRINT("vars currently allocated %lu bytes.\n", VarGetSizeAll(&parser));
-
-	VarDumpAll(&parser);
 
 	int err = cc_errorGetCode(&parser);
 
