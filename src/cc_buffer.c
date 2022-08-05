@@ -31,12 +31,6 @@ bool bufferReload(parser_s *_parser) {
 
 	memset(_parser->buffer->data, '\0', CC_BUFFER_SIZE);
 
-	if (_parser->buffer->offset > CC_BUFFER_SIZE) {
-		_parser->buffer->offset -= CC_BUFFER_SIZE;
-	} else {
-		_parser->buffer->offset = 0;
-	}
-
 	if (fseek(_parser->buffer->fd, (long int) _parser->buffer->offset, SEEK_SET) != 0) {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_IO);
@@ -57,8 +51,8 @@ bool bufferReload(parser_s *_parser) {
 		return false;
 	}
 
-	int offset = ftell(_parser->buffer->fd);
-	if (offset < 0) {
+	_parser->buffer->offset = ftell(_parser->buffer->fd);
+	if (_parser->buffer->offset < 0) {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_IO);
 
@@ -67,7 +61,7 @@ bool bufferReload(parser_s *_parser) {
 		return false;
 	}
 
-	_parser->buffer->offset = (size_t) offset;
+	_parser->buffer->fpos = 0;
 
 	return true;
 
