@@ -21,6 +21,7 @@
 #include <ccript/cc_stdlib.h>
 #include <ccript/cc_types.h>
 #include <ccript/cc_var_ext.h>
+#include <ccript/ccript.h>
 #include <ccript/common.h>
 #include <stdint.h>
 #include "ccript/cc_var.h"
@@ -28,7 +29,23 @@
 #include <float.h>
 #include <string.h>
 
-var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+bool stdlib_registrate(parser_s *_parser, void *_args) {
+	bool ret = true;
+	ret &= cc_registerFunction(_parser, "dump", 4, stdlib_dump, _args);
+	ret &= cc_registerFunction(_parser, "millis", 6, stdlib_millis, _args);
+	ret &= cc_registerFunction(_parser, "sleep", 5, stdlib_sleep, _args);
+	ret &= cc_registerFunction(_parser, "exit", 5, stdlib_exit, _args);
+	ret &= cc_registerFunction(_parser, "cast", 4, stdlib_cast, _args);
+	ret &= cc_registerFunction(_parser, "print", 5, stdlib_print, _args);
+	ret &= cc_registerFunction(_parser, "println", 7, stdlib_println, _args);
+	ret &= cc_registerFunction(_parser, "system", 6, stdlib_system, _args);
+	ret &= cc_registerFunction(_parser, "strlen", 6, stdlib_strlen, _args);
+	ret &= cc_registerFunction(_parser, "strcat", 6, stdlib_strcat, _args);
+
+	return ret;
+}
+
+var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count == 0) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -134,12 +151,12 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 	return var;
 }
 
-var_s* stdlib_exit(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_exit(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 	_parser->error = CC_CODE_ABORT;
 	return NULL;
 }
 
-var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count == 0) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -203,7 +220,7 @@ var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 	return var;
 }
 
-var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count == 0) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -249,13 +266,13 @@ var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 	}
 
 	else {
-		CC_PRINT("ERROR: unknown type '%s'!\n", (char*)_vars[0]->data);
+		CC_PRINT("ERROR: unknown type '%s'!\n", (char* )_vars[0]->data);
 	}
 
 	return var;
 }
 
-var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count == 0) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -292,7 +309,7 @@ var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 	return var;
 }
 
-var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count < 2) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -367,7 +384,7 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 
 }
 
-var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count != 1) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -403,7 +420,7 @@ var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 	return NULL;
 }
 
-var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count != 1) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
@@ -439,7 +456,7 @@ var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
 	return NULL;
 }
 
-var_s* stdlib_dump(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_dump(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count != 1) {
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);

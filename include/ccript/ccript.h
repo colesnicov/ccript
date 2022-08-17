@@ -58,11 +58,12 @@ void cc_deinit(parser_s *_parser);
  * @param _name Nazev funkce.
  * @param _name_len Delka nazvu funkce.
  * @param _fn Ukazatel na fn_handler_s.
+ * @param _args Ukazatel na externi argument pro funkci
  *
  * @return FALSE jestli neni dost pameti nebo funkce jiz byla registrovana. Jinak TRUE
  */
 bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
-		cc_fn_prototype _fn);
+		cc_fn_prototype _fn, void *_args);
 
 /**
  * @fn bool cc_parse(parser_s*, const char*)

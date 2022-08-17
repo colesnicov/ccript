@@ -26,27 +26,29 @@
 extern "C" {
 #endif
 
-extern var_s* stdlib_sleep(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+bool stdlib_registrate(parser_s *_parser, void *_args);
 
-extern var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+extern var_s* stdlib_sleep(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-extern var_s* stdlib_dump(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+extern var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-extern var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+extern var_s* stdlib_dump(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-extern var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+extern var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+extern var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
-var_s* stdlib_exit(parser_s *_parser, var_s **_vars, uint8_t _vars_count);
+var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
+
+var_s* stdlib_exit(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
 #ifdef __cplusplus
 }

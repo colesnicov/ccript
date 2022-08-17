@@ -159,7 +159,7 @@ typedef enum cc_code_ {
 
 	/**
 	 * @var CC_CODE_NO_FILE
-//	 * @brief Kod chyby ktery signalizuje ze soubor nenalezen.
+	 //	 * @brief Kod chyby ktery signalizuje ze soubor nenalezen.
 	 *
 	 */
 	CC_CODE_NO_FILE, /**< Kod chyby ktery signalizuje chybu cteni/zapisu souboru. */
@@ -413,13 +413,14 @@ struct parser_;
  * @param _parser Ukazatel na strukturu parseru
  * @param _vars Pole ukazatelu na struktury promennych
  * @param _vars_count Pocet promennych v poli
+ * @param _args Ukazatel na externi argument pro funkci
  *
  * @return	Ukazatel na strukturu promenne
  * @note	Vracena promenna, se musi po ukonceni praci s ni
  * 			odstranit volanim funkce @see varDestroy()
  */
 typedef struct var_* (*cc_fn_prototype)(struct parser_ *_parser, struct var_ **_vars,
-		uint8_t _vars_count);
+		uint8_t _vars_count, void *_args);
 
 /**
  * @struct fn_handler_
@@ -443,6 +444,12 @@ typedef struct fn_handler_ {
 	 * @brief Ukazatel na funkci
 	 */
 	cc_fn_prototype func;
+
+	/**
+	 * @var void* args
+	 * @brief Ukazatel na argumenty
+	 */
+	void *args;
 
 } fn_handler_s;
 

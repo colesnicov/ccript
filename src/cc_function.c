@@ -112,7 +112,7 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len) 
 		return NULL;
 	}
 
-	var = handler->func(_parser, args, args_count);
+	var = handler->func(_parser, args, args_count, handler->args);
 
 	funcClearArguments(args, args_count);
 
@@ -135,7 +135,7 @@ fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len) {
 }
 
 bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
-		cc_fn_prototype _fn) {
+		cc_fn_prototype _fn, void *_args) {
 	fn_handler_s *handler;
 
 	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++) {
@@ -157,6 +157,7 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 
 	hn->name = _name;
 	hn->func = _fn;
+	hn->args = _args;
 	return cvector_add(_parser->funcs, hn);
 
 }
