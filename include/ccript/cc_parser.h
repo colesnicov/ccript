@@ -68,6 +68,8 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name);
  */
 bool ParseDefineTypeInt(parser_s *_parser);
 
+bool ParseDefineTypeLong(parser_s *_parser);
+
 /**
  * @fn bool ParseDefineTypeFloat(parser_s*)
  * @brief Parsuje definici nove promenne nebo funkce typu FLOAT.
@@ -216,6 +218,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value);
  * @return
  */
 bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value);
+
+bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long*_value);
 
 /**
  * @fn bool parseVarArgsString(parser_s*, char, char*, size_t*)
@@ -487,6 +491,8 @@ bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len);
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
 bool parseValueInt(parser_s *_parser, char *_value, size_t *_value_len);
+
+bool parseValueLong(parser_s *_parser, char *_value, size_t *_value_len);
 
 /**
  * @fn size_t parseValueFloat(parser_s*, char*, bool*)

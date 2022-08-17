@@ -423,6 +423,13 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 						}
 					}
 
+					else if (_var->type == CC_TYPE_LONG) {
+						if (!VarValueSetLong(_parser, var, *(long*) _var->data)) {
+							VarDestroy(var);
+							return false;
+						}
+					}
+
 					else if (_var->type == CC_TYPE_STRING) {
 						if (!VarValueSetString(_parser, var, _var->data,
 								strlen((char*) (_var->data)))) {

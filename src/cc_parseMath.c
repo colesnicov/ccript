@@ -95,7 +95,9 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 				return true;
 
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 				int value = 0;
 				if (!VarValueGetInt(_parser, var, &value)) {
 					return 0;
@@ -109,7 +111,25 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 				return true;
 
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value -= 1;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+
+				return true;
+
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -188,7 +208,9 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 				return true;
 
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 				int value = 0;
 				if (!VarValueGetInt(_parser, var, &value)) {
 					return 0;
@@ -202,7 +224,25 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 				return true;
 
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value += 1;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+
+				return true;
+
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -266,7 +306,9 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 				return true;
 
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 				int value = 0;
 				if (!VarValueGetInt(_parser, var, &value)) {
 					return 0;
@@ -280,7 +322,25 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 				return true;
 
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value -= 1;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+
+				return true;
+
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -318,7 +378,9 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 				return true;
 
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
@@ -338,7 +400,31 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 				return true;
 
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+
+				long ival = 0;
+				if (!parseVarArgsLong(_parser, ';', &ival)) {
+					return 0;
+				}
+
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value -= ival;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+
+				return true;
+
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -403,7 +489,9 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 				return true;
 
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 				int value = 0;
 				if (!VarValueGetInt(_parser, var, &value)) {
 					return 0;
@@ -417,13 +505,33 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 				return true;
 
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value += 1;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+
+				return true;
+
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
 			}
 
-		} else if (ch == '=') {
+		}
+
+		else if (ch == '=') {
 			// prirazeni promenne:
 			// var += 20;
 
@@ -469,6 +577,24 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 				value += ival;
 
 				if (!VarValueSetInt(_parser, var, value)) {
+					return 0;
+				}
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+				long ival = 0;
+				if (!parseVarArgsLong(_parser, ';', &ival)) {
+					return 0;
+				}
+
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value += ival;
+
+				if (!VarValueSetLong(_parser, var, value)) {
 					return 0;
 				}
 			}
@@ -561,7 +687,9 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 				if (!VarValueSetFloat(_parser, var, value)) {
 					return 0;
 				}
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
@@ -578,7 +706,28 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 				if (!VarValueSetInt(_parser, var, value)) {
 					return 0;
 				}
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+
+				long ival = 0;
+				if (!parseVarArgsLong(_parser, ';', &ival)) {
+					return 0;
+				}
+
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value *= ival;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -638,7 +787,9 @@ bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_le
 				if (!VarValueSetFloat(_parser, var, value)) {
 					return 0;
 				}
-			} else if (var->type == CC_TYPE_INT) {
+			}
+
+			else if (var->type == CC_TYPE_INT) {
 
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
@@ -655,7 +806,28 @@ bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_le
 				if (!VarValueSetInt(_parser, var, value)) {
 					return 0;
 				}
-			} else {
+			}
+
+			else if (var->type == CC_TYPE_LONG) {
+
+				long ival = 0;
+				if (!parseVarArgsLong(_parser, ';', &ival)) {
+					return 0;
+				}
+
+				long value = 0;
+				if (!VarValueGetLong(_parser, var, &value)) {
+					return 0;
+				}
+
+				value /= ival;
+
+				if (!VarValueSetLong(_parser, var, value)) {
+					return 0;
+				}
+			}
+
+			else {
 				parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;

@@ -181,6 +181,14 @@ bool parseBlock(parser_s *_parser, char _end_char) {
 				}
 			}
 
+			else if (keyword_len == 4 && strncmp(keyword_name, "long", keyword_len) == 0) {
+				if (ParseDefineTypeLong(_parser)) {
+					continue;
+				} else {
+					return 0;
+				}
+			}
+
 			else if (keyword_len == 5 && strncmp(keyword_name, "float", keyword_len) == 0) {
 				if (ParseDefineTypeFloat(_parser)) {
 					continue;
@@ -436,6 +444,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 	bufferNext(_parser);
 	bufferSkipSpace(_parser);
 
+	printf("\n\ntady\n\n");
 	var_s *var = VarGet(_parser, _var_name, _var_len);
 	if (var == NULL) {
 		parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
@@ -478,8 +487,24 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	else if (var->type == CC_TYPE_FLOAT) {
+	else if (var->type == CC_TYPE_LONG) {
 
+		long val = 0;
+		if (!parseVarArgsLong(_parser, ';', &val)) {
+			return false;
+		}
+
+		if (!VarValueSetLong(_parser, var, val)) {
+			return false;
+		}
+
+		bufferNext(_parser);
+
+		return true;
+
+	}
+
+	else if (var->type == CC_TYPE_FLOAT) {
 		float fval = 0;
 		if (!parseVarArgsFloat(_parser, ';', &fval)) {
 			return false;

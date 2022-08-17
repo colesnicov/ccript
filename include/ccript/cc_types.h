@@ -36,6 +36,8 @@
  */
 #define CC_KEYWORD_SIZE 		CONFIG_CC_KEYWORD_SIZE_CAPS - 1
 
+#define CC_VAR_LONG_SIZE		sizeof(long) * 8 + 1
+
 /**
  * @def CC_STRING_SIZE
  * @brief Velikost zasobniku pro retezec - 1 znak.
@@ -353,6 +355,14 @@ typedef enum cc_type_ {
 	 *
 	 */
 	CC_TYPE_INT, /**< Index datoveho typu pro cele cislo se znamenkem */
+
+	/**
+	 * @var CC_TYPE_LONG
+	 * @brief Index datoveho typu pro cele cislo se znamenkem
+	 * @details Rozsah hodnot -2,147,483,648 az 2,147,483,647
+	 *
+	 */
+	CC_TYPE_LONG, /**< Index datoveho typu pro cele cislo se znamenkem */
 
 	/**
 	 * @var CC_TYPE_FLOAT

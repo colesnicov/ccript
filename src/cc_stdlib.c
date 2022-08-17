@@ -249,6 +249,10 @@ var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *
 		var = VarCastToInt(_parser, _vars[1]);
 	}
 
+	if (len == 4 && strncmp(_vars[0]->data, "long", len) == 0) {
+		var = VarCastToLong(_parser, _vars[1]);
+	}
+
 	else if (len == 5 && strncmp(_vars[0]->data, "float", len) == 0) {
 		var = VarCastToFloat(_parser, _vars[1]);
 	}

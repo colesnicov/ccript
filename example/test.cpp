@@ -29,7 +29,24 @@
 #include <climits>
 #include <cstring>
 
+
 extern "C" int main(int argc, char **argv) {
+
+    printf("CHAR_BIT    :   %d\n", CHAR_BIT);
+    printf("CHAR_MAX    :   %d\n", CHAR_MAX);
+    printf("CHAR_MIN    :   %d\n", CHAR_MIN);
+    printf("INT_MAX     :   %d\n", INT_MAX);
+    printf("INT_MIN     :   %d\n", INT_MIN);
+    printf("LONG_MAX    :   %ld\n", (long) LONG_MAX);
+    printf("LONG_MIN    :   %ld\n", (long) LONG_MIN);
+    printf("SCHAR_MAX   :   %d\n", SCHAR_MAX);
+    printf("SCHAR_MIN   :   %d\n", SCHAR_MIN);
+    printf("SHRT_MAX    :   %d\n", SHRT_MAX);
+    printf("SHRT_MIN    :   %d\n", SHRT_MIN);
+    printf("UCHAR_MAX   :   %d\n", UCHAR_MAX);
+    printf("UINT_MAX    :   %u\n", (unsigned int) UINT_MAX);
+    printf("ULONG_MAX   :   %lu\n", (unsigned long) ULONG_MAX);
+    printf("USHRT_MAX   :   %d\n", (unsigned short) USHRT_MAX);
 
 	if (argc < 2) {
 		CC_PRINT("Pouziti: %s <filename>\n", argv[0]);
@@ -51,17 +68,17 @@ extern "C" int main(int argc, char **argv) {
 		return 2;
 	}
 
-	cc_registerFunction(&parser, "dump", 4, stdlib_dump);
-	cc_registerFunction(&parser, "millis", 6, stdlib_millis);
-	cc_registerFunction(&parser, "sleep", 5, stdlib_sleep);
-	cc_registerFunction(&parser, "exit", 5, stdlib_exit);
-	cc_registerFunction(&parser, "ccDebugInfo", 11, stdlib_DebugInfo);
-	cc_registerFunction(&parser, "castTo", 4, stdlib_cast);
-	cc_registerFunction(&parser, "print", 5, stdlib_print);
-	cc_registerFunction(&parser, "println", 7, stdlib_println);
-	cc_registerFunction(&parser, "system", 6, stdlib_system);
-	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen);
-	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat);
+	cc_registerFunction(&parser, "dump", 4, stdlib_dump, NULL);
+	cc_registerFunction(&parser, "millis", 6, stdlib_millis, NULL);
+	cc_registerFunction(&parser, "sleep", 5, stdlib_sleep, NULL);
+	cc_registerFunction(&parser, "exit", 5, stdlib_exit, NULL);
+	cc_registerFunction(&parser, "ccDebugInfo", 11, stdlib_DebugInfo, NULL);
+	cc_registerFunction(&parser, "castTo", 4, stdlib_cast, NULL);
+	cc_registerFunction(&parser, "print", 5, stdlib_print, NULL);
+	cc_registerFunction(&parser, "println", 7, stdlib_println, NULL);
+	cc_registerFunction(&parser, "system", 6, stdlib_system, NULL);
+	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen, NULL);
+	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat, NULL);
 
 	cc_parse(&parser, fileName);
 

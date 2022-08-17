@@ -210,6 +210,8 @@ bool VarValueGetChar(parser_s *_parser, var_s *_var, char *_char);
  */
 bool VarValueGetInt(parser_s *_parser, var_s *_var, int *_int);
 
+bool VarValueGetLong(parser_s *_parser, var_s *_var, long *_int);
+
 /**
  * @fn bool VarValueGetString(var_s*, char*, size_t*)
  * @brief Ziska data z promenne. Tady retezec.
@@ -244,6 +246,8 @@ bool VarValueGetString(parser_s *_parser, var_s *_var, char *_str, size_t *_len)
  * @return FALSE jestli neni pamet nebo spatny typ. Jinak TRUE
  */
 bool VarValueSetInt(parser_s *_parser, var_s *_var, int _int);
+
+bool VarValueSetLong(parser_s *_parser, var_s *_var, long _int);
 
 /**
  * @fn bool VarValueSetBool(var_s*, bool)
@@ -319,6 +323,8 @@ bool VarValueSetString(parser_s *_parser, var_s *_var, char *_str, size_t _str_l
  * @return Nova promenna typu INT
  */
 var_s* VarCastToInt(parser_s *_parser, var_s *_var_from);
+
+var_s* VarCastToLong(parser_s *_parser, var_s *_var_from);
 
 /**
  * @fn var_s* VarCastToBool(var_s*)

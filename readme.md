@@ -12,6 +12,7 @@
 
 **ccript** umoznuje pracovat s peti datovymi typy:
  - [int](syntax.numeric.md)
+ - [long](syntax.numeric.md)
  - [float](syntax.numeric.md)
  - [bool](syntax.bool.md)
  - [char](syntax.char.md)

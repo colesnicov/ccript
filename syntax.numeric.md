@@ -6,19 +6,22 @@
 
 #### Ciselny typ
 
-CCRipt rozlisuje dva cislne typy. **cele cislo** `int` a **s desetinou plovouci carkou** (dale uz jen *'s plovouci carkou'*) `float`.
+CCRipt rozlisuje dva cislne typy. **cele cislo** `int`, `long` a **s desetinou plovouci carkou** (dale uz jen *'s plovouci carkou'*) `float`.
 
-Krome prezentace se lisi take mnozstvim pameti kterou vyzaduji pro praci s nimi. Obecne se da rict ze `float` je narocnejsi jak na pamet tak na procesor. To druhe plati v pripade ze nase 'zelezo' postrada 'FPU'.
+Krome prezentace se lisi take mnozstvim pameti kterou vyzaduji pro praci s nimi. Obecne se da rict ze `long` i `float` je narocnejsi jak na pamet tak na procesor. V pripade `float` to druhe plati v pripade ze nase 'zelezo' postrada 'FPU'.
 
 Prace s nimi se od sebe nelisi. Na obou typech je mozne provadet stejne aritmeticke operace. Lisi se tedy pouze v definici..
 
 ##### Cele cislo
 
-[Celociselny typ](https://en.wikipedia.org/wiki/Integer_%28computer_science%29) se ve *skriptach* definuje stejne jako v 'C' klicovym slovem **int** a ma rozsah **-2,147,483,648** az **2,147,483,647** vcetne **0**.
+[Celociselny typ](https://en.wikipedia.org/wiki/Integer_%28computer_science%29) se ve *skriptach* definuje klicovym slovem **int** nebo **long** a ma rozsah:
+
+ - **long** *-9223372036854775807* az *9223372036854775807*
+ - **int** *-2147483647* az *2147483647*
 
 ##### Cislo s plovouci carkou
 
-[Cislo s plovouci carkou](https://en.cppreference.com/w/cpp/keyword/float) se ve *skriptach* definuje stejne jako v 'C' klicovym slovem **float** a ma rozsah **-3.4028235E+38** az **3.4028235E+38** vcetne **0**.
+[Cislo s plovouci carkou](https://en.cppreference.com/w/cpp/keyword/float) se ve *skriptach* definuje klicovym slovem **float** a ma rozsah *-3.4028235E+38* az *3.4028235E+38*.
 
 -----------------------
 
@@ -28,6 +31,12 @@ Prace s nimi se od sebe nelisi. Na obou typech je mozne provadet stejne aritmeti
 
 ```
 int number1;
+```
+
+nebo 
+
+```
+long number1;
 ```
 
 *Cislo s plovouci carkou*:
@@ -44,6 +53,12 @@ float number1;
 
 ```
 int number1 = 10;
+```
+
+nebo 
+
+```
+long number1 = 10;
 ```
 
 *Cislo s plovouci carkou*:

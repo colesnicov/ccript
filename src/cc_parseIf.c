@@ -346,7 +346,23 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg) {
 					}
 					left_arg = (float) _int;
 
-				} else {
+				}
+
+				else if (_var->type == CC_TYPE_LONG) {
+					long _int = 0;
+
+					if (!VarValueGetLong(_parser, _var, &_int)) {
+
+						if (var_is_int == false) {
+							VarDestroy(_var);
+						}
+						return false;
+					}
+					left_arg = (float) _int;
+
+				}
+
+				else {
 
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, parseGetPos(_parser));

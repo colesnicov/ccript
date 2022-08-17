@@ -138,6 +138,31 @@ bool VarValueSetInt(parser_s *_parser, var_s *_var, int _int) {
 
 }
 
+bool VarValueSetLong(parser_s *_parser, var_s *_var, long _long) {
+
+	if (_var->type != CC_TYPE_LONG) {
+		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
+		return false;
+	}
+
+	if (_var->data == NULL) {
+		_var->data = CONFIG_CC_MALLOC(sizeof(long));
+
+		if (_var->data == NULL) {
+			parseSetError(_parser, CC_CODE_NOT_MEM);
+
+			return false;
+		}
+	}
+
+	memcpy(_var->data, &_long, 1 * sizeof(long));
+
+	_var->valid = true;
+
+	return true;
+
+}
+
 bool VarValueSetChar(parser_s *_parser, var_s *_var, char _char) {
 
 	if (_var->type != CC_TYPE_CHAR) {
@@ -510,23 +535,44 @@ void VarDump(var_s *_var) {
 		if (_var->type == CC_TYPE_INT) {
 			int *data = (int*) (_var->data);
 			CC_PRINT("\tdata='%d'\n", *data);
-		} else if (_var->type == CC_TYPE_FLOAT) {
+		}
+
+		else if (_var->type == CC_TYPE_LONG) {
+			long *data = (long*) (_var->data);
+//			char buf[sizeof(long) * 8 + 1] = { '\0' };
+//			char buf[CC_VAR_LONG_SIZE] = { '\0' };
+//			ltoa(*data, buf, 10);
+			char *buf = lltoa(( long)*data, 10);
+			CC_PRINT("\tdata='%s'\n", buf);
+		}
+
+		else if (_var->type == CC_TYPE_FLOAT) {
 			float *data = (float*) (_var->data);
 			char buf[16] = { '\0' };
 			ftoa(*data, buf, CC_FLOAT_EXP_LEN);
 			CC_PRINT("\tdata='%s'\n", buf);
-		} else if (_var->type == CC_TYPE_BOOL) {
+		}
+
+		else if (_var->type == CC_TYPE_BOOL) {
 			bool *data = (bool*) (_var->data);
 			CC_PRINT("\tdata='%d'\n", (int ) (*(data)));
-		} else if (_var->type == CC_TYPE_CHAR) {
+		}
+
+		else if (_var->type == CC_TYPE_CHAR) {
 			char *data = (char*) (_var->data);
 			CC_PRINT("\tdata='%c'\n", data[0]);
-		} else if (_var->type == CC_TYPE_STRING) {
+		}
+
+		else if (_var->type == CC_TYPE_STRING) {
 			char *data = (char*) (_var->data);
 			CC_PRINT("\tdata='%s'\n", data);
-		} else if (_var->type == CC_TYPE_ARRAY) {
+		}
+
+		else if (_var->type == CC_TYPE_ARRAY) {
 			CC_PRINT("\tdata='[]'\n");
-		} else {
+		}
+
+		else {
 			CC_PRINT("\tdata\n");
 		}
 	}
@@ -605,6 +651,21 @@ bool VarValueGetInt(parser_s *_parser, var_s *_var, int *_int) {
 	}
 
 	*_int = *((int*) _var->data);
+	return true;
+}
+
+bool VarValueGetLong(parser_s *_parser, var_s *_var, long *_int) {
+	if (_var->type != CC_TYPE_LONG) {
+		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
+		return false;
+	}
+
+	if (_var->valid == false) {
+		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
+		return false;
+	}
+
+	*_int = *((long*) _var->data);
 	return true;
 }
 
@@ -855,6 +916,75 @@ var_s* VarCastToInt(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
+var_s* VarCastToLong(parser_s *_parser, var_s *_var_from) {
+	long val = 0;
+
+	if (_var_from->type == CC_TYPE_FLOAT) {
+		float v = 0.0f;
+		if (!VarValueGetFloat(_parser, _var_from, &v)) {
+			return false;
+		}
+		val = (long) v;
+	}
+
+	else if (_var_from->type == CC_TYPE_BOOL) {
+		bool v = false;
+		if (!VarValueGetBool(_parser, _var_from, &v)) {
+			return false;
+		}
+		val = (long) v;
+	}
+
+	else if (_var_from->type == CC_TYPE_STRING) {
+		char v[51] = { '\0' };
+		size_t vl = 0;
+		if (!VarValueGetString(_parser, _var_from, v, &vl)) {
+			return false;
+		}
+		val = atol(v);
+	}
+
+	else if (_var_from->type == CC_TYPE_CHAR) {
+		char v = 0;
+		if (!VarValueGetChar(_parser, _var_from, &v)) {
+			return false;
+		}
+		val = (long) v;
+	}
+
+	else if (_var_from->type == CC_TYPE_INT) {
+		if (!VarValueGetInt(_parser, _var_from, &val)) {
+			return false;
+		}
+
+	}
+
+	else if (_var_from->type == CC_TYPE_INT) {
+		if (!VarValueGetLong(_parser, _var_from, &val)) {
+			return false;
+		}
+
+	}
+
+	else {
+		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
+		return false;
+
+	}
+
+	var_s *var = VarCreate("_", 1, CC_TYPE_LONG, _var_from->scope);
+	if (!var) {
+		return NULL;
+	}
+
+	if (!VarValueSetLong(_parser, var, val)) {
+		VarDestroy(var);
+		return NULL;
+	}
+
+	return var;
+}
+
 var_s* VarCastToFloat(parser_s *_parser, var_s *_var_from) {
 	float val = 0;
 
@@ -918,6 +1048,8 @@ const char* VarTypeToString(cc_type_t _type) {
 			return (const char*) "BOOL";
 		case CC_TYPE_INT:
 			return (const char*) "INT";
+		case CC_TYPE_LONG:
+			return (const char*) "LONG";
 		case CC_TYPE_FLOAT:
 			return (const char*) "FLOAT";
 		case CC_TYPE_CHAR:

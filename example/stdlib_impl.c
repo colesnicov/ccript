@@ -29,21 +29,20 @@
 #include <time.h>
 #include <unistd.h>
 
-
 static int64_t millis() {
 	struct timespec now;
 	timespec_get(&now, TIME_UTC);
 	return ((int64_t) now.tv_sec) * 1000 + ((int64_t) now.tv_nsec) / 1000000;
 }
 
-var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
-	var_s *var = VarCreate("@", 6, CC_TYPE_INT, _parser->depth);
+var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
+	var_s *var = VarCreate("@", 6, CC_TYPE_LONG, _parser->depth);
 
 	if (var == NULL) {
 		return NULL;
 	}
 
-	if (!VarValueSetInt(_parser, var, millis())) {
+	if (!VarValueSetLong(_parser, var, millis())) {
 		VarDestroy(var);
 		return NULL;
 	}
@@ -58,7 +57,7 @@ static void sleep_us(unsigned long microseconds) {
 	nanosleep(&ts, NULL);
 }
 
-var_s* stdlib_sleep(parser_s *_parser, var_s **_vars, uint8_t _vars_count) {
+var_s* stdlib_sleep(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
 
 	if (_vars_count != 1) {
 		parseSetError(_parser, CC_CODE_LOGIC);
