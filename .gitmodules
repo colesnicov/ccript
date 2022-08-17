@@ -1,0 +1,3 @@
+[submodule "libs/emblib"]
+    path = libs/emblib
+    url = https://github.com/colesnicov/emblib.git
