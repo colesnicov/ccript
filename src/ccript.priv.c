@@ -46,7 +46,7 @@ void parseClearScope(parser_s *_parser) {
 		var = cvector_get((cvector_s*) (_parser->vars), (int) i);
 		if (!var) {
 			CC_PRINT("DEBUG: variable with index '%d' of '%u' is 'null'", i,
-					((cvector_s* ) _parser->vars)->total);
+					(unsigned)((cvector_s* ) _parser->vars)->total);
 			cvector_delete((cvector_s*) _parser->vars, i);
 
 			continue;

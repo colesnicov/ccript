@@ -32,7 +32,7 @@ extern "C" {
  *
  * @return FALSE kdyz dojde k problemum, jinak TRUE.
  */
-bool parseWhile(parser_s *_parser);
+var_s* parseWhile(parser_s *_parser);
 
 #ifdef __cplusplus
 }

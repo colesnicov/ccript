@@ -49,11 +49,11 @@ bool ParseDefineTypeLong(parser_s *_parser) {
 	}
 
 	/**
-	 * @var char identifier_name[CC_KEYWORD_SIZE]
+	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
 	 * @brief Nazev promenne/funkce
 	 * fixme Tady definovat delku samostanych nazvu (promenna, funkce,...)
 	 */
-	char identifier_name[CC_KEYWORD_SIZE] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce

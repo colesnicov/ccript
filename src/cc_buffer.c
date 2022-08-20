@@ -125,7 +125,7 @@ bool bufferInit(parser_s *_parser, const char *_path, size_t _buffer_size) {
 	buffer_s *buffer = (buffer_s*) CONFIG_CC_MALLOC(sizeof(buffer_s));
 	if (buffer == NULL) {
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memory for 'buffer'! %u bytes needed.\n", sizeof(buffer_s));
+		CC_PRINT("ERROR: not enough memory for 'buffer'!\n");
 		fclose(fd);
 
 		_parser->buffer->fd = NULL;
@@ -137,8 +137,7 @@ bool bufferInit(parser_s *_parser, const char *_path, size_t _buffer_size) {
 	char *data = (char*) CONFIG_CC_MALLOC(_buffer_size * sizeof(char));
 	if (data == NULL) {
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memory for 'buffer::data'! %u bytes needed.\n",
-				_buffer_size * sizeof(char));
+		CC_PRINT("ERROR: not enough memory for 'buffer::data'!");
 		CONFIG_CC_FREE(buffer);
 		fclose(fd);
 

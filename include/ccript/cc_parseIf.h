@@ -36,7 +36,7 @@ extern "C" {
  * 			 - vyraz 'BREAK', 'CONTINUE', 'RETURN'
  * 			 - jina nezpracovatelna chyba
  */
-bool parseIf(parser_s *_parser);
+var_s* parseIf(parser_s *_parser);
 
 /**
  * @fn bool parseIfArguments(parser_s*, bool*)

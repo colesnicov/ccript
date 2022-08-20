@@ -50,10 +50,10 @@ var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 	return var;
 }
 
-static void sleep_us(unsigned long microseconds) {
+static void sleep_us(long microseconds) {
 	struct timespec ts;
-	ts.tv_sec = microseconds / 1000000ul;
-	ts.tv_nsec = (microseconds % 1000000ul) * 1000;
+	ts.tv_sec = microseconds / 1000000l;
+	ts.tv_nsec = (microseconds % 1000000l) * 1000;
 	nanosleep(&ts, NULL);
 }
 

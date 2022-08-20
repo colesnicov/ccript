@@ -49,11 +49,11 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 	}
 
 	/**
-	 * @var char identifier_name[CC_KEYWORD_SIZE]
+	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CC_KEYWORD_SIZE] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -112,7 +112,9 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 		return true;
 
-	} else if (ch == ';') {
+	}
+
+	else if (ch == ';') {
 		// definice promenne bez prirazeni
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_INT, _parser->depth);
@@ -129,7 +131,15 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 		return true;
 
-	} else {
+	}
+
+	else if (ch == '(') {
+		// definice funkce
+
+		return parseDefineBlock(_parser, CC_TYPE_INT, identifier_name, identifier_len);
+	}
+
+	else {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -139,7 +149,7 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
-	char value_name[CC_KEYWORD_SIZE] = { '\0' };
+	char value_name[CONFIG_CC_NUMERIC_LEN] = { '\0' };
 	size_t value_len;
 	int ival = 0;
 	int ival_temp = 0;
@@ -162,7 +172,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 	}
 
 	while (bufferValid(_parser)) {
-		memset(value_name, '\0', CC_KEYWORD_SIZE);
+		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		ival_temp = 0;
 		parseSkipNewLine(_parser);
 
@@ -350,6 +360,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 		}
 
 		else if (ch == '(') {
+			CC_PRINT("ASA");
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;

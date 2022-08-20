@@ -55,7 +55,7 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 	 */
 	size_t identifier_len = 0;
 
-	memset(_keyword_name, '\0', CC_KEYWORD_SIZE);
+	memset(_keyword_name, '\0', CC_KEYWORD_LEN);
 
 	{
 		size_t pos = parseGetPos(_parser);
@@ -134,7 +134,7 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 
 bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 
-	char value_name[CONFIG_CC_KEYWORD_SIZE_CAPS] = { '\0' };
+	char value_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 	size_t value_len;
 	bool negation = 0;
 	bool ival = 1;
@@ -143,7 +143,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 	char ch = 0;
 
 	while (bufferValid(_parser)) {
-		memset(value_name, '\0', CC_KEYWORD_SIZE);
+		memset(value_name, '\0', CC_KEYWORD_LEN);
 		ival_temp = 0;
 		negation = 0;
 

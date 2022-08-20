@@ -1,3 +1,6 @@
 [submodule "libs/emblib"]
     path = libs/emblib
     url = https://github.com/colesnicov/emblib.git
+[submodule "libs/filebuffer"]
+	path = libs/filebuffer
+	url = https://github.com/colesnicov/filebuffer.git

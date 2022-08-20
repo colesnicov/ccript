@@ -25,7 +25,7 @@
 #include <ccript/common.h>
 #include <stdint.h>
 #include "ccript/cc_var.h"
-#include CONFIG_CC_INCLUDE_SNPRINTF
+
 #include <float.h>
 #include <string.h>
 
@@ -322,14 +322,14 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 	}
 
 	size_t len_total = 0;
-	char buf[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
-	char buf2[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char buf[CONFIG_CC_STRING_LEN] = { '\0' };
+	char buf2[CONFIG_CC_STRING_LEN] = { '\0' };
 
 	size_t len = 0;
 
 	for (uint8_t i = 0; i < _vars_count; i++) {
 
-		memset(buf2, '\0', sizeof(char) * CC_STRING_SIZE);
+		memset(buf2, '\0', sizeof(char) * CC_VALUE_STRING_LEN);
 
 		if (!_vars[i]->valid) {
 			parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
@@ -348,10 +348,10 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 			len = 1;
 			buf2[0] = *(char*) _vars[i]->data;
 		} else if (_vars[i]->type == CC_TYPE_FLOAT) {
-			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_SIZE_CAPS, "%.*f",
+			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%.*f",
 			CONFIG_CC_FLOAT_EXP_LEN, *(float*) (_vars[i]->data));
 		} else if (_vars[i]->type == CC_TYPE_INT) {
-			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_SIZE_CAPS, "%d",
+			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%d",
 					*(int*) (_vars[i]->data));
 		} else if (_vars[i]->type == CC_TYPE_STRING) {
 			len = strlen(_vars[i]->data);
@@ -363,8 +363,8 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 
 		}
 
-		if (len_total + len > CC_STRING_SIZE) {
-			CC_PRINT("ERROR: string is too long. @see CC_STRING_SIZE\n");
+		if (len_total + len > CC_VALUE_STRING_LEN) {
+			CC_PRINT("ERROR: string is too long. @see CC_VALUE_STRING_LEN\n");
 			return NULL;
 		}
 
@@ -396,27 +396,27 @@ var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void 
 		return NULL;
 	}
 
-	char buf[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char buf[CONFIG_CC_STRING_LEN] = { '\0' };
 
 	if (_vars[0]->type == CC_TYPE_BOOL) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%d", *(bool*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(bool*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_CHAR) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%c", *(char*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%c", *(char*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_FLOAT) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%.*f", CONFIG_CC_FLOAT_EXP_LEN,
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%.*f", CONFIG_CC_FLOAT_EXP_LEN,
 				*(float*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_INT) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%d", *(int*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(int*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_STRING) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%s", (char*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%s", (char*) _vars[0]->data);
 	}
 
 	CC_PRINT("%s", buf);
@@ -432,27 +432,27 @@ var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count, voi
 		return NULL;
 	}
 
-	char buf[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char buf[CONFIG_CC_STRING_LEN] = { '\0' };
 
 	if (_vars[0]->type == CC_TYPE_BOOL) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%d", *(bool*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(bool*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_CHAR) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%c", *(char*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%c", *(char*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_FLOAT) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%.*f", CONFIG_CC_FLOAT_EXP_LEN,
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%.*f", CONFIG_CC_FLOAT_EXP_LEN,
 				*(float*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_INT) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%d", *(int*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(int*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_STRING) {
-		snprintf(buf, CONFIG_CC_STRING_SIZE_CAPS, "%s", (char*) _vars[0]->data);
+		snprintf(buf, CONFIG_CC_STRING_LEN, "%s", (char*) _vars[0]->data);
 	}
 
 	CC_PRINT("%s\n", buf);

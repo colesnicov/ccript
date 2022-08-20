@@ -600,19 +600,19 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			}
 
 			else if (var->type == CC_TYPE_STRING) {
-				char sval[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+				char sval[CONFIG_CC_STRING_LEN] = { '\0' };
 				size_t sval_len = 0;
 				if (!parseVarArgsString(_parser, ';', sval, &sval_len)) {
 					return 0;
 				}
 
-				char sval_l[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+				char sval_l[CONFIG_CC_STRING_LEN] = { '\0' };
 				size_t sval_l_len = 0;
 				if (!VarValueGetString(_parser, var, sval_l, &sval_l_len)) {
 					return 0;
 				}
 
-				if (sval_len + sval_l_len > CC_STRING_SIZE) {
+				if (sval_len + sval_l_len > CC_VALUE_STRING_LEN) {
 					parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					return false;

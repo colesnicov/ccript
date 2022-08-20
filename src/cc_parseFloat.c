@@ -49,11 +49,11 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 	}
 
 	/**
-	 * @var char identifier_name[CC_KEYWORD_SIZE]
+	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CC_KEYWORD_SIZE] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -133,7 +133,7 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
-	char value_name[CC_KEYWORD_SIZE] = { '\0' };
+	char value_name[CONFIG_CC_NUMERIC_LEN] = { '\0' };
 	size_t value_len;
 	float fval = 0;
 	float fval_temp = 0;
@@ -141,7 +141,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 	char ch = 0;
 
 	while (bufferValid(_parser)) {
-		memset(value_name, '\0', CC_KEYWORD_SIZE);
+		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		fval_temp = 0.0f;
 
 		parseSkipNewLine(_parser);

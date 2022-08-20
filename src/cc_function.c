@@ -15,6 +15,7 @@
  *
  */
 
+#include <emblib/emblib.h>
 #include "ccript/cc_buffer.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -37,7 +38,7 @@ bool funcInit(parser_s *_parser) {
 	if (funcs == NULL) {
 
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for functions! %u bytes needed.\n", sizeof(cvector_s));
+		CC_PRINT("ERROR: not enough memmory for functions!\n");
 		_parser->funcs = NULL;
 
 		return false;
@@ -49,7 +50,7 @@ bool funcInit(parser_s *_parser) {
 
 	if (!cvector_init(_parser->funcs)) {
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for functions! %u bytes needed.\n", sizeof(cvector_s));
+		CC_PRINT("ERROR: not enough memmory for functions!");
 
 		CONFIG_CC_FREE(_parser->funcs);
 		_parser->funcs = NULL;
@@ -74,7 +75,7 @@ void funcDeinit(parser_s *_parser) {
 		handler = cvector_get(_parser->funcs, i);
 
 		if (handler != NULL) {
-			CC_PRINT("DEBUG: remove function '%s'.\n", handler->name);
+			CC_FUNC_DEBUG("DEBUG: remove function '%s'.\n", handler->name);
 			CONFIG_CC_FREE(handler);
 			handler = NULL;
 		}
@@ -91,32 +92,43 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len) 
 
 	var_s *var = NULL;
 
-	fn_handler_s *handler = funcGet(_parser, func_name, func_name_len);
+	cc_block_s *block = blockGet(_parser, func_name, func_name_len);
+	if (block != NULL) {
+		var = blockCall(_parser, block, func_name, func_name_len);
 
-	if (handler == NULL) {
-		parseSetError(_parser, CC_CODE_FUNC_NOT_DEFINED);
-		CC_PRINT("ERROR: function '%s' not defined.\n", func_name);
-		return NULL;
-	}
+//		CC_PRINT("RET CODE: '%s'.\n", cc_errorToString(cc_errorGetCode(_parser)));
+		parseSetError(_parser, CC_CODE_OK);
+		return var;
+	} else {
 
-	var_s *args[CC_FUNC_NUMS_ARGS] = { NULL };
-	uint8_t args_count = 0;
+		fn_handler_s *handler = funcGet(_parser, func_name, func_name_len);
 
-	bufferNext(_parser);
-	bufferSkipSpace(_parser);
+		if (handler == NULL) {
+			parseSetError(_parser, CC_CODE_FUNC_NOT_DEFINED);
+			CC_PRINT("ERROR: function '%s' not defined.\n", func_name);
+			return NULL;
+		}
 
-	if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count)) {
-		CC_PRINT("ERROR: arguments error.\n");
+		var_s *args[CC_FUNC_NUMS_ARGS] = { NULL };
+		uint8_t args_count = 0;
+
+		bufferNext(_parser);
+		bufferSkipSpace(_parser);
+
+		if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count)) {
+			CC_PRINT("ERROR: arguments error.\n");
+			funcClearArguments(args, args_count);
+
+			return NULL;
+		}
+
+		var = handler->func(_parser, args, args_count, handler->args);
+
 		funcClearArguments(args, args_count);
 
-		return NULL;
+		return var;
 	}
 
-	var = handler->func(_parser, args, args_count, handler->args);
-
-	funcClearArguments(args, args_count);
-
-	return var;
 }
 
 fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len) {
@@ -155,7 +167,7 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 		return false;
 	}
 
-	hn->name = _name;
+	hn->name = (char*) _name;
 	hn->func = _fn;
 	hn->args = _args;
 	return cvector_add(_parser->funcs, hn);
@@ -191,7 +203,18 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				return false;
 			}
 
-			var_s *_var = VarCreate("_", 1, CC_TYPE_CHAR, _parser->depth);
+			char buf[3] = { '\0' };
+			size_t len = 1;
+
+			if (*_args_count == 0) {
+				memcpy(buf, "0", sizeof(char));
+			}
+
+			else {
+				len = itoa(*_args_count, buf, 10);
+			}
+
+			var_s *_var = VarCreate(buf, len, CC_TYPE_CHAR, _parser->depth);
 			if (_var == NULL) {
 				return false;
 			}
@@ -202,7 +225,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			}
 
 			_args[*_args_count] = _var;
-			*_args_count += 1;
+			*_args_count = *_args_count + 1;
 
 			bufferNext(_parser);
 			continue;
@@ -211,13 +234,24 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 		else if (ch == '"') {
 			// retezec
 
-			char value[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+			char value[CONFIG_CC_STRING_LEN] = { '\0' };
 
 			if (!ParseValueString(_parser, value, &value_len)) {
 				return false;
 			}
 
-			var_s *_var = VarCreate("_", 1, CC_TYPE_STRING, _parser->depth);
+			char buf[3] = { '\0' };
+			size_t len = 1;
+
+			if (*_args_count == 0) {
+				memcpy(buf, "0", sizeof(char));
+			}
+
+			else {
+				len = itoa(*_args_count, buf, 10);
+			}
+
+			var_s *_var = VarCreate(buf, len, CC_TYPE_STRING, _parser->depth);
 			if (_var == NULL) {
 				return false;
 			}
@@ -236,7 +270,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 		else if (isdigit(ch) || ch == '-') {
 			// cislo
 
-			char value[CC_KEYWORD_SIZE] = { '\0' };
+			char value[CC_VALUE_NUMERIC_LEN] = { '\0' };
 
 			bool is_float = false;
 			if (!parseValueFloat(_parser, value, &value_len, &is_float)) {
@@ -253,7 +287,19 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			var_s *_var = NULL;
 
 			if (is_float) {
-				_var = VarCreate("_", 1, CC_TYPE_FLOAT, _parser->depth);
+
+				char buf[3] = { '\0' };
+				size_t len = 1;
+
+				if (*_args_count == 0) {
+					memcpy(buf, "0", sizeof(char));
+				}
+
+				else {
+					len = itoa(*_args_count, buf, 10);
+				}
+
+				_var = VarCreate(buf, len, CC_TYPE_FLOAT, _parser->depth);
 
 				if (_var == NULL) {
 					return false;
@@ -265,9 +311,21 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				}
 
 			} else {
-				_var = VarCreate("_", 1, CC_TYPE_INT, _parser->depth);
+				char buf[3] = { '\0' };
+				size_t len = 1;
+
+				if (*_args_count == 0) {
+					memcpy(buf, "0", sizeof(char));
+				}
+
+				else {
+					len = itoa(*_args_count, buf, 10);
+				}
+
+				_var = VarCreate(buf, len, CC_TYPE_INT, _parser->depth);
 
 				if (_var == NULL) {
+					CC_PRINT("CHYBA?\n\n");
 					return false;
 				}
 
@@ -286,7 +344,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 		else if (isalpha(ch)) {
 
-			char var_name[CC_KEYWORD_SIZE] = { '\0' };
+			char var_name[CC_KEYWORD_LEN] = { '\0' };
 			size_t var_name_len = 0;
 
 			if (!parseIdentifier(_parser, var_name, &var_name_len)) {
@@ -303,7 +361,19 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			var_s *var = NULL;
 
 			if (var_name_len == 4 && strncmp(var_name, "true", var_name_len) == 0) {
-				var = VarCreate("_", 1, CC_TYPE_BOOL, _parser->depth);
+
+				char buf[3] = { '\0' };
+				size_t len = 1;
+
+				if (*_args_count == 0) {
+					memcpy(buf, "0", sizeof(char));
+				}
+
+				else {
+					len = itoa(*_args_count, buf, 10);
+				}
+
+				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);
 
 				if (var == NULL) {
 					return false;
@@ -317,7 +387,19 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			}
 
 			else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0) {
-				var = VarCreate("_", 1, CC_TYPE_BOOL, _parser->depth);
+
+				char buf[3] = { '\0' };
+				size_t len = 1;
+
+				if (*_args_count == 0) {
+					memcpy(buf, "0", sizeof(char));
+				}
+
+				else {
+					len = itoa(*_args_count, buf, 10);
+				}
+
+				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);
 
 				if (var == NULL) {
 					return false;

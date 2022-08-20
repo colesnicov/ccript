@@ -27,38 +27,64 @@
 #include "ccript/cvector.h"
 #include "ccript/cc_configs.h"
 
+#if CONFIG_CC_FUNC_DEBUG
+#define CC_FUNC_DEBUG(...)	CC_PRINT(__VA_ARGS__)
+#else
+#define CC_FUNC_DEBUG(...)
+#endif
+
+#if CONFIG_CC_BLOCK_DEBUG
+#define CC_BLOCK_DEBUG(...)	CC_PRINT(__VA_ARGS__)
+#else
+#define CC_BLOCK_DEBUG(...)
+#endif
+
+#if CONFIG_CC_VAR_DEBUG
+#define CC_VAR_DEBUG(...)	CC_PRINT(__VA_ARGS__)
+#else
+#define CC_VAR_DEBUG(...)
+#endif
+
 /**
- * @def CC_KEYWORD_SIZE
- * @brief Velikost zasobniku pro vyraz - 1 znak.
+ * @def	CC_KEYWORD_LEN
+ * @brief Velikost zasobniku pro nazev promenne/bloku/funkce
  * @details Toto je soucasne maximalni delka nazvu promenne, funkce a vyrazu (while, break, continue, ...)
- * @see CONFIG_CC_KEYWORD_SIZE_CAPS
- *
+ * @see CONFIG_CC_KEYWORD_LEN - 1 znak.
+ * FIXME PREJMENOVAL SIZE NA LEN
  */
-#define CC_KEYWORD_SIZE 		CONFIG_CC_KEYWORD_SIZE_CAPS - 1
+#define CC_KEYWORD_LEN 		CONFIG_CC_KEYWORD_LEN - 1
 
 #define CC_VAR_LONG_SIZE		sizeof(long) * 8 + 1
 
 /**
- * @def CC_STRING_SIZE
+ * @def CC_VALUE_NUMERIC_LEN
  * @brief Velikost zasobniku pro retezec - 1 znak.
- * @see CONFIG_CC_STRING_SIZE_CAPS
+ * @see CONFIG_CC_STRING_LEN
  *
  */
-#define CC_STRING_SIZE			CONFIG_CC_STRING_SIZE_CAPS - 1
+#define CC_VALUE_NUMERIC_LEN			CONFIG_CC_NUMERIC_LEN - 1
+
+/**
+ * @def CC_VALUE_STRING_LEN
+ * @brief Velikost zasobniku pro retezec - 1 znak.
+ * @see CONFIG_CC_STRING_LEN
+ *
+ */
+#define CC_VALUE_STRING_LEN			CONFIG_CC_STRING_LEN - 1
 
 /**
  * @def CC_COMMENT_SIZE
  * @brief Velikost zasobniku pro komentar - 1 znak.
- * @see CONFIG_CC_COMMENT_SIZE_CAPS
+ * @see CONFIG_CC_COMMENT_LEN
  */
-#define CC_COMMENT_SIZE		CONFIG_CC_COMMENT_SIZE_CAPS - 1
+#define CC_COMMENT_SIZE		CONFIG_CC_COMMENT_LEN - 1
 
 /**
  * @def CC_BUFFER_SIZE
  * @brief Velikost zasobniku pro skript nacteneho ze souboru - 1 znak.
- * @see CONFIG_CC_BUFFER_SIZE_CAPS
+ * @see CONFIG_CC_BUFFER_LEN
  */
-#define CC_BUFFER_SIZE 		CONFIG_CC_BUFFER_SIZE_CAPS - 1
+#define CC_BUFFER_SIZE 		CONFIG_CC_BUFFER_LEN - 1
 
 /**
  * @def CC_FLOAT_EXP_LEN
@@ -91,6 +117,14 @@
  *
  */
 #define CC_PRINT(...)	CONFIG_CC_PRINT(__VA_ARGS__)
+
+/**
+ * @def PARSER_DEFAULT
+ * @brief Pomucka pro snazsi vytvoreni vychozi (neinicializovane) struktury parseru
+ * @see cc_init(parser_s*)
+ *
+ */
+#define PARSER_DEFAULT()	{0, 0, CC_CODE_OK, 0, NULL, NULL, NULL, NULL}
 
 /**
  * @enum cc_code_
@@ -319,17 +353,16 @@ typedef enum cc_code_ {
 	 * @brief Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou..
 	 *
 	 */
-	CC_CODE_STRING_TOO_LONG /**< Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou.. */
+	CC_CODE_STRING_TOO_LONG, /**< Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou.. */
+
+	/**
+	 * @var CC_CODE_NOT_IMPLEMENTED
+	 * @brief Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou..
+	 *
+	 */
+	CC_CODE_NOT_IMPLEMENTED /**< Kod chyby ze funkce neni implementovana */
 
 } cc_code_t;
-
-/**
- * @def PARSER_DEFAULT
- * @brief Pomucka pro snazsi vytvoreni vychozi (neinicializovane) struktury parseru
- * @see cc_init(parser_s*)
- *
- */
-#define PARSER_DEFAULT()	{0, 0, CC_CODE_OK, 0, NULL, NULL, NULL}
 
 /**
  * @enum cc_type_
@@ -383,8 +416,8 @@ typedef enum cc_type_ {
 	/**
 	 * @var CC_TYPE_STRING
 	 * @brief Index datoveho typu pro retezec (pole znaku 'CC_TYPE_CHAR')
-	 * @details Delka od 0 do CC_STRING_SIZE
-	 * @see CC_STRING_SIZE
+	 * @details Delka od 0 do CC_VALUE_STRING_LEN
+	 * @see CC_VALUE_STRING_LEN
 	 *
 	 */
 	CC_TYPE_STRING, /**< Index datoveho typu pro retezec (pole znaku 'CC_TYPE_CHAR') */
@@ -447,7 +480,7 @@ typedef struct fn_handler_ {
 	 * @var const char *name
 	 * @brief Nazev funkce
 	 */
-	const char *name;
+	char *name;
 
 	/**
 	 * @var cc_fn_prototype func
@@ -457,7 +490,7 @@ typedef struct fn_handler_ {
 
 	/**
 	 * @var void* args
-	 * @brief Ukazatel na argumenty
+	 * @brief Ukazatel na argumenty z venci..
 	 */
 	void *args;
 
@@ -506,6 +539,35 @@ typedef struct var_ {
 	void *data;
 
 } var_s;
+
+typedef struct cc_block_args_ {
+
+	/**
+	 * @var	cc_type_t type
+	 * @brief Datovy typ promenne.
+	 * @see cc_type_t
+	 */
+	cc_type_t type;
+
+	size_t name_len;
+
+	/**
+	 * @var	char *name
+	 * @brief Nazev promenne.
+	 */
+	char *name;
+
+} cc_block_args_s;
+
+typedef struct cc_block_ {
+	char *name;
+	size_t name_len;
+	size_t pos_start;
+	size_t pos_end;
+	uint8_t args_count;
+	cc_block_args_s **args;
+	var_s *value;
+} cc_block_s;
 
 /**
  * @struct buffer_
@@ -597,6 +659,12 @@ typedef struct parser_ {
 	 * @brief Ukazatel na strukturu kontejneru s funkcemi ktere muze volat skript
 	 */
 	cvector_s *funcs;
+
+	/**
+	 * @var cvector_s *blocks
+	 * @brief Ukazatel na strukturu kontejneru s funkcemi ktere byli definovany uvnitr skripty
+	 */
+	cvector_s *blocks;
 
 	/**
 	 * @var cvector_s *vars

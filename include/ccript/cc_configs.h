@@ -113,29 +113,29 @@
 #define CONFIG_CC_KEYWORD_SIZE_CAPS	16
 
 /**
- * @def CONFIG_CC_STRING_SIZE_CAPS
+ * @def CONFIG_CC_STRING_LEN
  * @brief Velikost zasobniku pro retezec.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro retezec.
  *
  */
-#define CONFIG_CC_STRING_SIZE_CAPS	51
+#define CONFIG_CC_STRING_LEN	51
 
 /**
- * @def CONFIG_CC_COMMENT_SIZE_CAPS
+ * @def CONFIG_CC_COMMENT_LEN
  * @brief Velikost zasobniku pro komentar.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik komentare.
  * @see CONFIG_CC_PRINT_COMMENT
  *
  */
-#define CONFIG_CC_COMMENT_SIZE_CAPS	150
+#define CONFIG_CC_COMMENT_LEN	150
 
 /**
- * @def CONFIG_CC_BUFFER_SIZE_CAPS
+ * @def CONFIG_CC_BUFFER_LEN
  * @brief Velikost zasobniku pro skript.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik skriptu nacteneho ze souboru.
  *
  */
-#define CONFIG_CC_BUFFER_SIZE_CAPS		5
+#define CONFIG_CC_BUFFER_LEN		5
 
 #else
 /*
@@ -180,14 +180,6 @@
 #define CONFIG_CC_INCLUDE_FILEIO	<stdio.h>
 
 /**
- * @def CONFIG_CC_INCLUDE_SNPRINTF
- * @brief INCLUDE s definici funkce `snprintf`.
- * @details Napriklad <stdio.h>
- *
- */
-#define CONFIG_CC_INCLUDE_SNPRINTF	<stdio.h>
-
-/**
  * @def CONFIG_CC_FLOAT_EXP_LEN
  * @brief Delka exponentu cisla s plovouci desetinnou carkou.
  * @details Pouziva se pri prevodu promenne typu `float` na typ `string`
@@ -226,7 +218,7 @@
  * @see CONFIG_CC_PRINT
  *
  */
-#define CONFIG_CC_PRINT_COMMENT	1
+#define CONFIG_CC_PRINT_COMMENT	0
 
 /**
  * @def CONFIG_CC_FUNC_DEBUG
@@ -235,38 +227,45 @@
  */
 #define CONFIG_CC_FUNC_DEBUG	0
 
+#define CONFIG_CC_VAR_DEBUG		0
+
+#define CONFIG_CC_BLOCK_DEBUG	0
+
 /**
- * @def CONFIG_CC_KEYWORD_SIZE_CAPS
- * @brief Velikost zasobniku pro vyraz.
+ * @def CONFIG_CC_KEYWORD_LEN
+ * @brief Velikost zasobniku pro vyraz vcetne ukoncovaci '\0'. nazvy promennych, funkci, ...
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro vyraz.
+ * @details Vysledny vyraz bude o 1 znak kratsi!
  *
  *
  */
-#define CONFIG_CC_KEYWORD_SIZE_CAPS	16
+#define CONFIG_CC_KEYWORD_LEN	16
+
+#define CONFIG_CC_NUMERIC_LEN	51
 
 /**
- * @def CONFIG_CC_STRING_SIZE_CAPS
+ * @def CONFIG_CC_STRING_LEN
  * @brief Velikost zasobniku pro retezec.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro retezec.
  *
  */
-#define CONFIG_CC_STRING_SIZE_CAPS	51
+#define CONFIG_CC_STRING_LEN	51
 
 /**
- * @def CONFIG_CC_COMMENT_SIZE_CAPS
+ * @def CONFIG_CC_COMMENT_LEN
  * @brief Velikost zasobniku pro komentar.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik komentare.
  * @see CONFIG_CC_PRINT_COMMENT
  *
  */
-#define CONFIG_CC_COMMENT_SIZE_CAPS	150
+#define CONFIG_CC_COMMENT_LEN	150
 
 /**
- * @def CONFIG_CC_BUFFER_SIZE_CAPS
+ * @def CONFIG_CC_BUFFER_LEN
  * @brief Velikost zasobniku pro skript.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik skriptu nacteneho ze souboru.
  *
  */
-#define CONFIG_CC_BUFFER_SIZE_CAPS		5
+#define CONFIG_CC_BUFFER_LEN		5
 
 #endif

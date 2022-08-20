@@ -217,7 +217,7 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	size_t value_len = 0;
-	char value_name[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char value_name[CONFIG_CC_STRING_LEN] = { '\0' };
 
 	size_t fval_temp_len = 0;
 	char fval_temp = 0;
@@ -350,7 +350,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 	if (ch == _symbol_end) {
 		//konec vety
 
-		if (value_len + fval_temp_len > CC_STRING_SIZE) {
+		if (value_len + fval_temp_len > CC_VALUE_STRING_LEN) {
 			parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;

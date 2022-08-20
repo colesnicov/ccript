@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool parseWhile(parser_s *_parser) {
+var_s* parseWhile(parser_s *_parser) {
 	char ch = 0;
 
 	parseSkipNewLine(_parser);
@@ -41,7 +41,7 @@ bool parseWhile(parser_s *_parser) {
 	if (ch != '(') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
-		return false;
+		return NULL;
 	}
 
 	bool cond_passed = false;
@@ -51,7 +51,7 @@ bool parseWhile(parser_s *_parser) {
 	pos_condition_o = parseGetPos(_parser);
 
 	if (!parseIfArguments(_parser, &cond_passed)) {
-		return false;
+		return NULL;
 	}
 
 	bufferNext(_parser);
@@ -64,7 +64,7 @@ bool parseWhile(parser_s *_parser) {
 	if (ch != '{') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
-		return false;
+		return NULL;
 	}
 
 	uint8_t scope = _parser->depth;
@@ -78,14 +78,16 @@ bool parseWhile(parser_s *_parser) {
 			bufferNext(_parser);
 
 			_parser->depth++;
-			if (!parseBlock(_parser, '}')) {
-				_parser->depth = scope;
-				parseClearScope(_parser);
-				return false;
-			}
+			var_s *ret_var = parseBlock(_parser, '}');
 
 			_parser->depth = scope;
 			parseClearScope(_parser);
+
+			if (_parser->error == CC_CODE_RETURN) {
+				return ret_var;
+			}
+
+			VarDestroy(ret_var);
 
 			if (_parser->error == CC_CODE_BREAK) {
 				// break
@@ -99,12 +101,12 @@ bool parseWhile(parser_s *_parser) {
 				bufferNext(_parser);
 
 				if (!parserSkipBlock(_parser, '{', '}')) {
-					return false;
+					return NULL;
 				}
 
 				parseSkipNewLine(_parser);
 
-				return true;
+				return NULL;
 			}
 
 			else if (_parser->error == CC_CODE_CONTINUE) {
@@ -118,7 +120,7 @@ bool parseWhile(parser_s *_parser) {
 				bufferReload(_parser);
 
 				if (!parseIfArguments(_parser, &cond_passed)) {
-					return false;
+					return NULL;
 				}
 
 				// Navrat na zacatek bloku WHILE a overeni jestli podminka prosla
@@ -140,7 +142,7 @@ bool parseWhile(parser_s *_parser) {
 				bufferReload(_parser);
 
 				if (!parseIfArguments(_parser, &cond_passed)) {
-					return false;
+					return NULL;
 				}
 
 				// Navrat na zacatek bloku WHILE a overeni jestli podminka prosla
@@ -157,12 +159,12 @@ bool parseWhile(parser_s *_parser) {
 				CC_PRINT("ERROR: while exit with code: '%s(%d)' '%c' %d.\n",
 						cc_errorToString(_parser->error), _parser->error, ch, _parser->depth);
 
-				return false;
+				return NULL;
 			}
 
 			bufferNext(_parser);
 
-			return true;
+			return NULL;
 
 		} else {
 			//	preskocit blok while
@@ -170,20 +172,20 @@ bool parseWhile(parser_s *_parser) {
 			parseSkipNewLine(_parser);
 
 			if (!parserSkipBlock(_parser, '{', '}')) {
-				return false;
+				return NULL;
 			}
 
 			parseSkipNewLine(_parser);
 			parseSetError(_parser, CC_CODE_OK);
 
-			return true;
+			return NULL;
 
 		}
 	}
 
 	parseSetError(_parser, CC_CODE_LOGIC);
 	parseSetErrorPos(_parser, parseGetPos(_parser));
-	return false;
+	return NULL;
 }
 
 ///

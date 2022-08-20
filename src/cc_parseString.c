@@ -44,11 +44,11 @@ bool ParseDefineTypeString(parser_s *_parser) {
 	}
 
 	/**
-	 * @var char identifier_name[CC_KEYWORD_SIZE]
+	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CC_KEYWORD_SIZE] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -83,7 +83,7 @@ bool ParseDefineTypeString(parser_s *_parser) {
 		bufferNext(_parser);
 		bufferSkipSpace(_parser);
 
-		char fval[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+		char fval[CONFIG_CC_STRING_LEN] = { '\0' };
 		size_t len = 0;
 		if (!parseVarArgsString(_parser, ';', fval, &len)) {
 			return false;
@@ -158,11 +158,11 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 	}
 
 	/**
-	 * @var char identifier_name[CC_KEYWORD_SIZE]
+	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CC_KEYWORD_SIZE] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -257,12 +257,12 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 
 	if (ch == '"') {
 
-		memset(_value, '\0', CC_STRING_SIZE);
+		memset(_value, '\0', CC_VALUE_STRING_LEN);
 		bufferNext(_parser);
 
 		while (bufferValid(_parser)) {
 
-			if (len >= CC_STRING_SIZE) {
+			if (len >= CC_VALUE_STRING_LEN) {
 				parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -332,7 +332,7 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 		return 0;
 
 	} else if (ch == '\'') {
-		memset(_value, '\0', CC_KEYWORD_SIZE);
+		memset(_value, '\0', CC_VALUE_STRING_LEN);
 		return ParseValueChar(_parser, _value, _value_len);
 
 	} else {
@@ -346,10 +346,10 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_t *_value_len) {
 
 	size_t value_len = 0;
-	char value_name[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char value_name[CONFIG_CC_STRING_LEN] = { '\0' };
 
 	size_t fval_temp_len = 0;
-	char fval_temp[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char fval_temp[CONFIG_CC_STRING_LEN] = { '\0' };
 
 	char ch = 0;
 
@@ -357,7 +357,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 	while (bufferValid(_parser)) {
 
-		memset(fval_temp, '\0', CONFIG_CC_STRING_SIZE_CAPS);
+		memset(fval_temp, '\0', CC_VALUE_STRING_LEN);
 
 		parseSkipNewLine(_parser);
 		bufferGet(_parser, &ch);
@@ -502,7 +502,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 		if (ch == _symbol_end) {
 
-			if (value_len + fval_temp_len > CC_STRING_SIZE) {
+			if (value_len + fval_temp_len > CC_VALUE_STRING_LEN) {
 				parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;

@@ -34,7 +34,7 @@ extern "C" {
  *
  * @return FALSE jestli dojde k chybe, jinak TRUE.
  */
-bool parseBlock(parser_s *_parser, char _end_char);
+var_s* parseBlock(parser_s *_parser, char _end_char);
 
 ////////////////////////////////
 //
@@ -219,7 +219,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value);
  */
 bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value);
 
-bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long*_value);
+bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value);
 
 /**
  * @fn bool parseVarArgsString(parser_s*, char, char*, size_t*)
@@ -493,6 +493,30 @@ bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len);
 bool parseValueInt(parser_s *_parser, char *_value, size_t *_value_len);
 
 bool parseValueLong(parser_s *_parser, char *_value, size_t *_value_len);
+
+var_s* parseReturnArguments(parser_s *_parser);
+
+bool blockInit(parser_s *_parser);
+
+void blockDeinit(parser_s *_parser);
+
+cc_block_s* blockGet(parser_s *_parser, const char *_name, size_t _name_len);
+
+var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name,
+		size_t func_name_len);
+
+bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name,
+		size_t block_name_len);
+
+bool parseBlockArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
+		cc_block_args_s **_args, uint8_t *_args_count);
+
+void blockCleanArguments(cc_block_args_s **_args, uint8_t *_args_count);
+
+bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
+		var_s **_args, uint8_t *_args_count);
+
+void dumpBlockArgs(cc_block_args_s **_args, uint8_t _args_count);
 
 /**
  * @fn size_t parseValueFloat(parser_s*, char*, bool*)

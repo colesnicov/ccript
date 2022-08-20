@@ -251,8 +251,7 @@ var_s* VarCreate(const char *_name, size_t _name_len, cc_type_t _type, uint8_t _
 	var_s *var_t = (var_s*) CONFIG_CC_MALLOC(sizeof(var_s));
 	if (var_t == NULL) {
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enought memmory for variable '%s'. potrebuji: %u bytes needed.\n",
-				_name, (_name_len + 1) * sizeof(var_s));
+		CC_PRINT("ERROR: 2 not enought memmory for variable '%s'.\n", _name);
 		return NULL;
 	}
 
@@ -260,8 +259,7 @@ var_s* VarCreate(const char *_name, size_t _name_len, cc_type_t _type, uint8_t _
 
 	if (var_t->name == NULL) {
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enought memmory for variable '%s'. potrebuji: %u bytes needed.\n",
-				_name, (_name_len + 1) * sizeof(char));
+		CC_PRINT("ERROR: 3 not enought memmory for variable '%s'.\n", _name);
 		CONFIG_CC_FREE(var_t);
 
 		return NULL;
@@ -301,8 +299,7 @@ var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_typ
 	var_s *var_t = (var_s*) CONFIG_CC_MALLOC(sizeof(var_s));
 	if (var_t == NULL) {
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enought memmory for variable '%s'. potrebuji: %u bytes needed.\n",
-				_name, (_name_len + 1) * sizeof(var_s));
+		CC_PRINT("ERROR: 4 not enought memmory for variable '%s'.\n", _name);
 		return NULL;
 	}
 
@@ -310,8 +307,7 @@ var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_typ
 
 	if (var_t->name == NULL) {
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enought memmory for variable '%s'. potrebuji: %u bytes needed.\n",
-				_name, (_name_len + 1) * sizeof(char));
+		CC_PRINT("ERROR: 5 not enought memmory for variable '%s'.\n", _name);
 		CONFIG_CC_FREE(var_t);
 		var_t = NULL;
 		return NULL;
@@ -350,6 +346,7 @@ void VarDestroy(var_s *_var) {
 
 	if (_var != NULL) {
 
+		CC_VAR_DEBUG("DEBUG: destroy variable '%s'.\n", _var->name);
 		if (_var->name != NULL) {
 			CONFIG_CC_FREE(_var->name);
 			_var->name = NULL;
@@ -416,9 +413,9 @@ void VarDeinit(parser_s *_parser) {
 
 	var_s *var = NULL;
 
+	CC_VAR_DEBUG("DEBUG: destroy vars: '%d'.\n", cvector_total(_parser->vars));
 	for (i = 0; i < cvector_total(_parser->vars); i++) {
 		var = cvector_get(_parser->vars, i);
-//		CC_PRINT("DEBUG: destroy variable '%s'.\n", var->name);
 		VarDestroy(var);
 	}
 
@@ -542,7 +539,7 @@ void VarDump(var_s *_var) {
 //			char buf[sizeof(long) * 8 + 1] = { '\0' };
 //			char buf[CC_VAR_LONG_SIZE] = { '\0' };
 //			ltoa(*data, buf, 10);
-			char *buf = lltoa(( long)*data, 10);
+			char *buf = ltoa((long) *data, 10);
 			CC_PRINT("\tdata='%s'\n", buf);
 		}
 
@@ -681,7 +678,7 @@ bool VarValueGetString(parser_s *_parser, var_s *_var, char *_str, size_t *_len)
 	}
 	size_t len = strlen(_var->data);
 
-	if (len > CC_STRING_SIZE) {
+	if (len > CC_VALUE_STRING_LEN) {
 		CC_PRINT("ERROR: string is too long '%u>%u'\n", len, *_len);
 		*_len = len;
 		parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
@@ -696,7 +693,7 @@ bool VarValueGetString(parser_s *_parser, var_s *_var, char *_str, size_t *_len)
 
 var_s* VarCastToString(parser_s *_parser, var_s *_var_from) {
 
-	char val[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+	char val[CONFIG_CC_STRING_LEN] = { '\0' };
 	size_t len = 0;
 
 	if (_var_from->type == CC_TYPE_FLOAT) {
@@ -762,7 +759,7 @@ var_s* VarCastToBool(parser_s *_parser, var_s *_var_from) {
 	}
 
 	else if (_var_from->type == CC_TYPE_STRING) {
-		char v[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+		char v[CONFIG_CC_STRING_LEN] = { '\0' };
 		size_t vl = 0;
 		if (!VarValueGetString(_parser, _var_from, v, &vl)) {
 			return NULL;

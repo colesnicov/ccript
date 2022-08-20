@@ -43,6 +43,11 @@ bool cc_init(parser_s *_parser) {
 			break;
 		}
 
+		if (!blockInit(_parser)) {
+			CC_PRINT("ccript error 3!\n");
+			break;
+		}
+
 		return true;
 
 	} while (0);
@@ -53,6 +58,7 @@ bool cc_init(parser_s *_parser) {
 }
 
 void cc_deinit(parser_s *_parser) {
+	blockDeinit(_parser);
 	VarDeinit(_parser);
 	funcDeinit(_parser);
 	bufferClose(_parser);
@@ -62,22 +68,26 @@ bool cc_parse(parser_s *_parser, const char *_path) {
 	_parser->error = CC_CODE_OK;
 	_parser->error_pos = 0;
 
-	if (!bufferInit(_parser, _path, CONFIG_CC_BUFFER_SIZE_CAPS)) {
+	if (!bufferInit(_parser, _path, CONFIG_CC_BUFFER_LEN)) {
 		return false;
 	}
 
-	bool ret = parseBlock(_parser, 0);
+	var_s *ret_var = parseBlock(_parser, 0);
+	VarDestroy(ret_var);
 
 	if (_parser->error >= CC_CODE_ERROR && _parser->error_pos >= _parser->buffer->fsize) {
-		// Kdyz jsme na konci souboru, neni to chyba
-		_parser->error = CC_CODE_OK;
-
+		if (_parser->error_pos >= _parser->buffer->fsize) {
+			// Kdyz jsme na konci souboru, neni to chyba
+			_parser->error = CC_CODE_OK;
+		} else {
+			return false;
+		}
 	}
 
 	VarClean(_parser);
 	bufferClose(_parser);
 
-	return ret;
+	return true;
 }
 
 cc_code_t cc_errorGetCode(parser_s *_parser) {
@@ -190,6 +200,9 @@ const char* cc_errorToString(cc_code_t _err_code) {
 
 		case CC_CODE_ABORT:
 			return "CC_CODE_ABORT";
+
+		case CC_CODE_NOT_IMPLEMENTED:
+			return "CC_CODE_NOT_IMPLEMENTED";
 
 	}
 

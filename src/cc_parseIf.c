@@ -197,7 +197,7 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg) {
 	if (isdigit(ch) || ch == '-') {
 		// cislo
 
-		char value[CONFIG_CC_KEYWORD_SIZE_CAPS] = { '\0' };
+		char value[CONFIG_CC_NUMERIC_LEN] = { '\0' };
 
 		size_t value_len = 0;
 		bool is_bool = false;
@@ -220,7 +220,7 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg) {
 	else if (isalpha(ch)) {
 		// promenna nebo funkce
 
-		char var_name[CONFIG_CC_KEYWORD_SIZE_CAPS] = { '\0' };
+		char var_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
 		size_t var_name_len = 0;
 
 		parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -514,7 +514,7 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 
 }
 
-bool parseIf(parser_s *_parser) {
+var_s* parseIf(parser_s *_parser) {
 	char ch = 0;
 
 	parseSkipNewLine(_parser);
@@ -524,13 +524,13 @@ bool parseIf(parser_s *_parser) {
 	if (ch != '(') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
-		return false;
+		return NULL;
 	}
 
 	bool cond_passed = false;
 
 	if (!parseIfArguments(_parser, &cond_passed)) {
-		return false;
+		return NULL;
 	}
 
 	bufferNext(_parser);
@@ -541,39 +541,39 @@ bool parseIf(parser_s *_parser) {
 	if (ch != '{') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
-		return false;
+		return NULL;
 	}
 
 	if (cond_passed) {
 		bufferNext(_parser);
 
-		if (!parseBlock(_parser, '}')) {
-			return false;
+		var_s *ret_var = parseBlock(_parser, '}');
+
+		if (_parser->error == CC_CODE_RETURN) {
+
+			return ret_var;
 		}
+
+		VarDestroy(ret_var);
 
 		if (_parser->error == CC_CODE_BREAK) {
 
-			return true;
+			return NULL;
 		}
 
 		else if (_parser->error == CC_CODE_CONTINUE) {
 
-			return true;
-		}
-
-		else if (_parser->error == CC_CODE_RETURN) {
-
-			return true;
+			return NULL;
 		}
 
 		else if (_parser->error >= CC_CODE_ERROR) {
-			return false;
+			return NULL;
 		}
 
 		bufferNext(_parser);
 		parseSkipNewLine(_parser);
 
-		char _name[CONFIG_CC_STRING_SIZE_CAPS] = { '\0' };
+		char _name[CONFIG_CC_STRING_LEN] = { '\0' };
 
 		size_t pos_total = 0;
 		size_t pos_f = 0;
@@ -585,23 +585,23 @@ bool parseIf(parser_s *_parser) {
 				pos_total = _parser->buffer->offset;
 				pos_f = _parser->buffer->fpos;
 
-				memset(_name, '\0', sizeof(char) * CC_STRING_SIZE);
+				memset(_name, '\0', sizeof(char) * CC_VALUE_STRING_LEN);
 
 				size_t ll = 0;
 				if (!parseIdentifier(_parser, _name, &ll)) {
-					return false;
+					return NULL;
 				}
 
 				if (ll == 4 && strncmp(_name, "elif", ll) == 0) {
 					// elif, preskocit
 					parseSkipNewLine(_parser);
 					if (!parserSkipBlock(_parser, '(', ')')) {
-						return false;
+						return NULL;
 					}
 
 					parseSkipNewLine(_parser);
 					if (!parserSkipBlock(_parser, '{', '}')) {
-						return false;
+						return NULL;
 					}
 
 					parseSkipNewLine(_parser);
@@ -613,12 +613,12 @@ bool parseIf(parser_s *_parser) {
 					// else, preskocit
 					parseSkipNewLine(_parser);
 					if (!parserSkipBlock(_parser, '{', '}')) {
-						return false;
+						return NULL;
 					}
 
 					parseSkipNewLine(_parser);
 
-					return true;
+					return NULL;
 				}
 
 				else {
@@ -633,26 +633,26 @@ bool parseIf(parser_s *_parser) {
 					// fixme tento radek zpusobuje problem? zakomentuj ho
 					parseSkipNewLine(_parser);
 
-					return true;
+					return NULL;
 
 				}
 			}
 
 			else {
 				// else neni. konec
-				return true;
+				return NULL;
 			}
 		}
 
 		parseSetError(_parser, CC_CODE_LOGIC);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 
-		return false;
+		return NULL;
 	} else {
 		//	preskocit blok if
 
 		if (!parserSkipBlock(_parser, '{', '}')) {
-			return false;
+			return NULL;
 		}
 
 		parseSkipNewLine(_parser);
@@ -667,16 +667,16 @@ bool parseIf(parser_s *_parser) {
 
 			size_t ll = 0;
 			if (!parseIdentifier(_parser, _name, &ll)) {
-				return false;
+				return NULL;
 			}
 
 			if (ll == 4 && strncmp(_name, "elif", ll) == 0) {
 
 				if (!parseIf(_parser)) {
-					return false;
+					return NULL;
 				}
 
-				return true;
+				return NULL;
 			}
 
 			else if (ll == 4 && strncmp(_name, "else", ll) == 0) {
@@ -690,38 +690,37 @@ bool parseIf(parser_s *_parser) {
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 
-					return false;
+					return NULL;
 				}
 
 				bufferNext(_parser);
 
 				_parser->depth++;
+				var_s *ret_var = parseBlock(_parser, '}');
 
-				if (!parseBlock(_parser, '}')) {
-					return false;
+				if (_parser->error == CC_CODE_RETURN) {
+					return ret_var;
 				}
+
+				VarDestroy(ret_var);
 
 				if (_parser->error == CC_CODE_BREAK) {
 					// fixme kontrolovat jestli se zrovna nachazim ve smycce (a switch)?
-					return true;
+					return NULL;
 				}
 
 				else if (_parser->error == CC_CODE_CONTINUE) {
-					return true;
-				}
-
-				else if (_parser->error == CC_CODE_RETURN) {
-					return true;
+					return NULL;
 				}
 
 				else if (_parser->error >= CC_CODE_ERROR) {
-					return false;
+					return NULL;
 				}
 
 				bufferNext(_parser);
 				parseSkipNewLine(_parser);
 
-				return true;
+				return NULL;
 
 			} else {
 				// neni 'else', vratit buffer do pozice pred hledanim
@@ -733,11 +732,12 @@ bool parseIf(parser_s *_parser) {
 
 				parseSkipNewLine(_parser);
 
-				return true;
+				return NULL;
 			}
 		} else {
+			// no else/elif. go out
 
-			return true;
+			return NULL;
 		}
 
 	}
@@ -748,7 +748,7 @@ bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char) {
 	char ch = 0;
 	uint8_t depth = 1;
 
-		bufferNext(_parser);
+	bufferNext(_parser);
 
 	while (bufferValid(_parser)) {
 
@@ -773,14 +773,13 @@ bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char) {
 
 		else if (ch == _end_char) {
 
+			bufferNext(_parser);
 			if (depth > 1) {
 				depth--;
-				bufferNext(_parser);
 				continue;
 			}
 
 			else {
-				bufferNext(_parser);
 				return true;
 			}
 
