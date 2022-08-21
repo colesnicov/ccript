@@ -79,7 +79,10 @@ extern "C" int main(int argc, char **argv) {
 	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen, NULL);
 	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat, NULL);
 
-	cc_parse(&parser, fileName);
+	var_s * var = cc_parse(&parser, fileName);
+
+	VarDump(var);
+	VarDestroy(var);
 
 	if (cc_errorHas(&parser)) {
 		CC_PRINT("script fail at position '%lu' with code: '%s(%d)'\n", cc_errorGetPos(&parser),

@@ -672,7 +672,26 @@ var_s* parseIf(parser_s *_parser) {
 
 			if (ll == 4 && strncmp(_name, "elif", ll) == 0) {
 
-				if (!parseIf(_parser)) {
+				var_s *ret_var = parseIf(_parser);
+
+				if (_parser->error == CC_CODE_RETURN) {
+					return ret_var;
+				}
+
+				VarDestroy(ret_var);
+
+				if (_parser->error == CC_CODE_BREAK) {
+					CC_PRINT("\nCOTO?\n");
+					// fixme kontrolovat jestli se zrovna nachazim ve smycce (a switch)?
+					return NULL;
+				}
+
+				else if (_parser->error == CC_CODE_CONTINUE) {
+					CC_PRINT("\nCOTO?\n");
+					return NULL;
+				}
+
+				else if (_parser->error >= CC_CODE_ERROR) {
 					return NULL;
 				}
 

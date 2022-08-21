@@ -523,6 +523,12 @@ size_t VarGetSizeAll(parser_s *_parser) {
 
 void VarDump(var_s *_var) {
 	CC_PRINT("  ------ DUMP VAR\n");
+	if (_var == NULL) {
+
+		CC_PRINT("  ------ VAR IS 'NULL'\n");
+		CC_PRINT("  ------ END DUMP VAR\n");
+		return;
+	}
 
 	CC_PRINT("\tname='%s';\n", _var->name);
 	CC_PRINT("\ttype='%i:%s';\n", _var->type, VarTypeToString(_var->type));

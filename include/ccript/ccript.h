@@ -76,7 +76,7 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
  *
  * @return FALSE jestli dojde k chybe, jinak TRUE.
  */
-bool cc_parse(parser_s *_parser, const char *_path);
+var_s* cc_parse(parser_s *_parser, const char *_path);
 
 /**
  * @fn void cc_abort(parser_s*)

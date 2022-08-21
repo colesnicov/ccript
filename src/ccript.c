@@ -66,32 +66,33 @@ void cc_deinit(parser_s *_parser) {
 //	bufferClose(_parser);
 }
 
-bool cc_parse(parser_s *_parser, const char *_path) {
+var_s* cc_parse(parser_s *_parser, const char *_path) {
 	_parser->error = CC_CODE_OK;
 	_parser->error_pos = 0;
+	var_s *ret_var = NULL;
 
 	if (FILEBUFFER_OK != file_bufferInit(&_parser->buffer, _path, CONFIG_CC_BUFFER_LEN)) {
 		parseSetError(_parser, CC_CODE_IO);
-		return false;
+		return ret_var;
 	}
 
-	var_s *ret_var = parseBlock(_parser, 0);
-	VarDestroy(ret_var);
+	ret_var = parseBlock(_parser, 0);
 
-	VarClean(_parser);
+	if (_parser->error != CC_CODE_RETURN) {
+		VarDestroy(ret_var);
+	}
 
 	if (_parser->error >= CC_CODE_ERROR && _parser->error_pos >= _parser->buffer->fsize) {
 		if (_parser->error_pos >= _parser->buffer->fsize) {
 			// Kdyz jsme na konci souboru, neni to chyba
 			_parser->error = CC_CODE_OK;
-		} else {
-			file_bufferClose(_parser->buffer);
-			return false;
 		}
 	}
 
+	VarClean(_parser);
 	file_bufferClose(_parser->buffer);
-	return true;
+
+	return ret_var;
 }
 
 cc_code_t cc_errorGetCode(parser_s *_parser) {

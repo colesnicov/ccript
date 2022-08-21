@@ -42,7 +42,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 	parseSkipNewLine(_parser);
 
-	file_bufferGet(_parser->buffer, &ch);
+//	file_bufferGet(_parser->buffer, &ch);
 
 	uint8_t scope = _parser->depth;
 
@@ -357,7 +357,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 				}
 
 				else if (ch == '(') {
-					// volani funkce
+					// volani funkce, nevracim nic
 
 					var_s *var = funcCall(_parser, keyword_name, keyword_len);
 

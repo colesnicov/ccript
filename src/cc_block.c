@@ -114,7 +114,6 @@ void blockDeinit(parser_s *_parser) {
 var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, size_t func_name_len) {
 
 	var_s *var = NULL;
-
 	var_s *args[CC_FUNC_NUMS_ARGS];
 	uint8_t args_count = 0;
 
@@ -130,6 +129,7 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 
 	// fixme nastavovat kod chyby!
 	if (_block->args_count != args_count) {
+		// kontrola jestli byl predan spravny pocet argumentu
 		CC_PRINT("ERROR: bad number of arguments.\n");
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -152,7 +152,7 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 	}
 
 	for (int i = 0; i < args_count; i++) {
-
+		// kontrola jestli predane argumenty jsou spravneho typu.
 		if (_block->args[i]->type != args[i]->type) {
 			CC_PRINT("ERROR: bad arg '%d' for function '%s'.\n", i, _block->name);
 			parseSetErrorPos(_parser, pos);
@@ -1106,7 +1106,7 @@ var_s* parseReturnArguments(parser_s *_parser) {
 	}
 
 	else if(ch == ';'){
-		CC_PRINT(" exit without return value '%c'.\n", ch);
+//		CC_PRINT(" exit without return value '%c'.\n", ch);
 //		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 //		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return NULL;
