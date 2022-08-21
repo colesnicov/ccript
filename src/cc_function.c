@@ -16,7 +16,7 @@
  */
 
 #include <emblib/emblib.h>
-#include "ccript/cc_buffer.h"
+////#include "ccript/cc_buffer.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
 #include "ccript/cc_types.h"
@@ -96,8 +96,15 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len) 
 	if (block != NULL) {
 		var = blockCall(_parser, block, func_name, func_name_len);
 
-//		CC_PRINT("RET CODE: '%s'.\n", cc_errorToString(cc_errorGetCode(_parser)));
-		parseSetError(_parser, CC_CODE_OK);
+		if (cc_errorGetCode(_parser) == CC_CODE_RETURN) {
+
+			parseSetError(_parser, CC_CODE_OK);
+		}
+
+		else {
+//			CC_PRINT("RET CODE: '%s'.\n", cc_errorToString(cc_errorGetCode(_parser)));
+		}
+
 		return var;
 	} else {
 
@@ -112,8 +119,8 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len) 
 		var_s *args[CC_FUNC_NUMS_ARGS] = { NULL };
 		uint8_t args_count = 0;
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 
 		if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count)) {
 			CC_PRINT("ERROR: arguments error.\n");
@@ -179,17 +186,17 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 	char ch;
 
 	size_t value_len = 0;
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == ',') {
 			// dalsi argument
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 			continue;
 
 		}
@@ -227,7 +234,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			_args[*_args_count] = _var;
 			*_args_count = *_args_count + 1;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 			continue;
 		}
 
@@ -413,7 +420,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			} else {
 				// funkce nebo promenna
 
-				bufferGet(_parser, &ch);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '[') {
 					CC_PRINT("ERROR: not implemented '%c'!\n", ch);
@@ -440,9 +447,9 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 						return false;
 					}
 
-					bufferNext(_parser);
-					bufferSkipSpace(_parser);
-					bufferGet(_parser, &ch);
+					file_bufferNext(_parser->buffer);
+					file_bufferSkipSpace(_parser->buffer);
+					file_bufferGet(_parser->buffer, &ch);
 
 					// fixme tady hledat carku ','? kdyz ji odstranim?
 					if (!charin(ch, ",)")) {
@@ -544,7 +551,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			_args[*_args_count] = var;
 			*_args_count += 1;
 
-			bufferSkipSpace(_parser);
+			file_bufferSkipSpace(_parser->buffer);
 
 			continue;
 		}
@@ -562,7 +569,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			return false;
 		}
 
-	} // end - while (bufferValid(_parser)) {
+	} // end - while (file_bufferValid(_parser->buffer)) {
 
 	return false;
 }

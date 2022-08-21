@@ -163,6 +163,7 @@
 //
 ///////////////////////////
 
+#include "ccript/cc_log.h"
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>
@@ -210,7 +211,8 @@
  * @brief Funkce pro vypis do konzole.
  *
  */
-#define CONFIG_CC_PRINT(...)	printf(__VA_ARGS__)
+#define CONFIG_CC_PRINT(...)	printf("%s: ", LOG_TAG); \
+								printf(__VA_ARGS__)
 
 /**
  * @def CONFIG_CC_PRINT_COMMENT

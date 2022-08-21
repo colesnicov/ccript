@@ -397,7 +397,7 @@ void parseSkipNewLine(parser_s *_parser);
  *
  * @param _parser Ukazatel na parser.
  */
-void bufferSkipSpace(parser_s *_parser);
+//void bufferSkipSpace(parser_s *_parser);
 
 /**
  * @fn bool parseSkipComment(parser_s*)

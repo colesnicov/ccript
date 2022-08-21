@@ -15,7 +15,7 @@
  *
  */
 
-#include "ccript/cc_buffer.h"
+//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -34,13 +34,13 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 	char ch;
 	char ch_temp;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '\'') {
 		// prvni znak musi byt apostrof (')
 
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		ch_temp = ch;
 
@@ -51,14 +51,14 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 			// '\\'
 			// '\''
 
-			bufferNext(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '\'') {
 				// apostrof
 
-				bufferNext(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferNext(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '\'') {
 					// Konec komandy
@@ -81,8 +81,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 			else if (ch == '\\') {
 				// zpetne lomitko (\)
 
-				bufferNext(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferNext(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '\'') {
 					// Konec komandy
@@ -115,8 +115,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 
 				ch_temp = ch;
 
-				bufferNext(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferNext(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '\'') {
 					// Konec komandy
@@ -167,8 +167,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 		else {
 			// znak
 
-			bufferNext(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '\'' && ch_temp != '\\') {
 				// Konec komandy
@@ -226,7 +226,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '\'') {
 		if (!ParseValueChar(_parser, &fval_temp, &fval_temp_len)) {
@@ -239,14 +239,14 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 			return false;
 		}
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 	}
 
 	else if (ch == '(') {
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 		if (!parseVarArgsChar(_parser, ')', &fval_temp)) {
 			return false;
 		}
@@ -265,8 +265,8 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 			return false;
 		}
 
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '[') {
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -292,9 +292,9 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 				return false;
 			}
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch != ';') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -343,9 +343,9 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	}
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == _symbol_end) {
 		//konec vety
@@ -358,7 +358,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 		*_value = fval_temp;
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 		return true;
 
 	}

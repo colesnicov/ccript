@@ -15,15 +15,16 @@
  *
  */
 
-#include <ccript/cc_buffer.h>
-#include <ccript/cc_function.h>
-#include <ccript/cc_parser.h>
-#include <ccript/cc_types.h>
-#include <ccript/cc_var.h>
-#include <ccript/cc_var_ext.h>
-#include <ccript/common.h>
-#include <stdint.h>
 //#include "ccript/cc_buffer.h"
+#include "ccript/cc_configs.h"
+#include "ccript/cc_function.h"
+#include "ccript/cc_log.h"
+#include "ccript/cc_parser.h"
+#include "ccript/cc_types.h"
+#include "ccript/cc_var_ext.h"
+#include "ccript/cc_var.h"
+#include <stdint.h>
+////#include "ccript/cc_buffer.h"
 //#include "ccript/cc_function.h"
 //#include "ccript/cc_parser.h"
 //#include "ccript/cc_types.h"
@@ -117,11 +118,11 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 	var_s *args[CC_FUNC_NUMS_ARGS];
 	uint8_t args_count = 0;
 
-	bufferNext(_parser);
-	bufferSkipSpace(_parser);
+	file_bufferNext(_parser->buffer);
+	file_bufferSkipSpace(_parser->buffer);
 
 	if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count)) {
-		CC_PRINT("ERROR: arguments error.\n");
+		CC_PRINT("ERROR: arguments error 1.\n");
 		funcClearArguments(args, args_count);
 
 		return NULL;
@@ -129,7 +130,9 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 
 	// fixme nastavovat kod chyby!
 	if (_block->args_count != args_count) {
-		CC_PRINT("ERROR: number of arguments.\n");
+		CC_PRINT("ERROR: bad number of arguments.\n");
+		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
 		funcClearArguments(args, args_count);
 
 		return NULL;
@@ -138,7 +141,7 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 	size_t pos = parseGetPos(_parser);
 
 	_parser->buffer->offset = _block->pos_start;
-	bufferReload(_parser);
+	file_bufferReload(_parser->buffer);
 	cvector_s *vars = _parser->vars;
 	_parser->vars = NULL;
 
@@ -151,8 +154,9 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 	for (int i = 0; i < args_count; i++) {
 
 		if (_block->args[i]->type != args[i]->type) {
+			CC_PRINT("ERROR: bad arg '%d' for function '%s'.\n", i, _block->name);
 			parseSetErrorPos(_parser, pos);
-			parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
+			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
 			VarDeinit(_parser);
 			_parser->vars = vars;
 			funcClearArguments(args, args_count);
@@ -171,8 +175,6 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 			_parser->vars = vars;
 			funcClearArguments(args, args_count);
 			return NULL;
-
-			return NULL;
 		}
 	}
 
@@ -180,31 +182,27 @@ var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name, s
 
 	VarDeinit(_parser);
 	_parser->buffer->offset = pos;
-	bufferReload(_parser);
+	file_bufferReload(_parser->buffer);
 
 	_parser->vars = vars;
 
 	funcClearArguments(args, args_count);
 
 	if (_parser->error == CC_CODE_RETURN) {
-//		CC_PRINT("RET\n");
-//		VarDump(ret_var);
 		return ret_var;
 	}
 
 	VarDestroy(ret_var);
 
-	if (_parser->error == CC_CODE_OK) {
+//	if (_parser->error == CC_CODE_OK) {
+//
+//		return NULL;
+//	}
+//
+//	else {
+//		return NULL;
+//	}
 
-		CC_PRINT("RETT");
-		return NULL;
-	}
-
-	else {
-		return NULL;
-	}
-
-	CC_PRINT("RETTT");
 	return NULL;
 }
 
@@ -213,17 +211,17 @@ bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t 
 	char ch;
 
 	size_t value_len = 0;
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == ',') {
 			// dalsi argument
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 			continue;
 
 		}
@@ -250,7 +248,7 @@ bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t 
 			_args[*_args_count] = _var;
 			*_args_count += 1;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 			continue;
 		}
 
@@ -377,7 +375,7 @@ bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t 
 			} else {
 				// funkce nebo promenna
 
-				bufferGet(_parser, &ch);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '[') {
 					CC_PRINT("ERROR: not implemented '%c'!\n", ch);
@@ -404,9 +402,9 @@ bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t 
 //						return false;
 //					}
 //
-//					bufferNext(_parser);
-//					bufferSkipSpace(_parser);
-//					bufferGet(_parser, &ch);
+//					file_bufferNext(_parser->buffer);
+//					file_bufferSkipSpace(_parser->buffer);
+//					file_bufferGet(_parser->buffer, &ch);
 //
 //					// fixme tady hledat carku ','? kdyz ji odstranim?
 //					if (!charin(ch, ",)")) {
@@ -508,7 +506,7 @@ bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t 
 			_args[*_args_count] = var;
 			*_args_count += 1;
 
-			bufferSkipSpace(_parser);
+			file_bufferSkipSpace(_parser->buffer);
 
 			continue;
 		}
@@ -526,7 +524,7 @@ bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t 
 			return false;
 		}
 
-	} // end - while (bufferValid(_parser)) {
+	} // end - while (file_bufferValid(_parser->buffer)) {
 
 	return false;
 }
@@ -555,7 +553,7 @@ bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name
 
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != '(') {
 		CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
@@ -564,7 +562,7 @@ bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name
 		return false;
 	}
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 
 	cc_block_s *block = (cc_block_s*) CONFIG_CC_MALLOC(sizeof(cc_block_s));
 	if (block == NULL) {
@@ -585,10 +583,10 @@ bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name
 		return false;
 	}
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != '{') {
 		CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
@@ -601,7 +599,7 @@ bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name
 		return false;
 	}
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 	parseSkipNewLine(_parser);
 
 	block->pos_start = parseGetPos(_parser);
@@ -654,7 +652,7 @@ bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name
 		return false;
 	}
 
-	bufferGet(_parser, &ch);
+//	file_bufferGet(_parser->buffer, &ch);
 
 	return true;
 }
@@ -666,11 +664,11 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 	size_t var_type_len = 0;
 	uint8_t index = 0;
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (!isalpha(ch)) {
 			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
@@ -733,8 +731,8 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 			return false;
 		}
 
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (!isalpha(ch)) {
 			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
@@ -776,13 +774,13 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 		index++;
 		*_args_count = index;
 
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == ',') {
 			// dalsi argument
-			bufferNext(_parser);
-//			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+//			file_bufferSkipSpace(_parser->buffer);
 
 			continue;
 		}
@@ -799,7 +797,7 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 			return false;
 		}
 
-	} // end - while (bufferValid(_parser)) {
+	} // end - while (file_bufferValid(_parser->buffer)) {
 
 	return false;
 }
@@ -826,7 +824,7 @@ var_s* parseReturnArguments(parser_s *_parser) {
 
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	var_s *_var = NULL;
 
@@ -849,7 +847,7 @@ var_s* parseReturnArguments(parser_s *_parser) {
 			return NULL;
 		}
 
-//		bufferNext(_parser);
+//		file_bufferNext(_parser->buffer);
 
 	}
 
@@ -920,8 +918,6 @@ var_s* parseReturnArguments(parser_s *_parser) {
 
 		}
 
-		return _var;
-
 	}
 
 	else if (isalpha(ch)) {
@@ -953,8 +949,6 @@ var_s* parseReturnArguments(parser_s *_parser) {
 				return NULL;
 			}
 
-//			return _var;
-
 		}
 
 		else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0) {
@@ -970,14 +964,12 @@ var_s* parseReturnArguments(parser_s *_parser) {
 				return NULL;
 			}
 
-//			return _var;
-
 		}
 
 		else {
 			// funkce nebo promenna
 
-			bufferGet(_parser, &ch);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '[') {
 				CC_PRINT("ERROR: not implemented '%c'!\n", ch);
@@ -1004,9 +996,9 @@ var_s* parseReturnArguments(parser_s *_parser) {
 					return NULL;
 				}
 
-				bufferNext(_parser);
-				bufferSkipSpace(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				// fixme tady hledat carku ','? kdyz ji odstranim?
 				if (!charin(ch, ",)")) {
@@ -1016,11 +1008,9 @@ var_s* parseReturnArguments(parser_s *_parser) {
 					return NULL;
 				}
 
-//				return _var;
-
 			}
 
-			else if (ch == ';') { // FIXME TADY ASI HLEDAT ';'!
+			else if (ch == ';') {
 				// promenna
 
 				var_s *var = VarGet(_parser, var_name, var_name_len);
@@ -1100,8 +1090,6 @@ var_s* parseReturnArguments(parser_s *_parser) {
 					return NULL;
 				}
 
-//				return _var;
-
 			}
 
 			else {
@@ -1113,10 +1101,15 @@ var_s* parseReturnArguments(parser_s *_parser) {
 			}
 		}
 
-		bufferSkipSpace(_parser);
+		file_bufferSkipSpace(_parser->buffer);
 
-		return _var;
+	}
 
+	else if(ch == ';'){
+		CC_PRINT(" exit without return value '%c'.\n", ch);
+//		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+//		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return NULL;
 	}
 
 	else {
@@ -1126,7 +1119,7 @@ var_s* parseReturnArguments(parser_s *_parser) {
 		return NULL;
 	}
 
-	return NULL;
+	return _var;
 }
 
 ///

@@ -15,13 +15,13 @@
  *
  */
 
-#include <ccript/cc_buffer.h>
-#include <ccript/cc_configs.h>
-#include <ccript/cc_function.h>
-#include <ccript/cc_log.h>
-#include <ccript/cc_parser.h>
-#include <ccript/cc_types.h>
-#include <ccript/cc_var_ext.h>
+//#include "ccript/cc_buffer.h"
+#include "ccript/cc_configs.h"
+#include "ccript/cc_function.h"
+#include "ccript/cc_log.h"
+#include "ccript/cc_parser.h"
+#include "ccript/cc_types.h"
+#include "ccript/cc_var_ext.h"
 #include "ccript/cc_var.h"
 
 #include <stdbool.h>
@@ -38,9 +38,9 @@
 bool ParseDefineTypeInt(parser_s *_parser) {
 	char ch = '\0';
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isalpha(ch)) {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -72,8 +72,8 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 	}
 
-	bufferSkipSpace(_parser);
-	bufferGet(_parser, &ch);
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '=') {
 		// definice a prirazeni promenne
@@ -84,8 +84,8 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 
 		int ival = 0;
 		if (!parseVarArgsInt(_parser, ';', &ival)) {
@@ -108,7 +108,7 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -127,7 +127,7 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -161,7 +161,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (!isalnum(ch) && !charin(ch, "-(")) {
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -171,17 +171,17 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 		}
 	}
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		ival_temp = 0;
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '(') {
 			// zanoreni
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			if (!parseVarArgsInt(_parser, ')', &ival_temp)) {
 				return false;
@@ -224,8 +224,8 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
 			}
 
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '[') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -249,9 +249,9 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 					return false;
 				}
 
-				bufferNext(_parser);
-				bufferSkipSpace(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch != ';' && !charin(ch, "+-/*")) {
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -261,8 +261,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 				}
 
 				if (var->type != CC_TYPE_INT) {
-					CC_PRINT("ERROR: function '%s' return bad type '%s'.\n", value_name,
-							VarTypeToString(var->type));
+					CC_PRINT("ERROR: function '%s' returns bad type.\n", value_name);
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
 					VarDestroy(var);
@@ -275,7 +274,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 				}
 
 				VarDestroy(var);
-//				bufferNext(_parser);
+//				file_bufferNext(_parser->buffer);
 
 			}
 
@@ -319,41 +318,41 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 		}
 
 		{/* fixme toto je potreba?*/
-			bufferSkipSpace(_parser);
+			file_bufferSkipSpace(_parser->buffer);
 
-			bufferGet(_parser, &ch);
+			file_bufferGet(_parser->buffer, &ch);
 		}
 
 		if (ch == '+') {
 			last_op = OP_SUM;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 		if (ch == '-') {
 			last_op = OP_SUB;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 
 		else if (ch == '/') {
 			last_op = OP_DIV;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 
 		else if (ch == '*') {
 			last_op = OP_MUL;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 
 		else if (ch == _symbol_end) {
 			*_value = ival;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			return true;
 
@@ -374,9 +373,6 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 		}
 
 		else {
-
-			bufferGet(_parser, &ch);
-			CC_PRINT("ERROR: function return bad type '%c'.\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -388,7 +384,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 bool parseValueInt(parser_s *_parser, char *_value, size_t *_len) {
 	char ch;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isdigit(ch) && ch != '-') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -401,9 +397,9 @@ bool parseValueInt(parser_s *_parser, char *_value, size_t *_len) {
 
 	_value[i++] = ch;
 
-	while (bufferNext(_parser)) {
+	while (FILEBUFFER_OK == file_bufferNext(_parser->buffer)) {
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 		if (!isdigit(ch)) {
 			*_len = i;
 			return true;

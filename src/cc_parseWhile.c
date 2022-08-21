@@ -15,7 +15,7 @@
  *
  */
 
-#include <ccript/cc_buffer.h>
+//#include <ccript/cc_buffer.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_log.h>
@@ -36,7 +36,7 @@ var_s* parseWhile(parser_s *_parser) {
 
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != '(') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -54,12 +54,12 @@ var_s* parseWhile(parser_s *_parser) {
 		return NULL;
 	}
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 	parseSkipNewLine(_parser);
 
 	size_t pos_block_o = parseGetPos(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != '{') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -69,13 +69,13 @@ var_s* parseWhile(parser_s *_parser) {
 
 	uint8_t scope = _parser->depth;
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 		if (cond_passed) {
 
 // todo tady musim posunout o 1 dopredu? zda se ze to jinak nefunguje. mozna new line?
 // preskakuji znak '{'
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			_parser->depth++;
 			var_s *ret_var = parseBlock(_parser, '}');
@@ -97,8 +97,8 @@ var_s* parseWhile(parser_s *_parser) {
 
 				_parser->buffer->offset = pos_block_o;
 
-				bufferReload(_parser);
-				bufferNext(_parser);
+				file_bufferReload(_parser->buffer);
+				file_bufferNext(_parser->buffer);
 
 				if (!parserSkipBlock(_parser, '{', '}')) {
 					return NULL;
@@ -117,7 +117,7 @@ var_s* parseWhile(parser_s *_parser) {
 
 				_parser->buffer->offset = pos_condition_o;
 
-				bufferReload(_parser);
+				file_bufferReload(_parser->buffer);
 
 				if (!parseIfArguments(_parser, &cond_passed)) {
 					return NULL;
@@ -127,7 +127,7 @@ var_s* parseWhile(parser_s *_parser) {
 
 				_parser->buffer->offset = pos_block_o;
 
-				bufferReload(_parser);
+				file_bufferReload(_parser->buffer);
 
 				continue;
 
@@ -139,7 +139,7 @@ var_s* parseWhile(parser_s *_parser) {
 
 				_parser->buffer->offset = pos_condition_o;
 
-				bufferReload(_parser);
+				file_bufferReload(_parser->buffer);
 
 				if (!parseIfArguments(_parser, &cond_passed)) {
 					return NULL;
@@ -149,7 +149,7 @@ var_s* parseWhile(parser_s *_parser) {
 
 				_parser->buffer->offset = pos_block_o;
 
-				bufferReload(_parser);
+				file_bufferReload(_parser->buffer);
 
 				continue;
 
@@ -162,7 +162,7 @@ var_s* parseWhile(parser_s *_parser) {
 				return NULL;
 			}
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			return NULL;
 

@@ -17,7 +17,7 @@
 
 #include <ccript/ccript.h>
 #include "ccript/cc_parseIf.h"
-#include "ccript/cc_buffer.h"
+//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -47,12 +47,12 @@ bool parseIfArguments(parser_s *_parser, bool *_cond_passed) {
 	bool cond_result_left = true;
 	bool cond_result_right = false;
 
-	bufferNext(_parser);
-	bufferSkipSpace(_parser);
+	file_bufferNext(_parser->buffer);
+	file_bufferSkipSpace(_parser->buffer);
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '!') {
 			// negace
@@ -119,14 +119,14 @@ bool parseIfArguments(parser_s *_parser, bool *_cond_passed) {
 			}
 		}
 
-		bufferSkipSpace(_parser);
+		file_bufferSkipSpace(_parser->buffer);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '&') {
 
-			bufferNext(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 			if (ch == '&') {
 				// operator '&&'
 
@@ -177,15 +177,15 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg) {
 
 	bool negation = false;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '!') {
 
-		while (bufferNext(_parser)) {
+		while (FILEBUFFER_OK == file_bufferNext(_parser->buffer)) {
 			negation = !negation;
 
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch != '!') {
 				break;
@@ -255,9 +255,9 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg) {
 			{
 				// funkce nebo promenna
 
-				bufferSkipSpace(_parser);
+				file_bufferSkipSpace(_parser->buffer);
 
-				bufferGet(_parser, &ch);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '[') {
 					// pole ...
@@ -278,8 +278,8 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg) {
 						return false;
 					}
 
-					bufferNext(_parser);
-					bufferSkipSpace(_parser);
+					file_bufferNext(_parser->buffer);
+					file_bufferSkipSpace(_parser->buffer);
 
 					var_is_int = false;
 
@@ -413,16 +413,16 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 		return false;
 	}
 
-	bufferSkipSpace(_parser);
-	bufferGet(_parser, &ch);
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '=') {
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '=') {
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			float right_arg = 0;
 			if (!parseIfArg(_parser, &right_arg)) {
@@ -435,12 +435,12 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 	}
 
 	else if (ch == '!') {
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '=') {
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			float right_arg = 0;
 			if (!parseIfArg(_parser, &right_arg)) {
@@ -453,14 +453,14 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 	}
 
 	else if (ch == '<') {
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		float right_arg = 0;
 
 		if (ch == '=') {
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseIfArg(_parser, &right_arg)) {
 				return false;
@@ -470,7 +470,7 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 			return true;
 		}
 
-		bufferSkipSpace(_parser);
+		file_bufferSkipSpace(_parser->buffer);
 		if (!parseIfArg(_parser, &right_arg)) {
 			return false;
 		}
@@ -481,14 +481,14 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 	}
 
 	else if (ch == '>') {
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		float right_arg = 0;
 
 		if (ch == '=') {
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseIfArg(_parser, &right_arg)) {
 				return false;
@@ -498,7 +498,7 @@ bool parseIfPair(parser_s *_parser, bool *_cond_passed) {
 			return true;
 		} else {
 
-			bufferSkipSpace(_parser);
+			file_bufferSkipSpace(_parser->buffer);
 			if (!parseIfArg(_parser, &right_arg)) {
 				return false;
 			}
@@ -519,7 +519,7 @@ var_s* parseIf(parser_s *_parser) {
 
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != '(') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -533,10 +533,10 @@ var_s* parseIf(parser_s *_parser) {
 		return NULL;
 	}
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != '{') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -545,7 +545,7 @@ var_s* parseIf(parser_s *_parser) {
 	}
 
 	if (cond_passed) {
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		var_s *ret_var = parseBlock(_parser, '}');
 
@@ -570,16 +570,16 @@ var_s* parseIf(parser_s *_parser) {
 			return NULL;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 		parseSkipNewLine(_parser);
 
 		char _name[CONFIG_CC_STRING_LEN] = { '\0' };
 
 		size_t pos_total = 0;
 		size_t pos_f = 0;
-		while (bufferValid(_parser)) {
+		while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
-			bufferGet(_parser, &ch);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == 'e') {
 				pos_total = _parser->buffer->offset;
@@ -628,7 +628,7 @@ var_s* parseIf(parser_s *_parser) {
 					_parser->buffer->fpos = pos_f;
 					_parser->buffer->offset = pos_total;
 
-					bufferReload(_parser);
+					file_bufferReload(_parser->buffer);
 
 					// fixme tento radek zpusobuje problem? zakomentuj ho
 					parseSkipNewLine(_parser);
@@ -657,7 +657,7 @@ var_s* parseIf(parser_s *_parser) {
 
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == 'e') {
 
@@ -684,7 +684,7 @@ var_s* parseIf(parser_s *_parser) {
 
 				parseSkipNewLine(_parser);
 
-				bufferGet(_parser, &ch);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch != '{') {
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -693,7 +693,7 @@ var_s* parseIf(parser_s *_parser) {
 					return NULL;
 				}
 
-				bufferNext(_parser);
+				file_bufferNext(_parser->buffer);
 
 				_parser->depth++;
 				var_s *ret_var = parseBlock(_parser, '}');
@@ -717,7 +717,7 @@ var_s* parseIf(parser_s *_parser) {
 					return NULL;
 				}
 
-				bufferNext(_parser);
+				file_bufferNext(_parser->buffer);
 				parseSkipNewLine(_parser);
 
 				return NULL;
@@ -728,7 +728,7 @@ var_s* parseIf(parser_s *_parser) {
 				_parser->buffer->fpos = pos_f;
 				_parser->buffer->offset = pos_total;
 
-				bufferReload(_parser);
+				file_bufferReload(_parser->buffer);
 
 				parseSkipNewLine(_parser);
 
@@ -748,11 +748,11 @@ bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char) {
 	char ch = 0;
 	uint8_t depth = 1;
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '/') {
 			// komentar/operator
@@ -767,13 +767,13 @@ bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char) {
 		if (ch == _start_char) {
 			depth++;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 			continue;
 		}
 
 		else if (ch == _end_char) {
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 			if (depth > 1) {
 				depth--;
 				continue;
@@ -784,7 +784,7 @@ bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char) {
 			}
 
 		}
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 	}
 

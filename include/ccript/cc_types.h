@@ -19,6 +19,7 @@
 
 //#include <bits/types/FILE.h>
 
+#include <filebuffer/filebuffer.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -205,7 +206,7 @@ typedef enum cc_code_ {
 	 * @brief Kod chyby ktery signalizuje chybu cteni/zapisu souboru.
 	 *
 	 */
-	CC_CODE_IO, /**< Kod chyby ktery signalizuje chybu cteni/zapisu souboru. */
+	CC_CODE_IO, /**< Kod chyby ktery signalizuje chybu cteni/zapisu zasobniku/souboru. */
 
 	/**
 	 * @var CC_CODE_FUNC_NOT_DEFINED
@@ -255,6 +256,8 @@ typedef enum cc_code_ {
 	 *
 	 */
 	CC_CODE_VAR_BAD_TYPE, /**< Kod chyby ktery signalizuje pokus o pristup k datum promenne jineho typu. */
+
+	CC_CODE_ARGS_BAD_TYPE, /**< Kod chyby ktery signalizuje pokus o pristup k datum promenne jineho typu. */
 
 	/**
 	 * @var CC_CODE_VAR_EXISTS
@@ -676,7 +679,8 @@ typedef struct parser_ {
 	 * @var buffer_s *buffer
 	 * @brief Ukazatel na strukturu zasobniku
 	 */
-	buffer_s *buffer;
+//	buffer_s *buffer;
+	filebuffer_s *buffer;
 
 } parser_s;
 

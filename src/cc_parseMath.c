@@ -15,12 +15,19 @@
  *
  */
 
-#include <ccript/cc_buffer.h>
-#include <ccript/cc_configs.h>
-#include <ccript/cc_function.h>
-#include <ccript/cc_log.h>
-#include <ccript/cc_parser.h>
-#include <ccript/cc_types.h>
+//#include <ccript/cc_buffer.h>
+//#include <ccript/cc_configs.h>
+//#include <ccript/cc_function.h>
+//#include <ccript/cc_log.h>
+//#include <ccript/cc_parser.h>
+//#include <ccript/cc_types.h>
+#include <filebuffer/filebuffer.h>
+#include "ccript/cc_configs.h"
+#include "ccript/cc_function.h"
+#include "ccript/cc_log.h"
+#include "ccript/cc_parser.h"
+#include "ccript/cc_types.h"
+#include "ccript/cc_var_ext.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -41,20 +48,20 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 	char ch = 0;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '-') {
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '-') {
 			// Dekrementace promenne:
 			// --var;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseIdentifier(_parser, _var_name, &_var_name_len)) {
 				return false;
@@ -67,8 +74,8 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 			}
 
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch != ';') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -154,20 +161,20 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 	// ++var;?
 
 	char ch = 0;
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '+') {
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '+') {
 			// Dekrementace promenne:
 			// ++var;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseIdentifier(_parser, _var_name, &_var_name_len)) {
 				return false;
@@ -180,8 +187,8 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 			}
 
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch != ';') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -263,23 +270,23 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 
 bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name_len) {
 	char ch = 0;
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '-') {
 		// Decrementace promenne?
 		// var++;
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '-') {
 			// Decrementace promenne:
 			// var++;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch != ';') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -350,9 +357,9 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			// prirazeni promenne:
 			// var += 20;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -444,23 +451,23 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name_len) {
 	char ch = 0;
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '+') {
 		// inkrementace promenne?
 		// var++;?
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '+') {
 			// Inkrementace promenne:
 			// var++;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch != ';') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -535,9 +542,9 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			// prirazeni promenne:
 			// var += 20;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -649,22 +656,22 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_len) {
 
 	char ch = 0;
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '*') {
 		// Nasobeni promenne?
 		// var *= 20;
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '=') {
 			// prirazeni promenne:
 			// var *= 20;
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -751,20 +758,20 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_len) {
 
 	char ch = 0;
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '/') {
 		// Deleni promenne?
 		// var /= 20;
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '=') {
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {

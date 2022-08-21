@@ -15,7 +15,7 @@
  *
  */
 
-#include <ccript/cc_buffer.h>
+//#include <ccript/cc_buffer.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_log.h>
@@ -25,6 +25,7 @@
 #include <ccript/cc_types.h>
 #include <ccript/common.h>
 #include <ccript/cc_var.h>
+#include <filebuffer/filebuffer.h>
 #include "ccript/ccript.h"
 
 #include <stdbool.h>
@@ -61,32 +62,35 @@ void cc_deinit(parser_s *_parser) {
 	blockDeinit(_parser);
 	VarDeinit(_parser);
 	funcDeinit(_parser);
-	bufferClose(_parser);
+//	file_bufferClose(_parser->buffer);
+//	bufferClose(_parser);
 }
 
 bool cc_parse(parser_s *_parser, const char *_path) {
 	_parser->error = CC_CODE_OK;
 	_parser->error_pos = 0;
 
-	if (!bufferInit(_parser, _path, CONFIG_CC_BUFFER_LEN)) {
+	if (FILEBUFFER_OK != file_bufferInit(&_parser->buffer, _path, CONFIG_CC_BUFFER_LEN)) {
+		parseSetError(_parser, CC_CODE_IO);
 		return false;
 	}
 
 	var_s *ret_var = parseBlock(_parser, 0);
 	VarDestroy(ret_var);
 
+	VarClean(_parser);
+
 	if (_parser->error >= CC_CODE_ERROR && _parser->error_pos >= _parser->buffer->fsize) {
 		if (_parser->error_pos >= _parser->buffer->fsize) {
 			// Kdyz jsme na konci souboru, neni to chyba
 			_parser->error = CC_CODE_OK;
 		} else {
+			file_bufferClose(_parser->buffer);
 			return false;
 		}
 	}
 
-	VarClean(_parser);
-	bufferClose(_parser);
-
+	file_bufferClose(_parser->buffer);
 	return true;
 }
 

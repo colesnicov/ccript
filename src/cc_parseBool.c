@@ -15,7 +15,7 @@
  *
  */
 
-#include "ccript/cc_buffer.h"
+//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -38,8 +38,8 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 
 	char ch = '\0';
 
-	bufferSkipSpace(_parser);
-	bufferGet(_parser, &ch);
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isalpha(ch)) {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -72,14 +72,14 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 		}
 	}
 
-	bufferSkipSpace(_parser);
-	bufferGet(_parser, &ch);
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '=') {
 		// definice a prirazeni promenne
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 
 		bool ival = 0;
 		if (!parseVarArgsBool(_parser, ';', &ival)) {
@@ -102,7 +102,7 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -119,7 +119,7 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -142,19 +142,19 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 	uint8_t last_op = 0;
 	char ch = 0;
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 		memset(value_name, '\0', CC_KEYWORD_LEN);
 		ival_temp = 0;
 		negation = 0;
 
 		parseSkipNewLine(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 		if (ch == '!') {
 			// negace
 			negation = true;
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 		}
 
@@ -174,8 +174,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 		}
 
 		else if (ch == '(') {
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseVarArgsBool(_parser, ')', &ival_temp)) {
 				return false;
@@ -194,8 +194,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 
 			}
 
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (value_len == 4 && strncmp(value_name, "true", value_len) == 0) {
 				ival_temp = 1;
@@ -228,10 +228,11 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 					return false;
 				}
 
-				bufferNext(_parser);
-				bufferSkipSpace(_parser);
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
 
-				if (!bufferGet(_parser, &ch) || (ch != ';' && !charin(ch, "|&"))) {
+				if (FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch)
+						|| (ch != ';' && !charin(ch, "|&"))) {
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					VarDestroy(var);
@@ -307,8 +308,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 			return false;
 		}
 
-		bufferSkipSpace(_parser); // fixme je toto potreba?
-		bufferGet(_parser, &ch);
+		file_bufferSkipSpace(_parser->buffer); // fixme je toto potreba?
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (negation) {
 			ival_temp = !ival_temp;
@@ -330,7 +331,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 			}
 
 			*_value = ival;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 			return true;
 
 		}
@@ -363,8 +364,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 			}
 
 			last_op = OP_OR;
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 			continue;
 		}
 
@@ -383,8 +384,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 			}
 
 			last_op = OP_AND;
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 			continue;
 		}
 
@@ -402,7 +403,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len) {
 	char ch;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isdigit(ch) && ch != '-') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -417,7 +418,8 @@ bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len) {
 
 	while (true) {
 
-		if (bufferNext(_parser) && bufferGet(_parser, &ch)) {
+		if (FILEBUFFER_OK == file_bufferNext(_parser->buffer)
+				&& FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch)) {
 
 			if (!isalpha(ch)) {
 				*_value_len = i;

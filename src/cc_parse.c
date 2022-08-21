@@ -18,7 +18,7 @@
 #include <ccript/cc_function.h>
 #include <ccript/cc_parseIf.h>
 #include <ccript/cc_parseWhile.h>
-#include "ccript/cc_buffer.h"
+//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_parser.h"
 #include "ccript/cc_types.h"
@@ -42,13 +42,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 	parseSkipNewLine(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	uint8_t scope = _parser->depth;
 
 	var_s *ret_var = NULL;
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 //		ch = 0; // fixme toto asi netreba. kdyz dojde k chybe s IO tak se musi ukoncit!?
 		memset(keyword_name, '\0', CC_KEYWORD_LEN);
@@ -56,7 +56,11 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 		parseSkipNewLine(_parser);
 
-		bufferGet(_parser, &ch);
+		if (FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch)) {
+			parseSetErrorPos(_parser, parseGetPos(_parser));
+			parseSetError(_parser, CC_CODE_IO);
+			return NULL;
+		}
 
 		if (isdigit(ch)) {
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -78,7 +82,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 		if (ch == '{') {
 			// Zrejme zanoreny blok
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			_parser->depth++;
 
@@ -88,7 +92,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 			parseClearScope(_parser);
 
 			if (_parser->error == CC_CODE_OK) {
-				bufferNext(_parser);
+				file_bufferNext(_parser->buffer);
 
 				continue;
 			}
@@ -126,7 +130,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 				return NULL;
 			}
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 
@@ -140,7 +144,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 				return NULL;
 			}
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 
@@ -162,7 +166,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 			}
 
-			bufferSkipSpace(_parser);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (keyword_len == 4 && strncmp(keyword_name, "bool", keyword_len) == 0) {
 				if (ParseDefineTypeBool(_parser, keyword_name)) {
@@ -234,7 +238,9 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 //					CC_PRINT("\n\nNEJAKY RETURN z if\n\n");
 					return ret_var;
 				}
+
 				VarDestroy(ret_var);
+
 				if (_parser->error == CC_CODE_BREAK) {
 					// muzu se nachazet ve smycce
 					// break
@@ -297,6 +303,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 			else if (keyword_len == 5 && strncmp(keyword_name, "break", keyword_len) == 0) {
 				if (!_parser->inLoop) {
 					parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
+					parseSetErrorPos(_parser, parseGetPos(_parser));
 
 					return NULL;
 				}
@@ -309,6 +316,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 			else if (keyword_len == 8 && strncmp(keyword_name, "continue", keyword_len) == 0) {
 				if (!_parser->inLoop) {
 					parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
+					parseSetErrorPos(_parser, parseGetPos(_parser));
 
 					return NULL;
 				}
@@ -329,8 +337,8 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 			else {
 				// promenna nebo funkce
 
-				bufferSkipSpace(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferSkipSpace(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '=') {
 					// prirazeni promenne
@@ -361,9 +369,9 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 						return NULL;
 					}
 
-					bufferNext(_parser);
-					bufferSkipSpace(_parser);
-					bufferGet(_parser, &ch);
+					file_bufferNext(_parser->buffer);
+					file_bufferSkipSpace(_parser->buffer);
+					file_bufferGet(_parser->buffer, &ch);
 
 					if (ch != ';') {
 						parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -372,7 +380,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 						return NULL;
 					}
 
-					bufferNext(_parser);
+					file_bufferNext(_parser->buffer);
 
 					continue;
 				}
@@ -385,7 +393,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 						return NULL;
 					}
 
-					bufferNext(_parser);
+					file_bufferNext(_parser->buffer);
 
 					continue;
 
@@ -399,7 +407,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 						return NULL;
 					}
 
-					bufferNext(_parser);
+					file_bufferNext(_parser->buffer);
 
 					continue;
 
@@ -413,7 +421,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 						return NULL;
 					}
 
-					bufferNext(_parser);
+					file_bufferNext(_parser->buffer);
 
 					continue;
 
@@ -427,7 +435,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 						return NULL;
 					}
 
-					bufferNext(_parser);
+					file_bufferNext(_parser->buffer);
 
 					continue;
 
@@ -442,7 +450,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 			}
 
 		} else if (_parser->buffer->fsize > _parser->error_pos) {
-			CC_PRINT("ERROR: unexpected symbol '%c'\n", ch);
+			CC_PRINT("ERROR: unexpected symbol 2 '%c'\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			return NULL;
 		} else {
@@ -463,8 +471,8 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	parseSetErrorPos(_parser, parseGetPos(_parser));
 
-	bufferNext(_parser);
-	bufferSkipSpace(_parser);
+	file_bufferNext(_parser->buffer);
+	file_bufferSkipSpace(_parser->buffer);
 
 	var_s *var = VarGet(_parser, _var_name, _var_len);
 	if (var == NULL) {
@@ -485,7 +493,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -502,7 +510,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -519,7 +527,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -535,7 +543,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -552,7 +560,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -570,7 +578,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -602,12 +610,12 @@ void parseSetError(parser_s *_parser, cc_code_t _error) {
 bool parseSkipComment(parser_s *_parser) {
 	char ch = 0;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '/') {
 
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '/') {
 			// komentar
@@ -617,12 +625,12 @@ bool parseSkipComment(parser_s *_parser) {
 			size_t len = 0;
 #endif
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
-			while (bufferValid(_parser)) {
+			while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
-				bufferGet(_parser, &ch);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch == '\n') {
 					// konec radku
@@ -632,9 +640,9 @@ bool parseSkipComment(parser_s *_parser) {
 					memset(buf, 0, CC_COMMENT_SIZE);
 #endif
 
-					bufferNext(_parser);
-					bufferSkipSpace(_parser);
-					bufferGet(_parser, &ch);
+					file_bufferNext(_parser->buffer);
+					file_bufferSkipSpace(_parser->buffer);
+					file_bufferGet(_parser->buffer, &ch);
 
 					if (ch == '/') {
 						return parseSkipComment(_parser);
@@ -653,7 +661,7 @@ bool parseSkipComment(parser_s *_parser) {
 				buf[len++] = ch;
 #endif
 
-				bufferNext(_parser);
+				file_bufferNext(_parser->buffer);
 			}
 
 		}
@@ -669,36 +677,37 @@ bool parseSkipComment(parser_s *_parser) {
 void parseSkipNewLine(parser_s *_parser) {
 	char ch = 0;
 
-	while (bufferGet(_parser, &ch)) {
+	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch)) {
 		if (ch == '\n' || isspace(ch)) {
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 		} else {
 			break;
 		}
 	}
 }
 
-void bufferSkipSpace(parser_s *_parser) {
-	char ch = 0;
-	while (bufferGet(_parser, &ch)) {
-		if (isspace(ch)) {
-			_parser->buffer->fpos++;
-		} else {
-			break;
-		}
-	}
-}
+//void bufferSkipSpace(parser_s *_parser) {
+//	char ch = 0;
+//	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch)) {
+//		if (isspace(ch)) {
+//			_parser->buffer->fpos++;
+//		} else {
+//			break;
+//		}
+//	}
+//}
 
 bool parseIdentifier(parser_s *_parser, char *_name, size_t *_len) {
 
 	size_t i = 0;
 	char ch = 0;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	while (isalpha(ch) || isdigit(ch) || ch == '_') {
 		_name[i++] = ch;
-		if (!bufferNext(_parser) || !bufferGet(_parser, &ch)) {
+		if (FILEBUFFER_OK != file_bufferNext(_parser->buffer)
+				|| FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch)) {
 			*_len = 0;
 			return false;
 		}
@@ -710,11 +719,11 @@ bool parseIdentifier(parser_s *_parser, char *_name, size_t *_len) {
 
 bool parseVarDelete(parser_s *_parser, char *_var_name) {
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
 	char ch = '\0';
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isalpha(ch)) {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -735,9 +744,9 @@ bool parseVarDelete(parser_s *_parser, char *_var_name) {
 		return false;
 	}
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch != ';') {
 		parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -745,7 +754,7 @@ bool parseVarDelete(parser_s *_parser, char *_var_name) {
 		return false;
 	}
 
-	bufferNext(_parser);
+	file_bufferNext(_parser->buffer);
 
 	return VarFindAndDestroy(_parser, var_name, var_name_len);
 }

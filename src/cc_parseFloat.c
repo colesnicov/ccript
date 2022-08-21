@@ -15,7 +15,7 @@
  *
  */
 
-#include "ccript/cc_buffer.h"
+//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -38,9 +38,9 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 	char ch = '\0';
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isalpha(ch)) {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -71,15 +71,15 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 	}
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '=') {
 		// definice promenne a prirazeni
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 
 		float fval = 0;
 		if (!parseVarArgsFloat(_parser, ';', &fval)) {
@@ -102,7 +102,7 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -119,7 +119,7 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -140,12 +140,12 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 	uint8_t last_op = 0;
 	char ch = 0;
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		fval_temp = 0.0f;
 
 		parseSkipNewLine(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (isdigit(ch) || ch == '-' || ch == '.') {
 			// cislo
@@ -165,8 +165,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 			fval_temp = atof(value_name);
 
 		} else if (ch == '(') {
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseVarArgsFloat(_parser, ')', &fval_temp)) {
 				return false;
@@ -185,9 +185,9 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			}
 
-			bufferSkipSpace(_parser);
+			file_bufferSkipSpace(_parser->buffer);
 
-			bufferGet(_parser, &ch);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '[') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -213,10 +213,10 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 					return false;
 				}
 
-				bufferNext(_parser);
-				bufferSkipSpace(_parser);
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
 
-				bufferGet(_parser, &ch);
+				file_bufferGet(_parser->buffer, &ch);
 
 //				if (ch != ';' && !charin(ch, "+-/*")) {
 				if (ch != _symbol_end && !charin(ch, "+-/*")) {
@@ -259,8 +259,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 		}
 
-		bufferSkipSpace(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferSkipSpace(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == _symbol_end) {
 			if (last_op == OP_SUM) {
@@ -276,7 +276,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 			}
 
 			*_value = fval;
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			return true;
 
@@ -311,7 +311,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			last_op = OP_SUM;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
@@ -333,7 +333,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			last_op = OP_SUB;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 
@@ -355,7 +355,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			last_op = OP_DIV;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 
@@ -377,7 +377,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			last_op = OP_MUL;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 
 			continue;
 
@@ -397,7 +397,7 @@ bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *
 	char ch;
 	bool hasDot = false;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isdigit(ch) && ch != '-' && ch != '.') {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -410,10 +410,10 @@ bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *
 
 	_value[i++] = ch;
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
-		bufferNext(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferNext(_parser->buffer);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (!isdigit(ch)) {
 			if (ch == '.') {

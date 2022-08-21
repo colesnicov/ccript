@@ -15,8 +15,7 @@
  *
  */
 
-
-#include <ccript/cc_buffer.h>
+//#include <ccript/cc_buffer.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_log.h>
@@ -33,9 +32,9 @@
 bool ParseDefineTypeString(parser_s *_parser) {
 	char ch = '\0';
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isalpha(ch)) {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -67,9 +66,9 @@ bool ParseDefineTypeString(parser_s *_parser) {
 
 	}
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '=') {
 		// definice a prirazeni promenne
@@ -80,8 +79,8 @@ bool ParseDefineTypeString(parser_s *_parser) {
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 
 		char fval[CONFIG_CC_STRING_LEN] = { '\0' };
 		size_t len = 0;
@@ -105,7 +104,7 @@ bool ParseDefineTypeString(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -122,7 +121,7 @@ bool ParseDefineTypeString(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -145,11 +144,11 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 	//  '[' definice pole
 	//  nebo chyba?
 
-	bufferSkipSpace(_parser);
+	file_bufferSkipSpace(_parser->buffer);
 
 	char ch = '\0';
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (!isalpha(ch)) {
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -181,8 +180,8 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 
 	}
 
-	bufferSkipSpace(_parser);
-	bufferGet(_parser, &ch);
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '=') {
 		// definice a prirazeni promenne
@@ -193,8 +192,8 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-		bufferNext(_parser);
-		bufferSkipSpace(_parser);
+		file_bufferNext(_parser->buffer);
+		file_bufferSkipSpace(_parser->buffer);
 
 		char fval = 0;
 		if (!parseVarArgsChar(_parser, ';', &fval)) {
@@ -217,7 +216,7 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -234,7 +233,7 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 			return false;
 		}
 
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
 		return true;
 
@@ -252,15 +251,15 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 	char ch;
 	char ch_last = 0;
 
-	bufferSkipSpace(_parser);
-	bufferGet(_parser, &ch);
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
 
 	if (ch == '"') {
 
 		memset(_value, '\0', CC_VALUE_STRING_LEN);
-		bufferNext(_parser);
+		file_bufferNext(_parser->buffer);
 
-		while (bufferValid(_parser)) {
+		while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 			if (len >= CC_VALUE_STRING_LEN) {
 				parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
@@ -268,7 +267,7 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 				return false;
 			}
 
-			bufferGet(_parser, &ch);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch_last == '\\') {
 
@@ -306,7 +305,7 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 			else if (ch_last != '\\' && ch == '"') {
 				// Konec komandy
 
-				bufferNext(_parser);
+				file_bufferNext(_parser->buffer);
 
 				*_value_len = len;
 				return true;
@@ -324,7 +323,7 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len) {
 				ch_last = ch;
 			}
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 		}
 		parseSetError(_parser, CC_CODE_LOGIC);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -353,14 +352,14 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 	char ch = 0;
 
-	bufferGet(_parser, &ch);
+	file_bufferGet(_parser->buffer, &ch);
 
-	while (bufferValid(_parser)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
 		memset(fval_temp, '\0', CC_VALUE_STRING_LEN);
 
 		parseSkipNewLine(_parser);
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '"' || ch == '\'') {
 			if (!ParseValueString(_parser, fval_temp, &fval_temp_len)) {
@@ -377,8 +376,8 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 		else if (ch == '(') {
 
-			bufferNext(_parser);
-			bufferSkipSpace(_parser);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
 			if (!parseVarArgsString(_parser, ')', fval_temp, &fval_temp_len)) {
 				return false;
 			}
@@ -398,8 +397,8 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 			}
 
-			bufferSkipSpace(_parser);
-			bufferGet(_parser, &ch);
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '[') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -425,9 +424,9 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 					return false;
 				}
 
-				bufferNext(_parser);
-				bufferSkipSpace(_parser);
-				bufferGet(_parser, &ch);
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
 
 				if (ch != ';' && !charin(ch, "+")) {
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -496,9 +495,9 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 		}
 
-		bufferSkipSpace(_parser);
+		file_bufferSkipSpace(_parser->buffer);
 
-		bufferGet(_parser, &ch);
+		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == _symbol_end) {
 
@@ -512,7 +511,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 			*_value_len = fval_temp_len;
 
-			bufferNext(_parser);
+			file_bufferNext(_parser->buffer);
 			return true;
 
 		}
