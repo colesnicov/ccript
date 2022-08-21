@@ -38,7 +38,7 @@ while(1)
 		break;
 	}
 
-	println(castTo("string", Fibonacci(i)));
+	println(cast("string", Fibonacci(i)));
 
 	c++;
 	i++;
@@ -55,7 +55,7 @@ while(1)
 		break;
 	}
 
-	println(castTo("string", Fibonacci2(i)));
+	println(cast("string", Fibonacci2(i)));
 
 	c++;
 	i++;

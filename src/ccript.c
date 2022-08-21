@@ -219,6 +219,106 @@ void cc_abort(parser_s *_parser) {
 	_parser->error = CC_CODE_ABORT;
 }
 
+void cc_varDestroy(var_s *_var) {
+	VarDestroy(_var);
+}
+
+cc_code_t cc_varGetBool(var_s *_var, bool *_val) {
+	if (_var->type != CC_TYPE_BOOL) {
+		return CC_CODE_VAR_BAD_TYPE;
+	}
+
+	if (_var->valid == false) {
+		return CC_CODE_VAR_NOT_ASSIGNED;
+	}
+
+	*_val = *((bool*) (_var->data));
+
+	return CC_CODE_OK;
+}
+
+cc_code_t cc_varGetInt(var_s *_var, int *_val) {
+	if (_var->type != CC_TYPE_INT) {
+		return CC_CODE_VAR_BAD_TYPE;
+	}
+
+	if (_var->valid == false) {
+		return CC_CODE_VAR_NOT_ASSIGNED;
+	}
+
+	*_val = *((int*) (_var->data));
+
+	return CC_CODE_OK;
+
+}
+
+cc_code_t cc_varGetLong(var_s *_var, long *_val) {
+	if (_var->type != CC_TYPE_LONG) {
+		return CC_CODE_VAR_BAD_TYPE;
+	}
+
+	if (_var->valid == false) {
+		return CC_CODE_VAR_NOT_ASSIGNED;
+	}
+
+	*_val = *((long*) (_var->data));
+
+	return CC_CODE_OK;
+
+}
+
+cc_code_t cc_varGetFloat(var_s *_var, float *_val) {
+	if (_var->type != CC_TYPE_FLOAT) {
+		return CC_CODE_VAR_BAD_TYPE;
+	}
+
+	if (_var->valid == false) {
+		return CC_CODE_VAR_NOT_ASSIGNED;
+	}
+
+	*_val = *((float*) (_var->data));
+
+	return CC_CODE_OK;
+
+}
+
+cc_code_t cc_varGetChar(var_s *_var, char *_val) {
+	if (_var->type != CC_TYPE_CHAR) {
+		return  CC_CODE_VAR_BAD_TYPE;
+	}
+
+	if (_var->valid == false) {
+		return CC_CODE_VAR_NOT_ASSIGNED;
+	}
+
+	memcpy(_val, _var->data,  sizeof(char));
+//	_val[0] = ((char*) (_var->data))[0];
+	return true;
+
+}
+
+cc_code_t cc_varGetString(var_s *_var, char *_val, size_t *_len) {
+	if (_var->type != CC_TYPE_STRING) {
+		return CC_CODE_VAR_BAD_TYPE;
+	}
+
+	if (_var->valid == false) {
+		return CC_CODE_VAR_NOT_ASSIGNED;
+	}
+
+	*_len = strlen((char*) _var->data);
+
+	if (*_len > CC_VALUE_STRING_LEN) {
+		CC_PRINT("ERROR: string is too long\n");
+
+		return CC_CODE_STRING_TOO_LONG;
+	}
+
+	memcpy(_val, _var->data, *_len * sizeof(char));
+
+	return true;
+
+}
 ///
 ///
 ///

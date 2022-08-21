@@ -638,7 +638,8 @@ bool VarValueGetChar(parser_s *_parser, var_s *_var, char *_char) {
 		return false;
 	}
 
-	_char[0] = ((char*) (_var->data))[0];
+	memcpy(_char, _var->data,  sizeof(char));
+//	_char[0] = ((char*) (_var->data))[0];
 	return true;
 }
 

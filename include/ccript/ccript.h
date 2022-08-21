@@ -129,6 +129,15 @@ size_t cc_errorGetPos(parser_s *_parser);
  */
 const char* cc_errorToString(cc_code_t _err_code);
 
+void cc_varDestroy(var_s *_var);
+
+cc_code_t cc_varGetBool(var_s *_var, bool *_val);
+cc_code_t cc_varGetInt(var_s *_var, int *_val);
+cc_code_t cc_varGetLong(var_s *_var, long *_val);
+cc_code_t cc_varGetFloat(var_s *_var, float *_val);
+cc_code_t cc_varGetChar(var_s *_var, char*);
+cc_code_t cc_varGetString(var_s *_var, char*, size_t *_len);
+
 #ifdef __cplusplus
 }
 #endif

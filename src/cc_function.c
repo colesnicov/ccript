@@ -144,7 +144,6 @@ fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len) {
 
 	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++) {
 		handler = cvector_get(_parser->funcs, i);
-
 		if (_name_len == strlen(handler->name) && strncmp(_name, handler->name, _name_len) == 0) {
 			return handler;
 		}

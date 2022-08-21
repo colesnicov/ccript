@@ -67,22 +67,28 @@ extern "C" int main(int argc, char **argv) {
 		return 2;
 	}
 
-	cc_registerFunction(&parser, "dump", 4, stdlib_dump, NULL);
-	cc_registerFunction(&parser, "millis", 6, stdlib_millis, NULL);
-	cc_registerFunction(&parser, "sleep", 5, stdlib_sleep, NULL);
-	cc_registerFunction(&parser, "exit", 5, stdlib_exit, NULL);
-	cc_registerFunction(&parser, "ccDebugInfo", 11, stdlib_DebugInfo, NULL);
-	cc_registerFunction(&parser, "castTo", 4, stdlib_cast, NULL);
-	cc_registerFunction(&parser, "print", 5, stdlib_print, NULL);
-	cc_registerFunction(&parser, "println", 7, stdlib_println, NULL);
-	cc_registerFunction(&parser, "system", 6, stdlib_system, NULL);
-	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen, NULL);
-	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat, NULL);
+	cc_stdlib_registrate(&parser, NULL);
+//	cc_registerFunction(&parser, "dump", 4, stdlib_dump, NULL);
+//	cc_registerFunction(&parser, "millis", 6, stdlib_millis, NULL);
+//	cc_registerFunction(&parser, "sleep", 5, stdlib_sleep, NULL);
+//	cc_registerFunction(&parser, "exit", 5, stdlib_exit, NULL);
+//	cc_registerFunction(&parser, "ccDebugInfo", 11, stdlib_DebugInfo, NULL);
+//	cc_registerFunction(&parser, "castTo", 4, stdlib_cast, NULL);
+//	cc_registerFunction(&parser, "print", 5, stdlib_print, NULL);
+//	cc_registerFunction(&parser, "println", 7, stdlib_println, NULL);
+//	cc_registerFunction(&parser, "system", 6, stdlib_system, NULL);
+//	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen, NULL);
+//	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat, NULL);
 
-	var_s * var = cc_parse(&parser, fileName);
+	var_s *var = cc_parse(&parser, fileName);
 
-	VarDump(var);
-	VarDestroy(var);
+	if (var != NULL) {
+		int ret = 0;
+		cc_varGetInt(var, &ret);
+		CC_PRINT("script returns '%d'\n", ret);
+	}
+
+	cc_varDestroy(var);
 
 	if (cc_errorHas(&parser)) {
 		CC_PRINT("script fail at position '%lu' with code: '%s(%d)'\n", cc_errorGetPos(&parser),

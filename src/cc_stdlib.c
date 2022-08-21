@@ -29,11 +29,11 @@
 #include <float.h>
 #include <string.h>
 
-bool stdlib_registrate(parser_s *_parser, void *_args) {
+bool cc_stdlib_registrate(parser_s *_parser, void *_args) {
 	bool ret = true;
-	ret &= cc_registerFunction(_parser, "dump", 4, stdlib_dump, _args);
-	ret &= cc_registerFunction(_parser, "millis", 6, stdlib_millis, _args);
-	ret &= cc_registerFunction(_parser, "sleep", 5, stdlib_sleep, _args);
+	ret &= cc_registerFunction(_parser, "dump", 4, stdlib_dump, _args); // fixme toto neni soucasti 'STD'
+	ret &= cc_registerFunction(_parser, "millis", 6, stdlib_millis, _args); // fixme toto neni soucasti 'STD'
+	ret &= cc_registerFunction(_parser, "sleep", 5, stdlib_sleep, _args); // fixme toto neni soucasti 'STD'
 	ret &= cc_registerFunction(_parser, "exit", 5, stdlib_exit, _args);
 	ret &= cc_registerFunction(_parser, "cast", 4, stdlib_cast, _args);
 	ret &= cc_registerFunction(_parser, "print", 5, stdlib_print, _args);
@@ -351,8 +351,7 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%.*f",
 			CONFIG_CC_FLOAT_EXP_LEN, *(float*) (_vars[i]->data));
 		} else if (_vars[i]->type == CC_TYPE_INT) {
-			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%d",
-					*(int*) (_vars[i]->data));
+			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%d", *(int*) (_vars[i]->data));
 		} else if (_vars[i]->type == CC_TYPE_STRING) {
 			len = strlen(_vars[i]->data);
 			memcpy(buf2, _vars[i]->data, len);
