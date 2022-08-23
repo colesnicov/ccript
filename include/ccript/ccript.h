@@ -16,9 +16,7 @@
  */
 
 /**
- * @todo toto float1 = float2 na konci chybi strednik ';', vraci spatnou pozici chyby
- * @todo toto float1 = float2+10 na konci chybi strednik ';', vraci spatnou pozici chyby
- * @todo toto int int2 = 22 na konci chybi strednik ';', vraci spatnou chybu
+ * @todo toto float l =  na konci chybi 'neco' a strednik ';', vraci spatnou chybu
  */
 
 #pragma once
@@ -129,13 +127,77 @@ size_t cc_errorGetPos(parser_s *_parser);
  */
 const char* cc_errorToString(cc_code_t _err_code);
 
+/**
+ * @fn void cc_varDestroy(var_s*)
+ * @brief Odstrani promennou.
+ * @details Toto je potreba kdyz skripta vraci nejakou hodnotu
+ *
+ * @param _var Ukazatel na promennou
+ */
 void cc_varDestroy(var_s *_var);
-
+/**
+ * @fn cc_code_t cc_varGetBool(var_s*, bool*)
+ * @brief Ziska boolean z promenne vracene skriptou.
+ *
+ * @param _var Ukazatel na promennou.
+ * @param _val Sem bude zapsana hodnota
+ * @return CC_CODE_OK nebo jiny v pripade chyby
+ */
 cc_code_t cc_varGetBool(var_s *_var, bool *_val);
+
+/**
+ * @fn cc_code_t cc_varGetInt(var_s*, int*)
+ * @brief Ziska 'cislo' z promenne vracene skriptou.
+ *
+ * @param _var Ukazatel na promennou.
+ * @param _val Sem bude zapsana hodnota
+ * @return CC_CODE_OK nebo jiny v pripade chyby
+ *
+ */
 cc_code_t cc_varGetInt(var_s *_var, int *_val);
+
+/**
+ * @fn cc_code_t cc_varGetLong(var_s*, long*)
+ * @brief Ziska 'dlouhe cislo' z promenne vracene skriptou.
+ *
+ * @param _var Ukazatel na promennou.
+ * @param _val Sem bude zapsana hodnota
+ * @return CC_CODE_OK nebo jiny v pripade chyby
+ *
+ */
 cc_code_t cc_varGetLong(var_s *_var, long *_val);
+
+/**
+ * @fn cc_code_t cc_varGetFloat(var_s*, float*)
+ * @brief Ziska 'cislo s desetinou carkou' z promenne vracene skriptou.
+ *
+ * @param _var Ukazatel na promennou.
+ * @param _val Sem bude zapsana hodnota
+ * @return CC_CODE_OK nebo jiny v pripade chyby
+ *
+ */
 cc_code_t cc_varGetFloat(var_s *_var, float *_val);
+
+/**
+ * @fn cc_code_t cc_varGetChar(var_s*, char*)
+ * @brief Ziska 'znak' z promenne vracene skriptou.
+ *
+ * @param _var Ukazatel na promennou.
+ * @param _val Sem bude zapsana hodnota
+ * @return CC_CODE_OK nebo jiny v pripade chyby
+ *
+ */
 cc_code_t cc_varGetChar(var_s *_var, char*);
+
+/**
+ * @fn cc_code_t cc_varGetString(var_s*, char*, size_t*)
+ * @brief Ziska 'retezec' z promenne vracene skriptou.
+ *
+ * @param _var Ukazatel na promennou.
+ * @param _val Sem bude zapsana hodnota
+ * @return CC_CODE_OK nebo jiny v pripade chyby
+ *
+ */
 cc_code_t cc_varGetString(var_s *_var, char*, size_t *_len);
 
 #ifdef __cplusplus
