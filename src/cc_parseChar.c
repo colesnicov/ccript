@@ -29,6 +29,118 @@
 #include <stdlib.h>
 #include <string.h>
 
+bool ParseDefineTypeChar(parser_s *_parser) {
+	// parse name
+	// can be var name, function name,
+	//
+	// najit konec druheho vyrazu
+	// overit jestli za druhym vyrazem je znak:
+	//  '=' prirazeni promenne
+	//  '(' definice funkce
+	//  '[' definice pole
+	//  nebo chyba?
+
+	file_bufferSkipSpace(_parser->buffer);
+
+	char ch = '\0';
+
+	file_bufferGet(_parser->buffer, &ch);
+
+	if (!isalpha(ch)) {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	/**
+	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
+	 * @brief Nazev promenne/funkce
+	 *
+	 */
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
+	/**
+	 * @var size_t identifier_len
+	 * @brief Delka nazvu promenne/funkce
+	 *
+	 */
+	size_t identifier_len = 0;
+
+	if (!parseIdentifier(_parser, identifier_name, &identifier_len)) {
+		return false;
+	}
+
+	if (identifier_len == 0) {
+		parseSetError(_parser, CC_CODE_KEYWORD);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;\
+
+	}
+
+	file_bufferSkipSpace(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
+
+	if (ch == '=') {
+		// definice a prirazeni promenne
+		// ziskej nazev promenne (uz mam: 'keyword_position')
+		// over neexistenci promenne
+		// ziskej hodnotu prirazeni, over co nasleduje po vyrazu:
+		// ';' konec vety
+		// 'operator (+-/*)' scitani nekolika cisel
+		// '(' volani funkce ktera vraci numeric
+//
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
+
+		char fval = 0;
+		if (!parseVarArgsChar(_parser, ';', &fval)) {
+			return false;
+		}
+
+		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_CHAR, _parser->depth);
+
+		if (var == NULL) {
+			return false;
+		}
+
+		if (!VarValueSetChar(_parser, var, fval)) {
+			VarDestroy(var);
+			return false;
+		}
+
+		if (!VarStore(_parser, var)) {
+			VarDestroy(var);
+			return false;
+		}
+
+		file_bufferNext(_parser->buffer);
+
+		return true;
+
+	} else if (ch == ';') {
+		// definice promenne bez prirazeni
+
+		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_CHAR, _parser->depth);
+		if (var == NULL) {
+			return false;
+		}
+
+		if (!VarStore(_parser, var)) {
+			VarDestroy(var);
+			return false;
+		}
+
+		file_bufferNext(_parser->buffer);
+
+		return true;
+
+	} else {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+}
+
 bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 
 	char ch;
@@ -224,9 +336,38 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	char ch = 0;
 
-	parseSkipNewLine(_parser);
+	file_bufferNext(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferSkipSpace(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferGet(_parser->buffer, &ch);
+
+	{
+		// muze zacinat pouze pismenem a '
+
+		file_bufferGet(_parser->buffer, &ch);
+
+		if (!isalpha(ch) && ch != '\'') {
+			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+			parseSetErrorPos(_parser, parseGetPos(_parser));
+
+			return false;
+		}
+	}
 
 	if (ch == '\'') {
 		if (!ParseValueChar(_parser, &fval_temp, &fval_temp_len)) {
@@ -245,8 +386,8 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	else if (ch == '(') {
 
-		file_bufferNext(_parser->buffer);
-		file_bufferSkipSpace(_parser->buffer);
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 		if (!parseVarArgsChar(_parser, ')', &fval_temp)) {
 			return false;
 		}
@@ -265,6 +406,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 			return false;
 		}
 
+		parseSetErrorPos(_parser, parseGetPos(_parser));
 		file_bufferSkipSpace(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
 

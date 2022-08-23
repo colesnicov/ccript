@@ -77,9 +77,9 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name) {
 
 	if (ch == '=') {
 		// definice a prirazeni promenne
-
-		file_bufferNext(_parser->buffer);
-		file_bufferSkipSpace(_parser->buffer);
+//
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 
 		bool ival = 0;
 		if (!parseVarArgsBool(_parser, ';', &ival)) {
@@ -142,6 +142,26 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 	uint8_t last_op = 0;
 	char ch = 0;
 
+	file_bufferNext(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferSkipSpace(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferGet(_parser->buffer, &ch);
+
 	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 		memset(value_name, '\0', CC_KEYWORD_LEN);
 		ival_temp = 0;
@@ -174,8 +194,6 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 		}
 
 		else if (ch == '(') {
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseVarArgsBool(_parser, ')', &ival_temp)) {
 				return false;
@@ -215,6 +233,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 			else if (ch == '(') {
 				// volani funkce ...
 
+				size_t pos = parseGetPos(_parser);
 				var_s *var = funcCall(_parser, value_name, value_len);
 
 				if (_parser->error > CC_CODE_RETURN) {
@@ -224,6 +243,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 
 				if (var == NULL) {
 
+					parseSetError(_parser, CC_CODE_LOGIC);
+					parseSetErrorPos(_parser, pos);
 					CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
 					return false;
 				}
@@ -286,7 +307,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 
 				var_s *var = VarGet(_parser, value_name, value_len);
 				if (var == NULL) {
-					CC_PRINT("ERROR: undefined variable '%s'.\n", value_name);
+					parseSetErrorPos(_parser, parseGetPos(_parser));
+//					CC_PRINT("ERROR: undefined variable '%s'.\n", value_name);
 					return false;
 				}
 

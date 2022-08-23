@@ -77,10 +77,11 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 	if (ch == '=') {
 		// definice promenne a prirazeni
+//
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 
-		file_bufferNext(_parser->buffer);
-		file_bufferSkipSpace(_parser->buffer);
-
+//		parseSetErrorPos(_parser, parseGetPos(_parser));
 		float fval = 0;
 		if (!parseVarArgsFloat(_parser, ';', &fval)) {
 			return false;
@@ -140,6 +141,25 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 	uint8_t last_op = 0;
 	char ch = 0;
 
+	file_bufferNext(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferSkipSpace(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferGet(_parser->buffer, &ch);
 	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		fval_temp = 0.0f;
@@ -162,11 +182,20 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			}
 
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch != _symbol_end && !charin(ch, "+-/*")) {
+				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+				parseSetErrorPos(_parser, parseGetPos(_parser));
+
+				return false;
+			}
+
 			fval_temp = atof(value_name);
 
 		} else if (ch == '(') {
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
+//			file_bufferNext(_parser->buffer);
+//			file_bufferSkipSpace(_parser->buffer);
 
 			if (!parseVarArgsFloat(_parser, ')', &fval_temp)) {
 				return false;
@@ -185,13 +214,13 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			}
 
+			parseSetErrorPos(_parser, parseGetPos(_parser));
 			file_bufferSkipSpace(_parser->buffer);
-
 			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '[') {
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-				parseSetErrorPos(_parser, parseGetPos(_parser));
+//				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
 
 			} else if (ch == '(') {
@@ -218,12 +247,10 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 				file_bufferGet(_parser->buffer, &ch);
 
-//				if (ch != ';' && !charin(ch, "+-/*")) {
 				if (ch != _symbol_end && !charin(ch, "+-/*")) {
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-					parseSetErrorPos(_parser, parseGetPos(_parser));
-
 					VarDestroy(var);
+
 					return false;
 				}
 
@@ -232,11 +259,13 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					VarDestroy(var);
+
 					return false;
 				}
 
 				if (!VarValueGetFloat(_parser, var, &fval_temp)) {
 					VarDestroy(var);
+
 					return false;
 				}
 
@@ -245,6 +274,14 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 			}
 
 			else {
+				// promenna
+
+				file_bufferGet(_parser->buffer, &ch);
+
+				if (ch != _symbol_end && !charin(ch, "+-/*")) {
+					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+					return false;
+				}
 
 				var_s *var = VarGet(_parser, value_name, value_len);
 				if (var == NULL) {
@@ -384,7 +421,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 		} else {
 
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
+//			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 		}
 	}

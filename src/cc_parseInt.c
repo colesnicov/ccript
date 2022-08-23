@@ -84,8 +84,8 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-		file_bufferNext(_parser->buffer);
-		file_bufferSkipSpace(_parser->buffer);
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 
 		int ival = 0;
 		if (!parseVarArgsInt(_parser, ';', &ival)) {
@@ -155,11 +155,25 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 	int ival_temp = 0;
 	uint8_t last_op = 0;
 	char ch = 0;
+	file_bufferNext(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferSkipSpace(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
 
 	{
 		// muze zacinat pouze pismenem, cislici znakem '-', '+' a '('
-
-		parseSkipNewLine(_parser);
 
 		file_bufferGet(_parser->buffer, &ch);
 
@@ -181,7 +195,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 		if (ch == '(') {
 			// zanoreni
 
-			file_bufferNext(_parser->buffer);
+//			file_bufferNext(_parser->buffer);
 
 			if (!parseVarArgsInt(_parser, ')', &ival_temp)) {
 				return false;
@@ -224,6 +238,7 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
 			}
 
+			parseSetErrorPos(_parser, parseGetPos(_parser));
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
@@ -279,6 +294,12 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 			}
 
 			else {
+				file_bufferGet(_parser->buffer, &ch);
+
+				if (ch != _symbol_end && !charin(ch, "+-/*")) {
+					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+					return false;
+				}
 
 				var_s *var = VarGet(_parser, value_name, value_len);
 				if (var == NULL) {

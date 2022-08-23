@@ -85,8 +85,8 @@ bool ParseDefineTypeLong(parser_s *_parser) {
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-		file_bufferNext(_parser->buffer);
-		file_bufferSkipSpace(_parser->buffer);
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 
 		long lval = 0;
 		if (!parseVarArgsLong(_parser, ';', &lval)) {
@@ -147,12 +147,29 @@ bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value) {
 	uint8_t last_op = 0;
 	char ch = 0;
 
+	file_bufferNext(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferSkipSpace(_parser->buffer);
+
+	file_bufferGet(_parser->buffer, &ch);
+	if (ch == '\n') {
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
 	{
 		// muze zacinat pouze pismenem, cislici znakem '-', '+' a '('
 
-		parseSkipNewLine(_parser);
+//		parseSkipNewLine(_parser);
 
-		file_bufferGet(_parser->buffer, &ch);
+//		file_bufferGet(_parser->buffer, &ch);
 
 		if (!isalnum(ch) && !charin(ch, "-(")) {
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -172,7 +189,7 @@ bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value) {
 		if (ch == '(') {
 			// zanoreni
 
-			file_bufferNext(_parser->buffer);
+//			file_bufferNext(_parser->buffer);
 
 			if (!parseVarArgsLong(_parser, ')', &val_temp)) {
 				return false;
@@ -210,11 +227,12 @@ bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value) {
 
 			if (value_len == 0) {
 				parseSetError(_parser, CC_CODE_KEYWORD);
-				parseSetErrorPos(_parser, parseGetPos(_parser));
+				parseSetErrorPos(_parser, pos);
 				return false;
 
 			}
 
+			parseSetErrorPos(_parser, parseGetPos(_parser));
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
@@ -270,6 +288,14 @@ bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value) {
 			}
 
 			else {
+				// promenna
+
+				file_bufferGet(_parser->buffer, &ch);
+
+				if (ch != _symbol_end && !charin(ch, "+-/*")) {
+					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+					return false;
+				}
 
 				var_s *var = VarGet(_parser, value_name, value_len);
 				if (var == NULL) {

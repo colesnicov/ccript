@@ -40,7 +40,7 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 	char ch = '\0';
 
-	parseSkipNewLine(_parser);
+//	parseSkipNewLine(_parser);
 
 //	file_bufferGet(_parser->buffer, &ch);
 
@@ -471,8 +471,6 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	parseSetErrorPos(_parser, parseGetPos(_parser));
 
-	file_bufferNext(_parser->buffer);
-	file_bufferSkipSpace(_parser->buffer);
 
 	var_s *var = VarGet(_parser, _var_name, _var_len);
 	if (var == NULL) {
@@ -483,7 +481,9 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 	}
 
 	if (var->type == CC_TYPE_BOOL) {
-
+//
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 		bool ival = 0;
 		if (!parseVarArgsBool(_parser, ';', &ival)) {
 			return false;
@@ -501,6 +501,8 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	else if (var->type == CC_TYPE_INT) {
 
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 		int ival = 0;
 		if (!parseVarArgsInt(_parser, ';', &ival)) {
 			return false;
@@ -518,6 +520,8 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	else if (var->type == CC_TYPE_LONG) {
 
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 		long val = 0;
 		if (!parseVarArgsLong(_parser, ';', &val)) {
 			return false;
@@ -551,6 +555,8 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	else if (var->type == CC_TYPE_CHAR) {
 
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 		char cval = 0;
 		if (!parseVarArgsChar(_parser, ';', &cval)) {
 			return false;
@@ -568,6 +574,8 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	if (var->type == CC_TYPE_STRING) {
 
+//		file_bufferNext(_parser->buffer);
+//		file_bufferSkipSpace(_parser->buffer);
 		size_t fval_len = 50;
 		char fval[CONFIG_CC_STRING_LEN] = { '\0' };
 		if (!parseVarArgsString(_parser, ';', fval, &fval_len)) {

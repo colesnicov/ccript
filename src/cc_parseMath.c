@@ -357,9 +357,7 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			// prirazeni promenne:
 			// var += 20;
 
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
-			file_bufferGet(_parser->buffer, &ch);
+//			file_bufferGet(_parser->buffer, &ch);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -389,6 +387,8 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 			else if (var->type == CC_TYPE_INT) {
 
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
 					return 0;
@@ -411,6 +411,8 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 			else if (var->type == CC_TYPE_LONG) {
 
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				long ival = 0;
 				if (!parseVarArgsLong(_parser, ';', &ival)) {
 					return 0;
@@ -542,9 +544,7 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			// prirazeni promenne:
 			// var += 20;
 
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
-			file_bufferGet(_parser->buffer, &ch);
+//			file_bufferGet(_parser->buffer, &ch);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -571,6 +571,8 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			}
 
 			else if (var->type == CC_TYPE_INT) {
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
 					return 0;
@@ -589,6 +591,8 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			}
 
 			else if (var->type == CC_TYPE_LONG) {
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				long ival = 0;
 				if (!parseVarArgsLong(_parser, ';', &ival)) {
 					return 0;
@@ -607,6 +611,8 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 			}
 
 			else if (var->type == CC_TYPE_STRING) {
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				char sval[CONFIG_CC_STRING_LEN] = { '\0' };
 				size_t sval_len = 0;
 				if (!parseVarArgsString(_parser, ';', sval, &sval_len)) {
@@ -670,8 +676,6 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 			// prirazeni promenne:
 			// var *= 20;
 
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -697,7 +701,9 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 			}
 
 			else if (var->type == CC_TYPE_INT) {
-
+//
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
 					return 0;
@@ -717,6 +723,8 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 
 			else if (var->type == CC_TYPE_LONG) {
 
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				long ival = 0;
 				if (!parseVarArgsLong(_parser, ';', &ival)) {
 					return 0;
@@ -770,8 +778,6 @@ bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_le
 
 		if (ch == '=') {
 
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
 
 			var_s *var = VarGet(_parser, _var_name, _var_name_len);
 			if (var == NULL) {
@@ -798,6 +804,8 @@ bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_le
 
 			else if (var->type == CC_TYPE_INT) {
 
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				int ival = 0;
 				if (!parseVarArgsInt(_parser, ';', &ival)) {
 					return 0;
@@ -817,6 +825,8 @@ bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_le
 
 			else if (var->type == CC_TYPE_LONG) {
 
+//				file_bufferNext(_parser->buffer);
+//				file_bufferSkipSpace(_parser->buffer);
 				long ival = 0;
 				if (!parseVarArgsLong(_parser, ';', &ival)) {
 					return 0;
