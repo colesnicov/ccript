@@ -957,7 +957,7 @@ var_s* VarCastToLong(parser_s *_parser, var_s *_var_from) {
 	}
 
 	else if (_var_from->type == CC_TYPE_INT) {
-		if (!VarValueGetInt(_parser, _var_from, &val)) {
+		if (!VarValueGetInt(_parser, _var_from, (int*)&val)) {
 			return false;
 		}
 

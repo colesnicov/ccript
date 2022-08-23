@@ -217,7 +217,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			}
 
 			else {
-				len = itoa(*_args_count, buf, 10);
+				len = strlen(itoa(*_args_count, buf, 10));
 			}
 
 			var_s *_var = VarCreate(buf, len, CC_TYPE_CHAR, _parser->depth);

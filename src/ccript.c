@@ -90,7 +90,7 @@ var_s* cc_parse(parser_s *_parser, const char *_path) {
 	}
 
 	VarClean(_parser);
-	file_bufferClose(_parser->buffer);
+	file_bufferClose(&(_parser->buffer));
 
 	return ret_var;
 }
@@ -110,6 +110,9 @@ size_t cc_errorGetPos(parser_s *_parser) {
 const char* cc_errorToString(cc_code_t _err_code) {
 
 	switch (_err_code) {
+
+		case CC_CODE_ARGS_BAD_TYPE:
+			return "CC_CODE_FUNC_ARGS_BAD_TYPE";
 
 		case CC_CODE_FUNC_ARGS_ERROR:
 			return "CC_CODE_FUNC_ARGS_ERROR";
@@ -284,14 +287,14 @@ cc_code_t cc_varGetFloat(var_s *_var, float *_val) {
 
 cc_code_t cc_varGetChar(var_s *_var, char *_val) {
 	if (_var->type != CC_TYPE_CHAR) {
-		return  CC_CODE_VAR_BAD_TYPE;
+		return CC_CODE_VAR_BAD_TYPE;
 	}
 
 	if (_var->valid == false) {
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
-	memcpy(_val, _var->data,  sizeof(char));
+	memcpy(_val, _var->data, sizeof(char));
 //	_val[0] = ((char*) (_var->data))[0];
 	return true;
 

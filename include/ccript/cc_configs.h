@@ -30,13 +30,16 @@
 #include <assert.h>
 #include <malloc.h>
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/private/portable.h>
+
 #include <system/mathio.hpp>
 
 #define	CC_LOG_TAG	(char*)"CC"
 
-#define CONFIG_CC_MALLOC(s)		malloc((s))
-#define CONFIG_CC_REALLOC(p, s)	realloc((p),(s))
-#define CONFIG_CC_FREE(p)		free((p))
+#define CONFIG_CC_MALLOC(s)		pvPortMalloc((s))
+#define CONFIG_CC_REALLOC(p, s)	pvPortRealloc((p),(s))
+#define CONFIG_CC_FREE(p)		vPortFree((p))
 
 /**
  * @def CONFIG_CC_INCLUDE_FILEIO
@@ -71,7 +74,7 @@
  * @brief Maximalni pocet argumentu ktery funkce muze prijmout.
  *
  */
-#define CONFIG_CC_FUNC_NUMS_ARGS		10
+#define CONFIG_CC_FUNC_NUMS_ARGS		4
 
 /**
  * @def CONFIG_CC_ASSERT
@@ -104,13 +107,15 @@
 #define CONFIG_CC_FUNC_DEBUG	0
 
 /**
- * @def CONFIG_CC_KEYWORD_SIZE_CAPS
+ * @def CONFIG_CC_KEYWORD_LEN
  * @brief Velikost zasobniku pro vyraz.
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro vyraz.
  *
  *
  */
-#define CONFIG_CC_KEYWORD_SIZE_CAPS	16
+#define CONFIG_CC_KEYWORD_LEN	16
+
+#define CONFIG_CC_NUMERIC_LEN	51
 
 /**
  * @def CONFIG_CC_STRING_LEN
@@ -197,7 +202,7 @@
  * @brief Maximalni pocet argumentu ktery funkce muze prijmout.
  *
  */
-#define CONFIG_CC_FUNC_NUMS_ARGS		10
+#define CONFIG_CC_FUNC_NUMS_ARGS		4
 
 /**
  * @def CONFIG_CC_ASSERT
