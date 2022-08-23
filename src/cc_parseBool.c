@@ -203,6 +203,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 		else if (isalpha(ch)) {
 			// promenna nebo funkce
 
+			size_t pos = parseGetPos(_parser);
 			if (!parseIdentifier(_parser, value_name, &value_len)) {
 				return false;
 			}
@@ -212,6 +213,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 
 			}
 
+//			parseSetErrorPos(_parser, parseGetPos(_parser));
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
@@ -233,10 +235,11 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 			else if (ch == '(') {
 				// volani funkce ...
 
-				size_t pos = parseGetPos(_parser);
+//				size_t pos = parseGetPos(_parser);
 				var_s *var = funcCall(_parser, value_name, value_len);
 
 				if (_parser->error > CC_CODE_RETURN) {
+					parseSetErrorPos(_parser, parseGetPos(_parser));
 					VarDestroy(var);
 					return false;
 				}
@@ -244,7 +247,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value) {
 				if (var == NULL) {
 
 					parseSetError(_parser, CC_CODE_LOGIC);
-					parseSetErrorPos(_parser, pos);
+//					parseSetErrorPos(_parser, pos);
 					CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
 					return false;
 				}
