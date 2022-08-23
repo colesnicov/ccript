@@ -155,6 +155,8 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 //			size_t pos = parseGetPos(_parser);
 
+			parseSetErrorPos(_parser, parseGetPos(_parser));
+
 			if (!parseIdentifier(_parser, keyword_name, &keyword_len)) {
 				return NULL;
 			}
@@ -470,7 +472,6 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 	// funkce priradi hodnotu prommene ktera byla definovana jiz drive
 
 	parseSetErrorPos(_parser, parseGetPos(_parser));
-
 
 	var_s *var = VarGet(_parser, _var_name, _var_len);
 	if (var == NULL) {
