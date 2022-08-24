@@ -41,6 +41,7 @@ bool cc_stdlib_registrate(parser_s *_parser, void *_args) {
 	ret &= cc_registerFunction(_parser, "system", 6, stdlib_system, _args);
 	ret &= cc_registerFunction(_parser, "strlen", 6, stdlib_strlen, _args);
 	ret &= cc_registerFunction(_parser, "strcat", 6, stdlib_strcat, _args);
+	ret &= cc_registerFunction(_parser, "env", 3, stdlib_env, _args);
 
 	return ret;
 }
@@ -215,6 +216,93 @@ var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 
 		VarDestroy(var);
 		return NULL;
+	}
+
+	return var;
+}
+
+var_s* stdlib_env(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
+
+	if (_vars_count != 1) {
+		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+		CC_PRINT("ERROR: bad arguments count!\n");
+		return NULL;
+	}
+
+	if (_vars[0]->type != CC_TYPE_INT) {
+		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+		CC_PRINT("ERROR: bad argument type!\n");
+		return NULL;
+	}
+
+	int id = 0;
+	if (!VarValueGetInt(_parser, _vars[0], &id)) {
+		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+		return NULL;
+	}
+
+	if (id > _parser->env_count - 1) {
+		CC_PRINT("ERROR: bad ENV ID!\n");
+
+		parseSetError(_parser, CC_CODE_ABORT);
+		return NULL;
+	}
+
+	char buf[20] = { '\0' };
+	itoa(id, buf, 10);
+	var_s *var = VarCreate(buf, strlen(buf), _parser->env[id].type, _parser->depth);
+
+	if (var == NULL) {
+		return NULL;
+	}
+
+	if (_parser->env[id].type == CC_TYPE_INT) {
+
+		if (!VarValueSetInt(_parser, var, (int) (*(int*) (_parser->env[id]).data))) {
+			VarDestroy(var);
+			return NULL;
+		}
+	}
+
+	else if (_parser->env[id].type == CC_TYPE_BOOL) {
+
+		if (!VarValueSetBool(_parser, var, (bool) (*(bool*) (_parser->env[id]).data))) {
+			VarDestroy(var);
+			return NULL;
+		}
+	}
+
+	else if (_parser->env[id].type == CC_TYPE_LONG) {
+
+		if (!VarValueSetLong(_parser, var, (long) (*(long*) (_parser->env[id]).data))) {
+			VarDestroy(var);
+			return NULL;
+		}
+	}
+
+	else if (_parser->env[id].type == CC_TYPE_FLOAT) {
+
+		if (!VarValueSetLong(_parser, var, (float) (*(float*) (_parser->env[id]).data))) {
+			VarDestroy(var);
+			return NULL;
+		}
+	}
+
+	else if (_parser->env[id].type == CC_TYPE_CHAR) {
+
+		if (!VarValueSetChar(_parser, var, (char) *(char*) (_parser->env[id]).data)) {
+			VarDestroy(var);
+			return NULL;
+		}
+	}
+
+	else if (_parser->env[id].type == CC_TYPE_STRING) {
+
+		if (!VarValueSetString(_parser, var, (char*) (_parser->env[id]).data,
+				strlen((_parser->env[id]).data))) {
+			VarDestroy(var);
+			return NULL;
+		}
 	}
 
 	return var;

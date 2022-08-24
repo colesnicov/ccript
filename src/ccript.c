@@ -15,8 +15,9 @@
  *
  */
 
-//#include <ccript/cc_buffer.h>
+
 #include <ccript/cc_configs.h>
+#include <ccript/cc_types.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_log.h>
 #include <ccript/cc_parseIf.h>
@@ -66,7 +67,7 @@ void cc_deinit(parser_s *_parser) {
 //	bufferClose(_parser);
 }
 
-var_s* cc_parse(parser_s *_parser, const char *_path) {
+var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _env_count) {
 	_parser->error = CC_CODE_OK;
 	_parser->error_pos = 0;
 	var_s *ret_var = NULL;
@@ -75,6 +76,9 @@ var_s* cc_parse(parser_s *_parser, const char *_path) {
 		parseSetError(_parser, CC_CODE_IO);
 		return ret_var;
 	}
+
+	_parser->env_count = _env_count;
+	_parser->env = _env;
 
 	ret_var = parseBlock(_parser, 0);
 

@@ -50,6 +50,8 @@ var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 
 var_s* stdlib_exit(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
+var_s* stdlib_env(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
+
 #ifdef __cplusplus
 }
 #endif

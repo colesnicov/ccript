@@ -125,7 +125,7 @@
  * @see cc_init(parser_s*)
  *
  */
-#define PARSER_DEFAULT()	{0, 0, CC_CODE_OK, 0, NULL, NULL, NULL, NULL}
+#define PARSER_DEFAULT()	{0, 0, CC_CODE_OK, 0, 0, NULL, NULL, NULL, NULL, NULL}
 
 /**
  * @enum cc_code_
@@ -468,6 +468,11 @@ struct parser_;
 typedef struct var_* (*cc_fn_prototype)(struct parser_ *_parser, struct var_ **_vars,
 		uint8_t _vars_count, void *_args);
 
+typedef struct cc_env_ {
+	cc_type_t type;
+	void *data;
+} cc_env_s;
+
 /**
  * @struct fn_handler_
  * @brief Struktura pro udrzeni informaci o dostupne 'C' funkci pro volani ze skript
@@ -657,6 +662,8 @@ typedef struct parser_ {
 	 */
 	size_t error_pos; // pozice kde doslo k potencialni chybe. // vzdy, pred rizikovym mistem musim volat parseSetStop(_parser)
 
+	uint8_t env_count;
+
 	/**
 	 * @var cvector_s *funcs
 	 * @brief Ukazatel na strukturu kontejneru s funkcemi ktere muze volat skript
@@ -681,6 +688,8 @@ typedef struct parser_ {
 	 */
 //	buffer_s *buffer;
 	filebuffer_s *buffer;
+
+	cc_env_s *env;
 
 } parser_s;
 
