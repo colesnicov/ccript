@@ -187,7 +187,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 	size_t value_len = 0;
 	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
 
-		parseSkipNewLine(_parser);
+		file_bufferSkipSpace(_parser->buffer);
 
 		file_bufferGet(_parser->buffer, &ch);
 

@@ -542,10 +542,10 @@ void VarDump(var_s *_var) {
 
 		else if (_var->type == CC_TYPE_LONG) {
 			long *data = (long*) (_var->data);
-//			char buf[sizeof(long) * 8 + 1] = { '\0' };
+			char buf[sizeof(long) * 8 + 1] = { '\0' };
 //			char buf[CC_VAR_LONG_SIZE] = { '\0' };
 //			ltoa(*data, buf, 10);
-			char *buf = ltoa((long) *data, 10);
+			ltoa((long) *data, buf, 10);
 			CC_PRINT("\tdata='%s'\n", buf);
 		}
 
@@ -638,7 +638,7 @@ bool VarValueGetChar(parser_s *_parser, var_s *_var, char *_char) {
 		return false;
 	}
 
-	memcpy(_char, _var->data,  sizeof(char));
+	memcpy(_char, _var->data, sizeof(char));
 //	_char[0] = ((char*) (_var->data))[0];
 	return true;
 }
@@ -709,26 +709,51 @@ var_s* VarCastToString(parser_s *_parser, var_s *_var_from) {
 			return false;
 		}
 		len = (size_t) sprintf(val, "%.*f", CC_FLOAT_EXP_LEN, v);
-	} else if (_var_from->type == CC_TYPE_BOOL) {
+	}
+
+	else if (_var_from->type == CC_TYPE_BOOL) {
 		bool v = false;
 		if (!VarValueGetBool(_parser, _var_from, &v)) {
 			return false;
 		}
 		len = (size_t) sprintf(val, "%d", v);
-	} else if (_var_from->type == CC_TYPE_INT) {
+	}
+
+	else if (_var_from->type == CC_TYPE_INT) {
 		int v = 0;
 		if (!VarValueGetInt(_parser, _var_from, &v)) {
 			return false;
 		}
 		len = (size_t) sprintf(val, "%d", v);
-	} else if (_var_from->type == CC_TYPE_CHAR) {
+	}
+
+	else if (_var_from->type == CC_TYPE_LONG) {
+		long v = 0;
+		if (!VarValueGetLong(_parser, _var_from, &v)) {
+			return false;
+		}
+		ltoa(v, val, 10);
+		len = strlen(val);
+	}
+
+	else if (_var_from->type == CC_TYPE_INT) {
+		int v = 0;
+		if (!VarValueGetInt(_parser, _var_from, &v)) {
+			return false;
+		}
+		len = (size_t) sprintf(val, "%d", v);
+	}
+
+	else if (_var_from->type == CC_TYPE_CHAR) {
 		char v = 0;
 		if (!VarValueGetChar(_parser, _var_from, &v)) {
 			return false;
 		}
 		len = 1;
 		val[0] = v;
-	} else {
+	}
+
+	else {
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 
@@ -787,7 +812,17 @@ var_s* VarCastToBool(parser_s *_parser, var_s *_var_from) {
 			return NULL;
 		}
 
-	} else {
+	}
+
+	else if (_var_from->type == CC_TYPE_LONG) {
+
+		if (!VarValueGetLong(_parser, _var_from, (long*) &val)) {
+			return false;
+		}
+
+	}
+
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return NULL;
 
@@ -901,7 +936,17 @@ var_s* VarCastToInt(parser_s *_parser, var_s *_var_from) {
 			return false;
 		}
 
-	} else {
+	}
+
+	else if (_var_from->type == CC_TYPE_LONG) {
+		long v = 0;
+		if (!VarValueGetLong(_parser, _var_from, &v)) {
+			return false;
+		}
+		val = (int) v;
+	}
+
+	else {
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 
@@ -957,7 +1002,7 @@ var_s* VarCastToLong(parser_s *_parser, var_s *_var_from) {
 	}
 
 	else if (_var_from->type == CC_TYPE_INT) {
-		if (!VarValueGetInt(_parser, _var_from, (int*)&val)) {
+		if (!VarValueGetInt(_parser, _var_from, (int*) &val)) {
 			return false;
 		}
 
@@ -1021,6 +1066,14 @@ var_s* VarCastToFloat(parser_s *_parser, var_s *_var_from) {
 		int v = 0;
 		if (!VarValueGetInt(_parser, _var_from, &v)) {
 			return NULL;
+		}
+		val = (float) v;
+	}
+
+	else if (_var_from->type == CC_TYPE_LONG) {
+		long v = 0;
+		if (!VarValueGetLong(_parser, _var_from, &v)) {
+			return false;
 		}
 		val = (float) v;
 	}
