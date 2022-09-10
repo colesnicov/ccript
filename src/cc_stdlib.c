@@ -556,7 +556,7 @@ var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count, voi
 		snprintf(buf, CONFIG_CC_STRING_LEN, "%s", (char*) _vars[0]->data);
 	}
 
-	CC_PRINT("%s\n", buf);
+	CC_PRINT("s: '%s'\n", buf);
 
 	return NULL;
 }

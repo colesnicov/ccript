@@ -28,6 +28,7 @@
 #include <filebuffer/filebuffer.h>
 #include "ccript/ccript.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -80,8 +81,8 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 	_parser->env_count = _env_count;
 	_parser->env = _env;
 
-	for (uint i = 0; i < _parser->env_count; i++) {
-		CC_PRINT("env[%d] name(%s)  type(%d)  data(%ld)", i, _parser->env[i].name, _parser->env[i].type,
+	for (uint8_t i = 0; i < _parser->env_count; i++) {
+		CC_PRINT("env[%d] name(%s)  type(%d)  data(%ld)\n", i, _parser->env[i].name, _parser->env[i].type,
 				*((long* )(_parser->env[i].data)));
 	}
 

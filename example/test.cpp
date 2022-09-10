@@ -22,6 +22,7 @@
 #include <ccript/cc_stdlib.h>
 #include <ccript/cc_types.h>
 #include <ccript/ccript.h>
+#include <stdlib.h>
 #include "ccript/cc_var.h"
 #include "ccript/cc_var_ext.h"
 #include <string.h>
@@ -79,8 +80,29 @@ extern "C" int main(int argc, char **argv) {
 //	cc_registerFunction(&parser, "system", 6, stdlib_system, NULL);
 //	cc_registerFunction(&parser, "strlen", 6, stdlib_strlen, NULL);
 //	cc_registerFunction(&parser, "strcat", 6, stdlib_strcat, NULL);
+	long r = (random() % LONG_MAX);
+	int p = 4;
 
-	var_s *var = cc_parse(&parser, fileName);
+	cc_env_s env[5] ;/*= {
+			{ "rand", cc_type_t::CC_TYPE_LONG, &r } ,
+			{ "pin", cc_type_t::CC_TYPE_INT, &p }
+	};*/
+
+	env[0] = { "trigger", cc_type_t::CC_TYPE_INT, (void*) ((int*) &p) };
+
+	env[1] = { "action", cc_type_t::CC_TYPE_INT, (void*) ((int*) &p) };
+
+	env[2] = { "pin", cc_type_t::CC_TYPE_INT, (void*) ((int*) &p) };
+
+	env[3] = { "time", cc_type_t::CC_TYPE_LONG, (void*) &r };
+
+	env[4] = { "data", cc_type_t::CC_TYPE_LONG, (void*) &r };
+
+	for (uint8_t i = 0; i < 5; i++) {
+		CC_PRINT("env[%d] name(%s)  type(%d)  data(%ld)\n", i, env[i].name, env[i].type,
+				*((long* )(env[i].data)));
+	}
+	var_s *var = cc_parse(&parser, fileName, env, 5);
 
 	if (var != NULL) {
 		int ret = 0;
