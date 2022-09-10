@@ -649,13 +649,13 @@ bool parseSkipComment(parser_s *_parser) {
 					memset(buf, 0, CC_COMMENT_SIZE);
 #endif
 
-					file_bufferNext(_parser->buffer);
-					file_bufferSkipSpace(_parser->buffer);
-					file_bufferGet(_parser->buffer, &ch);
-
-					if (ch == '/') {
-						return parseSkipComment(_parser);
-					}
+//					file_bufferNext(_parser->buffer);
+//					file_bufferSkipSpace(_parser->buffer);
+//					file_bufferGet(_parser->buffer, &ch);
+//
+//					if (ch == '/') {
+//						return parseSkipComment(_parser);
+//					}
 
 					return true;
 				}

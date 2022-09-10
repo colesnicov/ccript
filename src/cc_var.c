@@ -259,7 +259,8 @@ var_s* VarCreate(const char *_name, size_t _name_len, cc_type_t _type, uint8_t _
 
 	if (var_t->name == NULL) {
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: 3 not enought memmory for variable '%s'.\n", _name);
+		CC_PRINT("ERROR: 3 not enought memmory for variable '%s:%d'.\n", _name, _name_len);
+//		CC_PRINT("ERROR: 3 not enought memmory for variable '%s:%d'.\n", esp_, _name_len);
 		CONFIG_CC_FREE(var_t);
 
 		return NULL;
@@ -346,8 +347,10 @@ void VarDestroy(var_s *_var) {
 
 	if (_var != NULL) {
 
-		CC_VAR_DEBUG("DEBUG: destroy variable '%s'.\n", _var->name);
 		if (_var->name != NULL) {
+#if CONFIG_CC_VAR_DEBUG
+				CC_VAR_DEBUG("DEBUG: destroy variable '%s'.\n", _var->name);
+#endif
 			CONFIG_CC_FREE(_var->name);
 			_var->name = NULL;
 		}

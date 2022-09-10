@@ -469,6 +469,7 @@ typedef struct var_* (*cc_fn_prototype)(struct parser_ *_parser, struct var_ **_
 		uint8_t _vars_count, void *_args);
 
 typedef struct cc_env_ {
+	const char * name;
 	cc_type_t type;
 	void *data;
 } cc_env_s;

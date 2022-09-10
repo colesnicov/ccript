@@ -28,10 +28,6 @@ extern "C" {
 
 bool cc_stdlib_registrate(parser_s *_parser, void *_args);
 
-var_s* stdlib_sleep(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
-
-var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
-
 var_s* stdlib_dump(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);
 
 var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args);

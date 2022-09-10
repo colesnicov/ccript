@@ -73,8 +73,9 @@
  * @def CONFIG_CC_FUNC_NUMS_ARGS
  * @brief Maximalni pocet argumentu ktery funkce muze prijmout.
  *
+ * @fixme Pri spatnem poctu predanych funkci parametru dochazi k padu! Vyresit!!
  */
-#define CONFIG_CC_FUNC_NUMS_ARGS		4
+#define CONFIG_CC_FUNC_NUMS_ARGS		5
 
 /**
  * @def CONFIG_CC_ASSERT
@@ -97,7 +98,7 @@
  * @see CONFIG_CC_PRINT
  *
  */
-#define CONFIG_CC_PRINT_COMMENT	1
+#define CONFIG_CC_PRINT_COMMENT	0
 
 /**
  * @def CONFIG_CC_FUNC_DEBUG
@@ -105,6 +106,8 @@
  *
  */
 #define CONFIG_CC_FUNC_DEBUG	0
+
+#define CONFIG_CC_VAR_DEBUG	0
 
 /**
  * @def CONFIG_CC_KEYWORD_LEN
@@ -216,7 +219,7 @@
  * @brief Funkce pro vypis do konzole.
  *
  */
-#define CONFIG_CC_PRINT(...)	printf("%s: ", LOG_TAG); \
+#define CONFIG_CC_PRINT(...)	printf("%s: ", CC_LOG_TAG); \
 								printf(__VA_ARGS__)
 
 /**

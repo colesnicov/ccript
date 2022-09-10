@@ -270,7 +270,7 @@ bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value) {
 				}
 
 				if (var->type != CC_TYPE_LONG) {
-					CC_PRINT("ERROR: function '%s' return bad type.\n", value_name);
+					CC_PRINT("ERROR: function '%s' return bad type2.\n", value_name);
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
 					VarDestroy(var);

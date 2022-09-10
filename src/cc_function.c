@@ -317,6 +317,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				}
 
 			} else {
+				// fixme Proc buf jen 3 a samostatna promenna len?
+
 				char buf[3] = { '\0' };
 				size_t len = 1;
 
@@ -325,11 +327,13 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				}
 
 				else {
-					len = itoa(*_args_count, buf, 10);
+					// fixme najit vsude itoa a opravit na novou verzi. ta uz nevraci delku ale retezec!
+					len = strlen(itoa(*_args_count, buf, 10));
 				}
 
 				_var = VarCreate(buf, len, CC_TYPE_INT, _parser->depth);
 
+				CC_PRINT("ERROR: empty int/float value '%d'!\n", value_len);
 				if (_var == NULL) {
 					CC_PRINT("CHYBA?\n\n");
 					return false;
@@ -376,7 +380,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				}
 
 				else {
-					len = itoa(*_args_count, buf, 10);
+					len = strlen(itoa(*_args_count, buf, 10));
 				}
 
 				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);
@@ -575,7 +579,9 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 void funcClearArguments(var_s **args, uint8_t args_count) {
 	for (uint8_t i = 0; i < args_count; i++) {
-//		CC_PRINT("DEBUG: destroy function argument: '%d':'%s'.\n", i, args[i]->name);
+#if CONFIG_CC_FUNC_DEBUG
+		CC_PRINT("DEBUG: destroy function argument: '%d':'%s'.\n", i, args[i]->name);
+#endif
 		VarDestroy(args[i]);
 	}
 }
