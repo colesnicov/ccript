@@ -247,7 +247,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 			else
 			{
-				len = strlen(itoa(*_args_count, buf, 10));
+				itoa(*_args_count, buf, 10);
+				len = strlen(buf);
 			}
 
 			var_s *_var = VarCreate(buf, len, CC_TYPE_CHAR, _parser->depth);
@@ -292,7 +293,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 			else
 			{
-				len = strlen(itoa(*_args_count, buf, 10));
+				itoa(*_args_count, buf, 10);
+				len = strlen(buf);
 			}
 
 			var_s *_var = VarCreate(buf, len, CC_TYPE_STRING, _parser->depth);
@@ -350,8 +352,9 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 				else
 				{
-					len = strlen(itoa(*_args_count, buf, 10));
-				}
+					itoa(*_args_count, buf, 10);
+					len = strlen(buf);
+									}
 
 				_var = VarCreate(buf, len, CC_TYPE_FLOAT, _parser->depth);
 
@@ -383,7 +386,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				else
 				{
 					// fixme najit vsude itoa a opravit na novou verzi. ta uz nevraci delku ale retezec!
-					len = strlen(itoa(*_args_count, buf, 10));
+					itoa(*_args_count, buf, 10);
+					len = strlen(buf);
 				}
 
 				_var = VarCreate(buf, len, CC_TYPE_INT, _parser->depth);
@@ -444,7 +448,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 				else
 				{
-					len = strlen(itoa(*_args_count, buf, 10));
+					itoa(*_args_count, buf, 10);
+					len = strlen(buf);
 				}
 
 				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);
@@ -476,7 +481,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 				else
 				{
-					len = strlen(itoa(*_args_count, buf, 10));
+					itoa(*_args_count, buf, 10);
+					len = strlen(buf);
 				}
 
 				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);

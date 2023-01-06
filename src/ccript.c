@@ -96,18 +96,37 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 					'\0' };
 			ftoa(*((float*) (_parser->env[i].data)), buf, 3);
 
-			CC_PRINT("env[%d] name(%s)  type(%d)  data(%s)\n", i, _parser->env[i].name,
+			CC_PRINT("env[%d] name(%s) type(%d)  data(%s)\n", i, _parser->env[i].name,
 					_parser->env[i].type, buf);
 		}
 		else if (CC_TYPE_INT == _parser->env[i].type)
 		{
-			CC_PRINT("env[%d] name(%s)  type(%d)  data(%d)\n", i, _parser->env[i].name,
+			CC_PRINT("env[%d] name(%s) type(%d)  data(%d)\n", i, _parser->env[i].name,
 					_parser->env[i].type, *((int* )(_parser->env[i].data)));
+		}
+		else if (CC_TYPE_BOOL == _parser->env[i].type)
+		{
+			CC_PRINT("env[%d] name(%s) type(%d)  data(%d)\n", i, _parser->env[i].name,
+					_parser->env[i].type, *((int* )(_parser->env[i].data)));
+		}
+		else if (CC_TYPE_CHAR == _parser->env[i].type)
+		{
+			CC_PRINT("env[%d] name(%s) type(%d)  data(%c)\n", i, _parser->env[i].name,
+					_parser->env[i].type, *((char* )(_parser->env[i].data)));
+		}
+		else if (CC_TYPE_STRING == _parser->env[i].type)
+		{
+			CC_PRINT("env[%d] name(%s) type(%d)  data(%s)\n", i, _parser->env[i].name,
+					_parser->env[i].type, ((char* )(_parser->env[i].data)));
+		}
+		else if (CC_TYPE_LONG == _parser->env[i].type)
+		{
+			CC_PRINT("env[%d] name(%s) type(%d)  data(%ld)\n", i, _parser->env[i].name,
+					_parser->env[i].type, *((long* )(_parser->env[i].data)));
 		}
 		else
 		{
-			CC_PRINT("env[%d] name(%s)  type(%d)  data(%ld)\n", i, _parser->env[i].name,
-					_parser->env[i].type, *((long* )(_parser->env[i].data)));
+			CC_PRINT("env[%d] name(%s) unknown type\n", i, _parser->env[i].name);
 		}
 	}
 
