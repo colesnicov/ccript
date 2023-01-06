@@ -17,6 +17,16 @@
 
 #pragma once
 
+#if 0
+#define S1(x) #x
+#define S2(x) S1(x)
+#define CC_LOG_TAG __FILE__ " : " S2(__LINE__)
+#else
+
+#define	CC_LOG_TAG	__FUNCTION__
+
+#endif
+
 #ifdef ESP_PLATFORM
 
 ///////////////////////////
@@ -34,16 +44,6 @@
 #include <freertos/private/portable.h>
 
 #include <system/mathio.hpp>
-
-#if 0
-#define S1(x) #x
-#define S2(x) S1(x)
-#define CC_LOG_TAG __FILE__ " : " S2(__LINE__)
-#else
-
-#define	CC_LOG_TAG	__FUNCTION__
-
-#endif
 
 #define CONFIG_CC_MALLOC(s)		pvPortMalloc((s))
 #define CONFIG_CC_REALLOC(p, s)	pvPortRealloc((p),(s))
@@ -154,24 +154,6 @@
 #define CONFIG_CC_BUFFER_LEN		5
 
 #else
-/*
- * This file is a part of "CCRipt" Embeddable C Like Scripting Language Interpreter
- */
-
-/**
- * @file cc_configs.h
- * @brief Uzivatelske nastaveni.
- *
- * @version 1
- * @date 26.06.2022
- *
- * @author Denis Colesnicov <eugustus@gmail.com>
- *
- * @copyright MIT License
- *
- */
-
-#pragma once
 
 ///////////////////////////
 //
@@ -179,7 +161,6 @@
 //
 ///////////////////////////
 
-#include "ccript/cc_log.h"
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>

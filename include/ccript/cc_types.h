@@ -17,13 +17,11 @@
 
 #pragma once
 
-//#include <bits/types/FILE.h>
 
 #include <filebuffer/filebuffer.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-//#include <stdio.h>
 
 #include "cvector/cvector.h"
 #include "ccript/cc_configs.h"
