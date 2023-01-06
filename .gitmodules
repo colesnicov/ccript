@@ -4,3 +4,6 @@
 [submodule "libs/filebuffer"]
 	path = libs/filebuffer
 	url = https://github.com/colesnicov/filebuffer.git
+[submodule "libs/cvector"]
+	path = libs/cvector
+	url = https://github.com/colesnicov/cvector.git
