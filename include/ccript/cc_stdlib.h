@@ -8,7 +8,7 @@
  * @details Tyto funkce mohou byt 'zaveseny' na parser a posleze pristupne ze skriptu.
  * @see cc_registerFunction()
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>

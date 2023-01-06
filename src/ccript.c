@@ -6,7 +6,7 @@
  * @file ccript.c
  * @brief Implementace verejnych funkci pro praci s interpreterem.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -18,13 +18,13 @@
 #include <ccript/cc_configs.h>
 #include <ccript/cc_types.h>
 #include <ccript/cc_function.h>
-#include <ccript/cc_log.h>
 #include <ccript/cc_parseIf.h>
 #include <ccript/cc_parser.h>
 #include <ccript/cc_parseWhile.h>
 #include <ccript/cc_types.h>
 #include <ccript/common.h>
 #include <ccript/cc_var.h>
+#include <emblib/emblib.h>
 #include <filebuffer/filebuffer.h>
 #include "ccript/ccript.h"
 
@@ -32,20 +32,25 @@
 #include <stdbool.h>
 #include <string.h>
 
-bool cc_init(parser_s *_parser) {
+bool cc_init(parser_s *_parser)
+{
 
-	do {
-		if (!VarInit(_parser)) {
+	do
+	{
+		if (!VarInit(_parser))
+		{
 			CC_PRINT("ccript error 2!\n");
 			break;
 		}
 
-		if (!funcInit(_parser)) {
+		if (!funcInit(_parser))
+		{
 			CC_PRINT("ccript error 3!\n");
 			break;
 		}
 
-		if (!blockInit(_parser)) {
+		if (!blockInit(_parser))
+		{
 			CC_PRINT("ccript error 3!\n");
 			break;
 		}
@@ -59,21 +64,21 @@ bool cc_init(parser_s *_parser) {
 	return false;
 }
 
-void cc_deinit(parser_s *_parser) {
+void cc_deinit(parser_s *_parser)
+{
 	blockDeinit(_parser);
 	VarDeinit(_parser);
 	funcDeinit(_parser);
-//	file_bufferClose(_parser->buffer);
-//	bufferClose(_parser);
 }
 
-var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _env_count) {
+var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _env_count)
+{
 	_parser->error = CC_CODE_OK;
 	_parser->error_pos = 0;
 	var_s *ret_var = NULL;
 
-
-	if (FILEBUFFER_OK != file_bufferInit(&_parser->buffer, _path, CONFIG_CC_BUFFER_LEN)) {
+	if (FILEBUFFER_OK != file_bufferInit(&_parser->buffer, _path, CONFIG_CC_BUFFER_LEN))
+	{
 		parseSetError(_parser, CC_CODE_IO);
 		return ret_var;
 	}
@@ -81,19 +86,42 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 	_parser->env_count = _env_count;
 	_parser->env = _env;
 
-	for (uint8_t i = 0; i < _parser->env_count; i++) {
-		CC_PRINT("env[%d] name(%s)  type(%d)  data(%ld)\n", i, _parser->env[i].name, _parser->env[i].type,
-				*((long* )(_parser->env[i].data)));
+// fixme napsat funkci printEnv?
+	for (uint8_t i = 0; i < _parser->env_count; i++)
+	{
+		if (CC_TYPE_FLOAT == _parser->env[i].type)
+		{
+
+			char buf[10] = {
+					'\0' };
+			ftoa(*((float*) (_parser->env[i].data)), buf, 3);
+
+			CC_PRINT("env[%d] name(%s)  type(%d)  data(%s)\n", i, _parser->env[i].name,
+					_parser->env[i].type, buf);
+		}
+		else if (CC_TYPE_INT == _parser->env[i].type)
+		{
+			CC_PRINT("env[%d] name(%s)  type(%d)  data(%d)\n", i, _parser->env[i].name,
+					_parser->env[i].type, *((int* )(_parser->env[i].data)));
+		}
+		else
+		{
+			CC_PRINT("env[%d] name(%s)  type(%d)  data(%ld)\n", i, _parser->env[i].name,
+					_parser->env[i].type, *((long* )(_parser->env[i].data)));
+		}
 	}
 
 	ret_var = parseBlock(_parser, 0);
 
-	if (_parser->error != CC_CODE_RETURN) {
+	if (_parser->error != CC_CODE_RETURN)
+	{
 		VarDestroy(ret_var);
 	}
 
-	if (_parser->error >= CC_CODE_ERROR && _parser->error_pos >= _parser->buffer->fsize) {
-		if (_parser->error_pos >= _parser->buffer->fsize) {
+	if (_parser->error >= CC_CODE_ERROR && _parser->error_pos >= _parser->buffer->fsize)
+	{
+		if (_parser->error_pos >= _parser->buffer->fsize)
+		{
 			// Kdyz jsme na konci souboru, neni to chyba
 			_parser->error = CC_CODE_OK;
 		}
@@ -105,19 +133,23 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 	return ret_var;
 }
 
-cc_code_t cc_errorGetCode(parser_s *_parser) {
+cc_code_t cc_errorGetCode(parser_s *_parser)
+{
 	return _parser->error;
 }
 
-bool cc_errorHas(parser_s *_parser) {
+bool cc_errorHas(parser_s *_parser)
+{
 	return _parser->error >= CC_CODE_ERROR;
 }
 
-size_t cc_errorGetPos(parser_s *_parser) {
+size_t cc_errorGetPos(parser_s *_parser)
+{
 	return _parser->error_pos;
 }
 
-const char* cc_errorToString(cc_code_t _err_code) {
+const char* cc_errorToString(cc_code_t _err_code)
+{
 
 	switch (_err_code) {
 
@@ -224,24 +256,29 @@ const char* cc_errorToString(cc_code_t _err_code) {
 
 	}
 
-	return "CC_CODE_UNKNOWN";
+	return "?";
 }
 
-void cc_abort(parser_s *_parser) {
+void cc_abort(parser_s *_parser)
+{
 	/// fixme tady neco jineho.
 	_parser->error = CC_CODE_ABORT;
 }
 
-void cc_varDestroy(var_s *_var) {
+void cc_varDestroy(var_s *_var)
+{
 	VarDestroy(_var);
 }
 
-cc_code_t cc_varGetBool(var_s *_var, bool *_val) {
-	if (_var->type != CC_TYPE_BOOL) {
+cc_code_t cc_varGetBool(var_s *_var, bool *_val)
+{
+	if (_var->type != CC_TYPE_BOOL)
+	{
 		return CC_CODE_VAR_BAD_TYPE;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
@@ -250,12 +287,15 @@ cc_code_t cc_varGetBool(var_s *_var, bool *_val) {
 	return CC_CODE_OK;
 }
 
-cc_code_t cc_varGetInt(var_s *_var, int *_val) {
-	if (_var->type != CC_TYPE_INT) {
+cc_code_t cc_varGetInt(var_s *_var, int *_val)
+{
+	if (_var->type != CC_TYPE_INT)
+	{
 		return CC_CODE_VAR_BAD_TYPE;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
@@ -265,12 +305,15 @@ cc_code_t cc_varGetInt(var_s *_var, int *_val) {
 
 }
 
-cc_code_t cc_varGetLong(var_s *_var, long *_val) {
-	if (_var->type != CC_TYPE_LONG) {
+cc_code_t cc_varGetLong(var_s *_var, long *_val)
+{
+	if (_var->type != CC_TYPE_LONG)
+	{
 		return CC_CODE_VAR_BAD_TYPE;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
@@ -280,12 +323,15 @@ cc_code_t cc_varGetLong(var_s *_var, long *_val) {
 
 }
 
-cc_code_t cc_varGetFloat(var_s *_var, float *_val) {
-	if (_var->type != CC_TYPE_FLOAT) {
+cc_code_t cc_varGetFloat(var_s *_var, float *_val)
+{
+	if (_var->type != CC_TYPE_FLOAT)
+	{
 		return CC_CODE_VAR_BAD_TYPE;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
@@ -295,33 +341,40 @@ cc_code_t cc_varGetFloat(var_s *_var, float *_val) {
 
 }
 
-cc_code_t cc_varGetChar(var_s *_var, char *_val) {
-	if (_var->type != CC_TYPE_CHAR) {
+cc_code_t cc_varGetChar(var_s *_var, char *_val)
+{
+	if (_var->type != CC_TYPE_CHAR)
+	{
 		return CC_CODE_VAR_BAD_TYPE;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
 	memcpy(_val, _var->data, sizeof(char));
-//	_val[0] = ((char*) (_var->data))[0];
-	return true;
+
+	return CC_CODE_OK;
 
 }
 
-cc_code_t cc_varGetString(var_s *_var, char *_val, size_t *_len) {
-	if (_var->type != CC_TYPE_STRING) {
+cc_code_t cc_varGetString(var_s *_var, char *_val, size_t *_len)
+{
+	if (_var->type != CC_TYPE_STRING)
+	{
 		return CC_CODE_VAR_BAD_TYPE;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		return CC_CODE_VAR_NOT_ASSIGNED;
 	}
 
 	*_len = strlen((char*) _var->data);
 
-	if (*_len > CC_VALUE_STRING_LEN) {
+	if (*_len > CC_VALUE_STRING_LEN)
+	{
 		CC_PRINT("ERROR: string is too long\n");
 
 		return CC_CODE_STRING_TOO_LONG;
@@ -329,7 +382,7 @@ cc_code_t cc_varGetString(var_s *_var, char *_val, size_t *_len) {
 
 	memcpy(_val, _var->data, *_len * sizeof(char));
 
-	return true;
+	return CC_CODE_OK;
 
 }
 ///

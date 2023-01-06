@@ -16,7 +16,6 @@
  */
 
 #include <ccript/cc_configs.h>
-#include <ccript/cc_log.h>
 #include <ccript/cc_parser.h>
 #include <ccript/cc_stdlib.h>
 #include <ccript/cc_types.h>
@@ -36,7 +35,7 @@ static int64_t millis() {
 }
 
 var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
-	var_s *var = VarCreate("@", 6, CC_TYPE_LONG, _parser->depth);
+	var_s *var = VarCreate("@", 1, CC_TYPE_LONG, _parser->depth);
 
 	if (var == NULL) {
 		return NULL;

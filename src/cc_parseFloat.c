@@ -6,7 +6,7 @@
  * @file cc_parseFloat.c
  * @brief Implementace funkci pro parsovani typu 'FLOAT'.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -15,7 +15,6 @@
  *
  */
 
-//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -34,7 +33,8 @@
 #define OP_MUL	3
 #define OP_DIV	4
 
-bool ParseDefineTypeFloat(parser_s *_parser) {
+bool ParseDefineTypeFloat(parser_s *_parser)
+{
 
 	char ch = '\0';
 
@@ -42,7 +42,8 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (!isalpha(ch)) {
+	if (!isalpha(ch))
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -53,7 +54,8 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = {
+			'\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -61,11 +63,13 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 	 */
 	size_t identifier_len = 0;
 
-	if (!parseIdentifier(_parser, identifier_name, &identifier_len)) {
+	if (!parseIdentifier(_parser, identifier_name, &identifier_len))
+	{
 		return false;
 	}
 
-	if (identifier_len == 0) {
+	if (identifier_len == 0)
+	{
 		parseSetError(_parser, CC_CODE_KEYWORD);
 		return false;
 
@@ -75,30 +79,31 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch == '=') {
+	if (ch == '=')
+	{
 		// definice promenne a prirazeni
-//
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
 
-//		parseSetErrorPos(_parser, parseGetPos(_parser));
 		float fval = 0;
-		if (!parseVarArgsFloat(_parser, ';', &fval)) {
+		if (!parseVarArgsFloat(_parser, ';', &fval))
+		{
 			return false;
 		}
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_FLOAT, _parser->depth);
 
-		if (var == NULL) {
+		if (var == NULL)
+		{
 			return false;
 		}
 
-		if (!VarValueSetFloat(_parser, var, fval)) {
+		if (!VarValueSetFloat(_parser, var, fval))
+		{
 			VarDestroy(var);
 			return false;
 		}
 
-		if (!VarStore(_parser, var)) {
+		if (!VarStore(_parser, var))
+		{
 			VarDestroy(var);
 			return false;
 		}
@@ -107,15 +112,19 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 		return true;
 
-	} else if (ch == ';') {
+	}
+	else if (ch == ';')
+	{
 		// definice promenne bez prirazeni
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_FLOAT, _parser->depth);
-		if (var == NULL) {
+		if (var == NULL)
+		{
 			return false;
 		}
 
-		if (!VarStore(_parser, var)) {
+		if (!VarStore(_parser, var))
+		{
 			VarDestroy(var);
 			return false;
 		}
@@ -124,7 +133,9 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 		return true;
 
-	} else {
+	}
+	else
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -132,9 +143,11 @@ bool ParseDefineTypeFloat(parser_s *_parser) {
 
 }
 
-bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
+bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
+{
 
-	char value_name[CONFIG_CC_NUMERIC_LEN] = { '\0' };
+	char value_name[CONFIG_CC_NUMERIC_LEN] = {
+			'\0' };
 	size_t value_len;
 	float fval = 0;
 	float fval_temp = 0;
@@ -144,7 +157,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 	file_bufferNext(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
-	if (ch == '\n') {
+	if (ch == '\n')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -153,29 +167,34 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 	file_bufferSkipSpace(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
-	if (ch == '\n') {
+	if (ch == '\n')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
 	}
 
 	file_bufferGet(_parser->buffer, &ch);
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	{
 		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		fval_temp = 0.0f;
 
 		parseSkipNewLine(_parser);
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (isdigit(ch) || ch == '-' || ch == '.') {
+		if (isdigit(ch) || ch == '-' || ch == '.')
+		{
 			// cislo
 
 			bool is_float = false;
-			if (!parseValueFloat(_parser, value_name, &value_len, &is_float)) {
+			if (!parseValueFloat(_parser, value_name, &value_len, &is_float))
+			{
 				return false;
 			}
 
-			if (value_len == 0) {
+			if (value_len == 0)
+			{
 				parseSetError(_parser, CC_CODE_KEYWORD);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -184,7 +203,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			file_bufferGet(_parser->buffer, &ch);
 
-			if (ch != _symbol_end && !charin(ch, "+-/*")) {
+			if (ch != _symbol_end && !charin(ch, "+-/*"))
+			{
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -193,48 +213,58 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			fval_temp = atof(value_name);
 
-		} else if (ch == '(') {
-//			file_bufferNext(_parser->buffer);
-//			file_bufferSkipSpace(_parser->buffer);
-
-			if (!parseVarArgsFloat(_parser, ')', &fval_temp)) {
+		}
+		else if (ch == '(')
+		{
+			if (!parseVarArgsFloat(_parser, ')', &fval_temp))
+			{
 				return false;
 			}
-		} else {
+		}
+		else
+		{
 			// promenna nebo funkce
 
-			if (!parseIdentifier(_parser, value_name, &value_len)) {
+			if (!parseIdentifier(_parser, value_name, &value_len))
+			{
 				return false;
 			}
 
-			if (value_len == 0) {
+			if (value_len == 0)
+			{
 				parseSetError(_parser, CC_CODE_KEYWORD);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
 
 			}
 
+// fixme proc to nastavuji tady?
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
-			if (ch == '[') {
+			if (ch == '[')
+			{
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-//				parseSetErrorPos(_parser, parseGetPos(_parser));
+				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
 
-			} else if (ch == '(') {
+			}
+			else if (ch == '(')
+			{
 				// volani funkce
 
 				size_t pos = parseGetPos(_parser);
 				var_s *var = funcCall(_parser, value_name, value_len);
 
-				if (_parser->error > CC_CODE_RETURN) {
+				if (_parser->error > CC_CODE_RETURN)
+				{
 					VarDestroy(var);
 					return false;
 				}
 
-				if (var == NULL) {
+				if (var == NULL)
+				{
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
 
@@ -247,15 +277,18 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch != _symbol_end && !charin(ch, "+-/*")) {
+				if (ch != _symbol_end && !charin(ch, "+-/*"))
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					VarDestroy(var);
 
 					return false;
 				}
 
-				if (var->type != CC_TYPE_FLOAT) {
+				if (var->type != CC_TYPE_FLOAT)
+				{
 					CC_PRINT("ERROR: function '%s' return bad type.\n", value_name);
+// fixme vracet jiny kod. treba RETURN_BAD_TYPE nebo BAD_RETURN
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					VarDestroy(var);
@@ -263,7 +296,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 					return false;
 				}
 
-				if (!VarValueGetFloat(_parser, var, &fval_temp)) {
+				if (!VarValueGetFloat(_parser, var, &fval_temp))
+				{
 					VarDestroy(var);
 
 					return false;
@@ -273,22 +307,26 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			}
 
-			else {
+			else
+			{
 				// promenna
 
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch != _symbol_end && !charin(ch, "+-/*")) {
+				if (ch != _symbol_end && !charin(ch, "+-/*"))
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					return false;
 				}
 
 				var_s *var = VarGet(_parser, value_name, value_len);
-				if (var == NULL) {
+				if (var == NULL)
+				{
 					return false;
 				}
 
-				if (!VarValueGetFloat(_parser, var, &fval_temp)) {
+				if (!VarValueGetFloat(_parser, var, &fval_temp))
+				{
 					return false;
 				}
 
@@ -299,16 +337,26 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 		file_bufferSkipSpace(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (ch == _symbol_end) {
-			if (last_op == OP_SUM) {
+		if (ch == _symbol_end)
+		{
+			if (last_op == OP_SUM)
+			{
 				fval += fval_temp;
-			} else if (last_op == OP_SUB) {
+			}
+			else if (last_op == OP_SUB)
+			{
 				fval -= fval_temp;
-			} else if (last_op == OP_MUL) {
+			}
+			else if (last_op == OP_MUL)
+			{
 				fval *= fval_temp;
-			} else if (last_op == OP_DIV) {
+			}
+			else if (last_op == OP_DIV)
+			{
 				fval /= fval_temp;
-			} else {
+			}
+			else
+			{
 				fval = fval_temp;
 			}
 
@@ -317,32 +365,47 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			return true;
 
-		} else if (ch == '(') {
+		}
+		else if (ch == '(')
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			CC_PRINT("ERROR: function call?\n");
 
 			return false;
 
-		} else if (ch == '[') {
+		}
+		else if (ch == '[')
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			CC_PRINT("ERROR: array access?\n");
 
 			return false;
-		} else if (ch == '+') {
+		}
+		else if (ch == '+')
+		{
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM) {
+			if (last_op == OP_SUM)
+			{
 				fval += f;
-			} else if (last_op == OP_SUB) {
+			}
+			else if (last_op == OP_SUB)
+			{
 				fval -= f;
-			} else if (last_op == OP_MUL) {
+			}
+			else if (last_op == OP_MUL)
+			{
 				fval *= f;
-			} else if (last_op == OP_DIV) {
+			}
+			else if (last_op == OP_DIV)
+			{
 				fval /= f;
-			} else {
+			}
+			else
+			{
 				fval = f;
 			}
 
@@ -352,19 +415,30 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			continue;
 		}
-		if (ch == '-') {
+
+		if (ch == '-')
+		{
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM) {
+			if (last_op == OP_SUM)
+			{
 				fval += f;
-			} else if (last_op == OP_SUB) {
+			}
+			else if (last_op == OP_SUB)
+			{
 				fval -= f;
-			} else if (last_op == OP_MUL) {
+			}
+			else if (last_op == OP_MUL)
+			{
 				fval *= f;
-			} else if (last_op == OP_DIV) {
+			}
+			else if (last_op == OP_DIV)
+			{
 				fval /= f;
-			} else {
+			}
+			else
+			{
 				fval = f;
 			}
 
@@ -374,19 +448,30 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			continue;
 
-		} else if (ch == '/') {
+		}
+		else if (ch == '/')
+		{
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM) {
+			if (last_op == OP_SUM)
+			{
 				fval += f;
-			} else if (last_op == OP_SUB) {
+			}
+			else if (last_op == OP_SUB)
+			{
 				fval -= f;
-			} else if (last_op == OP_MUL) {
+			}
+			else if (last_op == OP_MUL)
+			{
 				fval *= f;
-			} else if (last_op == OP_DIV) {
+			}
+			else if (last_op == OP_DIV)
+			{
 				fval /= f;
-			} else {
+			}
+			else
+			{
 				fval = f;
 			}
 
@@ -396,19 +481,30 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			continue;
 
-		} else if (ch == '*') {
+		}
+		else if (ch == '*')
+		{
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM) {
+			if (last_op == OP_SUM)
+			{
 				fval += f;
-			} else if (last_op == OP_SUB) {
+			}
+			else if (last_op == OP_SUB)
+			{
 				fval -= f;
-			} else if (last_op == OP_MUL) {
+			}
+			else if (last_op == OP_MUL)
+			{
 				fval *= f;
-			} else if (last_op == OP_DIV) {
+			}
+			else if (last_op == OP_DIV)
+			{
 				fval /= f;
-			} else {
+			}
+			else
+			{
 				fval = f;
 			}
 
@@ -418,17 +514,21 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value) {
 
 			continue;
 
-		} else {
+		}
+		else
+		{
 
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-//			parseSetErrorPos(_parser, parseGetPos(_parser));
+// fixme odkomentovat?
+			// parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 		}
 	}
 	return false;
 }
 
-bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *_is_float) {
+bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *_is_float)
+{
 
 	// todo predelat aby float mel (mohl mit) na konci pismeno 'f'?
 	char ch;
@@ -436,7 +536,8 @@ bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (!isdigit(ch) && ch != '-' && ch != '.') {
+	if (!isdigit(ch) && ch != '-' && ch != '.')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -447,21 +548,27 @@ bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *
 
 	_value[i++] = ch;
 
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	{
 
 		file_bufferNext(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (!isdigit(ch)) {
-			if (ch == '.') {
-				if (hasDot) {
+		if (!isdigit(ch))
+		{
+			if (ch == '.')
+			{
+				if (hasDot)
+				{
 					CC_PRINT("ERROR: second dot in the float value");
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					return false;
 				}
 				hasDot = true;
-			} else {
+			}
+			else
+			{
 				*_is_float = hasDot;
 
 				*_value_len = i;

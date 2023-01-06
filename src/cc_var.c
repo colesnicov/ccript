@@ -6,7 +6,7 @@
  * @file cc_var.c
  * @brief Implementace funkci pro praci s promennymi.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -20,7 +20,7 @@
 #include "ccript/cc_types.h"
 #include "ccript/cc_var.h"
 #include "ccript/cc_var_ext.h"
-#include "ccript/cvector.h"
+#include "cvector/cvector.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -31,29 +31,35 @@
  * @todo Lepsi kontrolu validnosti dat.
  * @todo Mozna typovou kontrolu??
  */
-bool VarInit(parser_s *_parser) {
+bool VarInit(parser_s *_parser)
+{
 	_parser->vars = (cvector_s*) CONFIG_CC_MALLOC(sizeof(cvector_s));
-	if (_parser->vars == NULL) {
+	if (_parser->vars == NULL)
+	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: not enough memmory for variables.\n");
 		return false;
 	}
 	memset(_parser->vars, 0, sizeof(cvector_s));
 
-	if (!cvector_init(_parser->vars)) {
+	if (!cvector_init(_parser->vars))
+	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: not enough memmory for variables container.\n");
 	}
 	return true;
 }
 
-bool VarExists(parser_s *_parser, const char *_name, size_t _name_len) {
-	for (int i = 0; i < cvector_total(_parser->vars); i++) {
+bool VarExists(parser_s *_parser, const char *_name, size_t _name_len)
+{
+	for (int i = 0; i < cvector_total(_parser->vars); i++)
+	{
 
 		var_s *var = (var_s*) cvector_get(_parser->vars, i);
 		CC_ASSERT(var != NULL);
 
-		if (strlen(var->name) == _name_len && strncmp(var->name, _name, _name_len) == 0) {
+		if (strlen(var->name) == _name_len && strncmp(var->name, _name, _name_len) == 0)
+		{
 
 			return true;
 		}
@@ -62,17 +68,21 @@ bool VarExists(parser_s *_parser, const char *_name, size_t _name_len) {
 	return false;
 }
 
-bool VarValueSetBool(parser_s *_parser, var_s *_var, bool _bool) {
+bool VarValueSetBool(parser_s *_parser, var_s *_var, bool _bool)
+{
 
-	if (_var->type != CC_TYPE_BOOL) {
+	if (_var->type != CC_TYPE_BOOL)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->data == NULL) {
+	if (_var->data == NULL)
+	{
 		_var->data = CONFIG_CC_MALLOC(sizeof(bool));
 
-		if (_var->data == NULL) {
+		if (_var->data == NULL)
+		{
 
 			parseSetError(_parser, CC_CODE_NOT_MEM);
 
@@ -88,17 +98,21 @@ bool VarValueSetBool(parser_s *_parser, var_s *_var, bool _bool) {
 
 }
 
-bool VarValueSetFloat(parser_s *_parser, var_s *_var, float _float) {
+bool VarValueSetFloat(parser_s *_parser, var_s *_var, float _float)
+{
 
-	if (_var->type != CC_TYPE_FLOAT) {
+	if (_var->type != CC_TYPE_FLOAT)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->data == NULL) {
+	if (_var->data == NULL)
+	{
 		_var->data = CONFIG_CC_MALLOC(sizeof(float));
 
-		if (_var->data == NULL) {
+		if (_var->data == NULL)
+		{
 			parseSetError(_parser, CC_CODE_NOT_MEM);
 
 			return false;
@@ -113,17 +127,21 @@ bool VarValueSetFloat(parser_s *_parser, var_s *_var, float _float) {
 
 }
 
-bool VarValueSetInt(parser_s *_parser, var_s *_var, int _int) {
+bool VarValueSetInt(parser_s *_parser, var_s *_var, int _int)
+{
 
-	if (_var->type != CC_TYPE_INT) {
+	if (_var->type != CC_TYPE_INT)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->data == NULL) {
+	if (_var->data == NULL)
+	{
 		_var->data = CONFIG_CC_MALLOC(sizeof(int));
 
-		if (_var->data == NULL) {
+		if (_var->data == NULL)
+		{
 			parseSetError(_parser, CC_CODE_NOT_MEM);
 
 			return false;
@@ -138,17 +156,21 @@ bool VarValueSetInt(parser_s *_parser, var_s *_var, int _int) {
 
 }
 
-bool VarValueSetLong(parser_s *_parser, var_s *_var, long _long) {
+bool VarValueSetLong(parser_s *_parser, var_s *_var, long _long)
+{
 
-	if (_var->type != CC_TYPE_LONG) {
+	if (_var->type != CC_TYPE_LONG)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->data == NULL) {
+	if (_var->data == NULL)
+	{
 		_var->data = CONFIG_CC_MALLOC(sizeof(long));
 
-		if (_var->data == NULL) {
+		if (_var->data == NULL)
+		{
 			parseSetError(_parser, CC_CODE_NOT_MEM);
 
 			return false;
@@ -163,17 +185,21 @@ bool VarValueSetLong(parser_s *_parser, var_s *_var, long _long) {
 
 }
 
-bool VarValueSetChar(parser_s *_parser, var_s *_var, char _char) {
+bool VarValueSetChar(parser_s *_parser, var_s *_var, char _char)
+{
 
-	if (_var->type != CC_TYPE_CHAR) {
+	if (_var->type != CC_TYPE_CHAR)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->data == NULL) {
+	if (_var->data == NULL)
+	{
 		_var->data = CONFIG_CC_MALLOC(sizeof(char));
 
-		if (_var->data == NULL) {
+		if (_var->data == NULL)
+		{
 			parseSetError(_parser, CC_CODE_NOT_MEM);
 
 			return false;
@@ -189,14 +215,17 @@ bool VarValueSetChar(parser_s *_parser, var_s *_var, char _char) {
 
 }
 
-bool VarValueSetString(parser_s *_parser, var_s *var, char *_str, size_t _str_len) {
+bool VarValueSetString(parser_s *_parser, var_s *var, char *_str, size_t _str_len)
+{
 
-	if (var->type != CC_TYPE_STRING) {
+	if (var->type != CC_TYPE_STRING)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (var->data != NULL) {
+	if (var->data != NULL)
+	{
 		CONFIG_CC_FREE(var->data);
 		var->data = NULL;
 		var->valid = false;
@@ -204,7 +233,8 @@ bool VarValueSetString(parser_s *_parser, var_s *var, char *_str, size_t _str_le
 /// fixme volat realloc?
 
 	var->data = CONFIG_CC_MALLOC((_str_len + 1) * sizeof(char));
-	if (var->data == NULL) {
+	if (var->data == NULL)
+	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
 
 		return false;
@@ -219,11 +249,13 @@ bool VarValueSetString(parser_s *_parser, var_s *var, char *_str, size_t _str_le
 
 }
 
-bool VarStore(parser_s *_parser, var_s *_var) {
+bool VarStore(parser_s *_parser, var_s *_var)
+{
 
 	CC_ASSERT(_var != NULL && "var is NULL!");
 
-	if (VarExists(_parser, _var->name, strlen(_var->name))) {
+	if (VarExists(_parser, _var->name, strlen(_var->name)))
+	{
 		parseSetError(_parser, CC_CODE_VAR_EXISTS);
 		CC_PRINT("ERROR: variable '%s' exists!\n", _var->name);
 
@@ -234,22 +266,26 @@ bool VarStore(parser_s *_parser, var_s *_var) {
 
 }
 
-var_s* VarCreate(const char *_name, size_t _name_len, cc_type_t _type, uint8_t _scope) {
+var_s* VarCreate(const char *_name, size_t _name_len, cc_type_t _type, uint8_t _scope)
+{
 
-	if (_name_len == 0 || _name == NULL) {
+	if (_name_len == 0 || _name == NULL)
+	{
 //		parseSetError(_parser, CC_CODE_LOGIC);
 		CC_PRINT("ERROR: variable name is 'null'\n");
 		return NULL;
 	}
 
-	if (_type >= CC_TYPE_MAX) {
+	if (_type >= CC_TYPE_MAX)
+	{
 		CC_PRINT("ERROR: variable '%s' type unknown!\n", _name);
 //		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return NULL;
 	}
 
 	var_s *var_t = (var_s*) CONFIG_CC_MALLOC(sizeof(var_s));
-	if (var_t == NULL) {
+	if (var_t == NULL)
+	{
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: 2 not enought memmory for variable '%s'.\n", _name);
 		return NULL;
@@ -257,10 +293,10 @@ var_s* VarCreate(const char *_name, size_t _name_len, cc_type_t _type, uint8_t _
 
 	var_t->name = (char*) CONFIG_CC_MALLOC((_name_len + 1) * sizeof(char));
 
-	if (var_t->name == NULL) {
+	if (var_t->name == NULL)
+	{
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: 3 not enought memmory for variable '%s:%d'.\n", _name, _name_len);
-//		CC_PRINT("ERROR: 3 not enought memmory for variable '%s:%d'.\n", esp_, _name_len);
 		CONFIG_CC_FREE(var_t);
 
 		return NULL;
@@ -283,22 +319,26 @@ typedef struct {
 	void **data;
 } var_array_s;
 
-var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_type_t _type) {
+var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_type_t _type)
+{
 
-	if (_name_len == 0 || _name == NULL) {
+	if (_name_len == 0 || _name == NULL)
+	{
 //		parseSetError(_parser, CC_CODE_LOGIC);
 		CC_PRINT("ERROR: variable name is 'null'\n");
 		return NULL;
 	}
 
-	if (_type >= CC_TYPE_MAX) {
+	if (_type >= CC_TYPE_MAX)
+	{
 		CC_PRINT("ERROR: variable '%d' type unknown!\n", _type);
 //		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return NULL;
 	}
 
 	var_s *var_t = (var_s*) CONFIG_CC_MALLOC(sizeof(var_s));
-	if (var_t == NULL) {
+	if (var_t == NULL)
+	{
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: 4 not enought memmory for variable '%s'.\n", _name);
 		return NULL;
@@ -306,7 +346,8 @@ var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_typ
 
 	var_t->name = (char*) CONFIG_CC_MALLOC((_name_len + 1) * sizeof(char));
 
-	if (var_t->name == NULL) {
+	if (var_t->name == NULL)
+	{
 //		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: 5 not enought memmory for variable '%s'.\n", _name);
 		CONFIG_CC_FREE(var_t);
@@ -318,11 +359,13 @@ var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_typ
 	memcpy(var_t->name, _name, _name_len);
 
 	CC_PRINT("array[%s]\n", VarTypeToString(_type));
-	if (_type == CC_TYPE_INT) {
+	if (_type == CC_TYPE_INT)
+	{
 
 		CC_PRINT("array\n");
 		var_array_s *holder = CONFIG_CC_MALLOC(sizeof(*holder));
-		if (holder == NULL) {
+		if (holder == NULL)
+		{
 //			parseSetError(_parser, CC_CODE_NOT_MEM);
 			CC_PRINT("neni pamet");
 			CONFIG_CC_FREE(var_t->name);
@@ -343,11 +386,14 @@ var_s* VarCreateArray(const char *_name, size_t _name_len, uint8_t _size, cc_typ
 	return var_t;
 }
 
-void VarDestroy(var_s *_var) {
+void VarDestroy(var_s *_var)
+{
 
-	if (_var != NULL) {
+	if (_var != NULL)
+	{
 
-		if (_var->name != NULL) {
+		if (_var->name != NULL)
+		{
 #if CONFIG_CC_VAR_DEBUG
 				CC_VAR_DEBUG("DEBUG: destroy variable '%s'.\n", _var->name);
 #endif
@@ -355,12 +401,16 @@ void VarDestroy(var_s *_var) {
 			_var->name = NULL;
 		}
 
-		if (_var->data != NULL) {
+		if (_var->data != NULL)
+		{
 
-			if (_var->type == CC_TYPE_ARRAY) {
+			if (_var->type == CC_TYPE_ARRAY)
+			{
 				var_array_s *arr = ((var_array_s*) (_var->data));
-				if (arr->data != NULL) {
-					for (uint8_t i = 0; i < arr->count; i++) {
+				if (arr->data != NULL)
+				{
+					for (uint8_t i = 0; i < arr->count; i++)
+					{
 						CONFIG_CC_FREE(arr->data[i]);
 						arr->data[i] = NULL;
 					}
@@ -371,7 +421,9 @@ void VarDestroy(var_s *_var) {
 
 				CONFIG_CC_FREE(_var->data);
 
-			} else {
+			}
+			else
+			{
 				CONFIG_CC_FREE(_var->data);
 				_var->data = NULL;
 			}
@@ -383,16 +435,19 @@ void VarDestroy(var_s *_var) {
 
 }
 
-bool VarFindAndDestroy(parser_s *_parser, const char *_name, size_t _len) {
+bool VarFindAndDestroy(parser_s *_parser, const char *_name, size_t _len)
+{
 
 	size_t len;
 	int i;
 
-	for (i = 0; i < cvector_total(_parser->vars); i++) {
+	for (i = 0; i < cvector_total(_parser->vars); i++)
+	{
 		var_s *var = (var_s*) cvector_get(_parser->vars, i);
 		len = strlen(var->name);
 
-		if (_len == len && strncmp(_name, var->name, _len) == 0) {
+		if (_len == len && strncmp(_name, var->name, _len) == 0)
+		{
 
 			VarDestroy(var);
 
@@ -407,17 +462,20 @@ bool VarFindAndDestroy(parser_s *_parser, const char *_name, size_t _len) {
 	return false;
 }
 
-void VarDeinit(parser_s *_parser) {
+void VarDeinit(parser_s *_parser)
+{
 	int i;
 
-	if (_parser->vars == NULL) {
+	if (_parser->vars == NULL)
+	{
 		return;
 	}
 
 	var_s *var = NULL;
 
 	CC_VAR_DEBUG("DEBUG: destroy vars: '%d'.\n", cvector_total(_parser->vars));
-	for (i = 0; i < cvector_total(_parser->vars); i++) {
+	for (i = 0; i < cvector_total(_parser->vars); i++)
+	{
 		var = cvector_get(_parser->vars, i);
 		VarDestroy(var);
 	}
@@ -428,21 +486,23 @@ void VarDeinit(parser_s *_parser) {
 
 }
 
-void VarClean(parser_s *_parser) {
+void VarClean(parser_s *_parser)
+{
 	assert(_parser != NULL && "PARSER NOT INITIALIZED!");
 
-	if (_parser->vars == NULL) {
+	if (_parser->vars == NULL)
+	{
 		return;
 	}
 
 	var_s *var = NULL;
 
 	int i = cvector_total(_parser->vars);
-	while (i) {
+	while (i)
+	{
 		i--;
 		{
 			var = cvector_get(_parser->vars, i);
-//			CC_PRINT("DEBUG: destroy variable '%s'.\n", var->name);
 		}
 		cvector_delete_dealloc(_parser->vars, i, freeVar);
 
@@ -450,15 +510,19 @@ void VarClean(parser_s *_parser) {
 
 }
 
-var_s* VarGet(parser_s *_parser, const char *_name, size_t _len) {
+var_s* VarGet(parser_s *_parser, const char *_name, size_t _len)
+{
 
 	var_s *var = NULL;
 
-	for (int i = 0; i < cvector_total(_parser->vars); i++) {
+	for (int i = 0; i < cvector_total(_parser->vars); i++)
+	{
 		var = cvector_get(_parser->vars, i);
 
-		if (_len == strlen(var->name) && strncmp(var->name, _name, _len) == 0) {
-			if (var->scope > _parser->depth) {
+		if (_len == strlen(var->name) && strncmp(var->name, _name, _len) == 0)
+		{
+			if (var->scope > _parser->depth)
+			{
 				parseSetError(_parser, CC_CODE_LOGIC);
 				CC_PRINT("error: variable '%s' out of scope: '%d>%d'", var->name, var->scope,
 						_parser->depth);
@@ -476,7 +540,8 @@ var_s* VarGet(parser_s *_parser, const char *_name, size_t _len) {
 	return NULL;
 }
 
-size_t VarGetSize(var_s *_var) {
+size_t VarGetSize(var_s *_var)
+{
 
 	CC_ASSERT(_var != NULL && "var is NULL");
 
@@ -487,20 +552,34 @@ size_t VarGetSize(var_s *_var) {
 	siz += sizeof(uint8_t); // scope
 	siz += sizeof(bool); // valid
 
-	if (_var->valid) {
-		if (_var->type == CC_TYPE_INT) {
+	if (_var->valid)
+	{
+		if (_var->type == CC_TYPE_INT)
+		{
 			siz += sizeof(int); // data
-		} else if (_var->type == CC_TYPE_FLOAT) {
+		}
+		else if (_var->type == CC_TYPE_FLOAT)
+		{
 			siz += sizeof(float); // data
-		} else if (_var->type == CC_TYPE_BOOL) {
+		}
+		else if (_var->type == CC_TYPE_BOOL)
+		{
 			siz += sizeof(bool); // data
-		} else if (_var->type == CC_TYPE_CHAR) {
+		}
+		else if (_var->type == CC_TYPE_CHAR)
+		{
 			siz += sizeof(char); // data
-		} else if (_var->type == CC_TYPE_STRING) {
+		}
+		else if (_var->type == CC_TYPE_STRING)
+		{
 			siz += sizeof(char) * (strlen(_var->data) + 1); // data
-		} else if (_var->type == CC_TYPE_ARRAY) {
+		}
+		else if (_var->type == CC_TYPE_ARRAY)
+		{
 			CC_PRINT("\tdata='[]'\n");
-		} else {
+		}
+		else
+		{
 			CC_PRINT("\tdata\n");
 		}
 	}
@@ -508,12 +587,15 @@ size_t VarGetSize(var_s *_var) {
 	return siz;
 }
 
-size_t VarGetSizeAll(parser_s *_parser) {
+size_t VarGetSizeAll(parser_s *_parser)
+{
 	size_t siz = 0;
 
-	for (int i = 0; i < cvector_total(_parser->vars); i++) {
+	for (int i = 0; i < cvector_total(_parser->vars); i++)
+	{
 		var_s *var = cvector_get(_parser->vars, i);
-		if (!var) {
+		if (!var)
+		{
 			CC_PRINT("ERROR: var '#%d' is 'null'\n", i);
 			parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
 			return 0;
@@ -524,9 +606,11 @@ size_t VarGetSizeAll(parser_s *_parser) {
 	return siz;
 }
 
-void VarDump(var_s *_var) {
+void VarDump(var_s *_var)
+{
 	CC_PRINT("  ------ DUMP VAR\n");
-	if (_var == NULL) {
+	if (_var == NULL)
+	{
 
 		CC_PRINT("  ------ VAR IS 'NULL'\n");
 		CC_PRINT("  ------ END DUMP VAR\n");
@@ -537,48 +621,58 @@ void VarDump(var_s *_var) {
 	CC_PRINT("\ttype='%i:%s';\n", _var->type, VarTypeToString(_var->type));
 	CC_PRINT("\tvalid='%i';\n", _var->valid);
 	CC_PRINT("\tscope='%d'\n", _var->scope);
-	if (_var->valid) {
-		if (_var->type == CC_TYPE_INT) {
+	if (_var->valid)
+	{
+		if (_var->type == CC_TYPE_INT)
+		{
 			int *data = (int*) (_var->data);
 			CC_PRINT("\tdata='%d'\n", *data);
 		}
 
-		else if (_var->type == CC_TYPE_LONG) {
+		else if (_var->type == CC_TYPE_LONG)
+		{
 			long *data = (long*) (_var->data);
-			char buf[sizeof(long) * 8 + 1] = { '\0' };
-//			char buf[CC_VAR_LONG_SIZE] = { '\0' };
-//			ltoa(*data, buf, 10);
+
+			char buf[CC_VAR_LONG_SIZE] = {
+					'\0' };
 			ltoa((long) *data, buf, 10);
 			CC_PRINT("\tdata='%s'\n", buf);
 		}
 
-		else if (_var->type == CC_TYPE_FLOAT) {
+		else if (_var->type == CC_TYPE_FLOAT)
+		{
 			float *data = (float*) (_var->data);
-			char buf[16] = { '\0' };
+			char buf[16] = {
+					'\0' };
 			ftoa(*data, buf, CC_FLOAT_EXP_LEN);
 			CC_PRINT("\tdata='%s'\n", buf);
 		}
 
-		else if (_var->type == CC_TYPE_BOOL) {
+		else if (_var->type == CC_TYPE_BOOL)
+		{
 			bool *data = (bool*) (_var->data);
 			CC_PRINT("\tdata='%d'\n", (int ) (*(data)));
 		}
 
-		else if (_var->type == CC_TYPE_CHAR) {
+		else if (_var->type == CC_TYPE_CHAR)
+		{
 			char *data = (char*) (_var->data);
 			CC_PRINT("\tdata='%c'\n", data[0]);
 		}
 
-		else if (_var->type == CC_TYPE_STRING) {
+		else if (_var->type == CC_TYPE_STRING)
+		{
 			char *data = (char*) (_var->data);
 			CC_PRINT("\tdata='%s'\n", data);
 		}
 
-		else if (_var->type == CC_TYPE_ARRAY) {
+		else if (_var->type == CC_TYPE_ARRAY)
+		{
 			CC_PRINT("\tdata='[]'\n");
 		}
 
-		else {
+		else
+		{
 			CC_PRINT("\tdata\n");
 		}
 	}
@@ -586,10 +680,12 @@ void VarDump(var_s *_var) {
 	CC_PRINT("  ------ END DUMP VAR\n");
 }
 
-void VarDumpAll(parser_s *_parser) {
+void VarDumpAll(parser_s *_parser)
+{
 	CC_PRINT("DUMP ALL VARS(%d)\n", cvector_total(_parser->vars));
 
-	for (int i = 0; i < cvector_total(_parser->vars); i++) {
+	for (int i = 0; i < cvector_total(_parser->vars); i++)
+	{
 		var_s *var = cvector_get(_parser->vars, i);
 		CC_PRINT("iteration='%d';\n", i);
 		VarDump(var);
@@ -598,13 +694,16 @@ void VarDumpAll(parser_s *_parser) {
 	CC_PRINT("END DUMP ALL VARS\n");
 }
 
-bool VarValueGetBool(parser_s *_parser, var_s *_var, bool *_bool) {
-	if (_var->type != CC_TYPE_BOOL) {
+bool VarValueGetBool(parser_s *_parser, var_s *_var, bool *_bool)
+{
+	if (_var->type != CC_TYPE_BOOL)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 		return false;
 	}
@@ -614,13 +713,16 @@ bool VarValueGetBool(parser_s *_parser, var_s *_var, bool *_bool) {
 	return true;
 }
 
-bool VarValueGetFloat(parser_s *_parser, var_s *_var, float *_float) {
-	if (_var->type != CC_TYPE_FLOAT) {
+bool VarValueGetFloat(parser_s *_parser, var_s *_var, float *_float)
+{
+	if (_var->type != CC_TYPE_FLOAT)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 		return false;
 	}
@@ -630,29 +732,35 @@ bool VarValueGetFloat(parser_s *_parser, var_s *_var, float *_float) {
 	return true;
 }
 
-bool VarValueGetChar(parser_s *_parser, var_s *_var, char *_char) {
-	if (_var->type != CC_TYPE_CHAR) {
+bool VarValueGetChar(parser_s *_parser, var_s *_var, char *_char)
+{
+	if (_var->type != CC_TYPE_CHAR)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 		return false;
 	}
 
 	memcpy(_char, _var->data, sizeof(char));
-//	_char[0] = ((char*) (_var->data))[0];
+
 	return true;
 }
 
-bool VarValueGetInt(parser_s *_parser, var_s *_var, int *_int) {
-	if (_var->type != CC_TYPE_INT) {
+bool VarValueGetInt(parser_s *_parser, var_s *_var, int *_int)
+{
+	if (_var->type != CC_TYPE_INT)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 		return false;
 	}
@@ -661,13 +769,16 @@ bool VarValueGetInt(parser_s *_parser, var_s *_var, int *_int) {
 	return true;
 }
 
-bool VarValueGetLong(parser_s *_parser, var_s *_var, long *_int) {
-	if (_var->type != CC_TYPE_LONG) {
+bool VarValueGetLong(parser_s *_parser, var_s *_var, long *_int)
+{
+	if (_var->type != CC_TYPE_LONG)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 		return false;
 	}
@@ -676,19 +787,23 @@ bool VarValueGetLong(parser_s *_parser, var_s *_var, long *_int) {
 	return true;
 }
 
-bool VarValueGetString(parser_s *_parser, var_s *_var, char *_str, size_t *_len) {
-	if (_var->type != CC_TYPE_STRING) {
+bool VarValueGetString(parser_s *_parser, var_s *_var, char *_str, size_t *_len)
+{
+	if (_var->type != CC_TYPE_STRING)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	if (_var->valid == false) {
+	if (_var->valid == false)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 		return false;
 	}
 	size_t len = strlen(_var->data);
 
-	if (len > CC_VALUE_STRING_LEN) {
+	if (len > CC_VALUE_STRING_LEN)
+	{
 		CC_PRINT("ERROR: string is too long '%u>%u'\n", len, *_len);
 		*_len = len;
 		parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
@@ -701,73 +816,90 @@ bool VarValueGetString(parser_s *_parser, var_s *_var, char *_str, size_t *_len)
 	return true;
 }
 
-var_s* VarCastToString(parser_s *_parser, var_s *_var_from) {
+var_s* VarCastToString(parser_s *_parser, var_s *_var_from)
+{
 
-	char val[CONFIG_CC_STRING_LEN] = { '\0' };
+	char val[CONFIG_CC_STRING_LEN] = {
+			'\0' };
 	size_t len = 0;
 
-	if (_var_from->type == CC_TYPE_FLOAT) {
+	if (_var_from->type == CC_TYPE_FLOAT)
+	{
 		float v = 0.0f;
-		if (!VarValueGetFloat(_parser, _var_from, &v)) {
+		if (!VarValueGetFloat(_parser, _var_from, &v))
+		{
 			return false;
 		}
-		len = (size_t) sprintf(val, "%.*f", CC_FLOAT_EXP_LEN, v);
+		len = (size_t) strlen(ftoa(v, val, CC_FLOAT_EXP_LEN));
 	}
 
-	else if (_var_from->type == CC_TYPE_BOOL) {
+	else if (_var_from->type == CC_TYPE_BOOL)
+	{
 		bool v = false;
-		if (!VarValueGetBool(_parser, _var_from, &v)) {
+		if (!VarValueGetBool(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		len = (size_t) sprintf(val, "%d", v);
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
 		int v = 0;
-		if (!VarValueGetInt(_parser, _var_from, &v)) {
+		if (!VarValueGetInt(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		len = (size_t) sprintf(val, "%d", v);
 	}
 
-	else if (_var_from->type == CC_TYPE_LONG) {
+	else if (_var_from->type == CC_TYPE_LONG)
+	{
 		long v = 0;
-		if (!VarValueGetLong(_parser, _var_from, &v)) {
+		if (!VarValueGetLong(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		ltoa(v, val, 10);
 		len = strlen(val);
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
 		int v = 0;
-		if (!VarValueGetInt(_parser, _var_from, &v)) {
+		if (!VarValueGetInt(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		len = (size_t) sprintf(val, "%d", v);
 	}
 
-	else if (_var_from->type == CC_TYPE_CHAR) {
+	else if (_var_from->type == CC_TYPE_CHAR)
+	{
 		char v = 0;
-		if (!VarValueGetChar(_parser, _var_from, &v)) {
+		if (!VarValueGetChar(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		len = 1;
 		val[0] = v;
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 
 	}
 
 	var_s *var = VarCreate("_", 1, CC_TYPE_STRING, _var_from->scope);
-	if (!var) {
+	if (!var)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetString(_parser, var, val, len)) {
+	if (!VarValueSetString(_parser, var, val, len))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -775,51 +907,65 @@ var_s* VarCastToString(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
-var_s* VarCastToBool(parser_s *_parser, var_s *_var_from) {
+var_s* VarCastToBool(parser_s *_parser, var_s *_var_from)
+{
 	bool val = 0;
 
-	if (_var_from->type == CC_TYPE_FLOAT) {
+	if (_var_from->type == CC_TYPE_FLOAT)
+	{
 		float v = 0.0f;
-		if (!VarValueGetFloat(_parser, _var_from, &v)) {
+		if (!VarValueGetFloat(_parser, _var_from, &v))
+		{
 			return NULL;
 		}
 		val = (bool) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_BOOL) {
+	else if (_var_from->type == CC_TYPE_BOOL)
+	{
 
-		if (!VarValueGetBool(_parser, _var_from, &val)) {
+		if (!VarValueGetBool(_parser, _var_from, &val))
+		{
 			return NULL;
 		}
 	}
 
-	else if (_var_from->type == CC_TYPE_STRING) {
-		char v[CONFIG_CC_STRING_LEN] = { '\0' };
+	else if (_var_from->type == CC_TYPE_STRING)
+	{
+		char v[CONFIG_CC_STRING_LEN] = {
+				'\0' };
 		size_t vl = 0;
-		if (!VarValueGetString(_parser, _var_from, v, &vl)) {
+		if (!VarValueGetString(_parser, _var_from, v, &vl))
+		{
 			return NULL;
 		}
 		val = (bool) atoi(v);
 	}
 
-	else if (_var_from->type == CC_TYPE_CHAR) {
+	else if (_var_from->type == CC_TYPE_CHAR)
+	{
 		char v = 0;
-		if (!VarValueGetChar(_parser, _var_from, &v)) {
+		if (!VarValueGetChar(_parser, _var_from, &v))
+		{
 			return NULL;
 		}
 		val = (bool) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
-		if (!VarValueGetInt(_parser, _var_from, (int*) &val)) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
+		if (!VarValueGetInt(_parser, _var_from, (int*) &val))
+		{
 			return NULL;
 		}
 
 	}
 
-	else if (_var_from->type == CC_TYPE_LONG) {
+	else if (_var_from->type == CC_TYPE_LONG)
+	{
 
-		if (!VarValueGetLong(_parser, _var_from, (long*) &val)) {
+		if (!VarValueGetLong(_parser, _var_from, (long*) &val))
+		{
 			return false;
 		}
 
@@ -832,11 +978,13 @@ var_s* VarCastToBool(parser_s *_parser, var_s *_var_from) {
 	}
 
 	var_s *var = VarCreate("_", 1, CC_TYPE_BOOL, _var_from->scope);
-	if (!var) {
+	if (!var)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetBool(_parser, var, val)) {
+	if (!VarValueSetBool(_parser, var, val))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -844,53 +992,66 @@ var_s* VarCastToBool(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
-var_s* VarCastToChar(parser_s *_parser, var_s *_var_from) {
+var_s* VarCastToChar(parser_s *_parser, var_s *_var_from)
+{
 	char val = 0;
 
-	if (_var_from->type == CC_TYPE_FLOAT) {
+	if (_var_from->type == CC_TYPE_FLOAT)
+	{
 		float v = 0.0f;
-		if (!VarValueGetFloat(_parser, _var_from, &v)) {
+		if (!VarValueGetFloat(_parser, _var_from, &v))
+		{
 			return NULL;
 		}
 		val = (char) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_BOOL) {
+	else if (_var_from->type == CC_TYPE_BOOL)
+	{
 		CC_PRINT("ERROR: can't convert type 'bool' to 'char'!\n");
 		return NULL;
 	}
 
-	else if (_var_from->type == CC_TYPE_STRING) {
+	else if (_var_from->type == CC_TYPE_STRING)
+	{
 		CC_PRINT("ERROR: can't convert type 'string' to 'char'!\n");
 		return NULL;
 	}
 
-	else if (_var_from->type == CC_TYPE_CHAR) {
+	else if (_var_from->type == CC_TYPE_CHAR)
+	{
 
-		if (!VarValueGetChar(_parser, _var_from, &val)) {
+		if (!VarValueGetChar(_parser, _var_from, &val))
+		{
 			return NULL;
 		}
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
 		int v = 0;
-		if (!VarValueGetInt(_parser, _var_from, (int*) &v)) {
+		if (!VarValueGetInt(_parser, _var_from, (int*) &v))
+		{
 			return NULL;
 		}
 		val = (char) v;
 
-	} else {
+	}
+	else
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return NULL;
 
 	}
 
 	var_s *var = VarCreate("_", 1, CC_TYPE_CHAR, _var_from->scope);
-	if (!var) {
+	if (!var)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetChar(_parser, var, val)) {
+	if (!VarValueSetChar(_parser, var, val))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -898,69 +1059,86 @@ var_s* VarCastToChar(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
-var_s* VarCastToInt(parser_s *_parser, var_s *_var_from) {
+var_s* VarCastToInt(parser_s *_parser, var_s *_var_from)
+{
 	int val = 0;
 
-	if (_var_from->type == CC_TYPE_FLOAT) {
+	if (_var_from->type == CC_TYPE_FLOAT)
+	{
 		float v = 0.0f;
-		if (!VarValueGetFloat(_parser, _var_from, &v)) {
+		if (!VarValueGetFloat(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (int) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_BOOL) {
+	else if (_var_from->type == CC_TYPE_BOOL)
+	{
 		bool v = false;
-		if (!VarValueGetBool(_parser, _var_from, &v)) {
+		if (!VarValueGetBool(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = v;
 	}
 
-	else if (_var_from->type == CC_TYPE_STRING) {
-		char v[51] = { '\0' };
+	else if (_var_from->type == CC_TYPE_STRING)
+	{
+		char v[51] = {
+				'\0' };
 		size_t vl = 0;
-		if (!VarValueGetString(_parser, _var_from, v, &vl)) {
+		if (!VarValueGetString(_parser, _var_from, v, &vl))
+		{
 			return false;
 		}
 		val = atoi(v);
 	}
 
-	else if (_var_from->type == CC_TYPE_CHAR) {
+	else if (_var_from->type == CC_TYPE_CHAR)
+	{
 		char v = 0;
-		if (!VarValueGetChar(_parser, _var_from, &v)) {
+		if (!VarValueGetChar(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (uint8_t) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
-		if (!VarValueGetInt(_parser, _var_from, &val)) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
+		if (!VarValueGetInt(_parser, _var_from, &val))
+		{
 			return false;
 		}
 
 	}
 
-	else if (_var_from->type == CC_TYPE_LONG) {
+	else if (_var_from->type == CC_TYPE_LONG)
+	{
 		long v = 0;
-		if (!VarValueGetLong(_parser, _var_from, &v)) {
+		if (!VarValueGetLong(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (int) v;
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 
 	}
 
 	var_s *var = VarCreate("_", 1, CC_TYPE_INT, _var_from->scope);
-	if (!var) {
+	if (!var)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetInt(_parser, var, val)) {
+	if (!VarValueSetInt(_parser, var, val))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -968,68 +1146,85 @@ var_s* VarCastToInt(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
-var_s* VarCastToLong(parser_s *_parser, var_s *_var_from) {
+var_s* VarCastToLong(parser_s *_parser, var_s *_var_from)
+{
 	long val = 0;
 
-	if (_var_from->type == CC_TYPE_FLOAT) {
+	if (_var_from->type == CC_TYPE_FLOAT)
+	{
 		float v = 0.0f;
-		if (!VarValueGetFloat(_parser, _var_from, &v)) {
+		if (!VarValueGetFloat(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (long) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_BOOL) {
+	else if (_var_from->type == CC_TYPE_BOOL)
+	{
 		bool v = false;
-		if (!VarValueGetBool(_parser, _var_from, &v)) {
+		if (!VarValueGetBool(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (long) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_STRING) {
-		char v[51] = { '\0' };
+	else if (_var_from->type == CC_TYPE_STRING)
+	{
+		char v[51] = {
+				'\0' };
 		size_t vl = 0;
-		if (!VarValueGetString(_parser, _var_from, v, &vl)) {
+		if (!VarValueGetString(_parser, _var_from, v, &vl))
+		{
 			return false;
 		}
 		val = atol(v);
 	}
 
-	else if (_var_from->type == CC_TYPE_CHAR) {
+	else if (_var_from->type == CC_TYPE_CHAR)
+	{
 		char v = 0;
-		if (!VarValueGetChar(_parser, _var_from, &v)) {
+		if (!VarValueGetChar(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (long) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
-		if (!VarValueGetInt(_parser, _var_from, (int*) &val)) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
+		if (!VarValueGetInt(_parser, _var_from, (int*) &val))
+		{
 			return false;
 		}
 
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
-		if (!VarValueGetLong(_parser, _var_from, &val)) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
+		if (!VarValueGetLong(_parser, _var_from, &val))
+		{
 			return false;
 		}
 
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 
 	}
 
 	var_s *var = VarCreate("_", 1, CC_TYPE_LONG, _var_from->scope);
-	if (!var) {
+	if (!var)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetLong(_parser, var, val)) {
+	if (!VarValueSetLong(_parser, var, val))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -1037,51 +1232,69 @@ var_s* VarCastToLong(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
-var_s* VarCastToFloat(parser_s *_parser, var_s *_var_from) {
+var_s* VarCastToFloat(parser_s *_parser, var_s *_var_from)
+{
 	float val = 0;
 
-	if (_var_from->type == CC_TYPE_FLOAT) {
-		if (!VarValueGetFloat(_parser, _var_from, &val)) {
+	if (_var_from->type == CC_TYPE_FLOAT)
+	{
+		if (!VarValueGetFloat(_parser, _var_from, &val))
+		{
 			return NULL;
 		}
-	} else if (_var_from->type == CC_TYPE_BOOL) {
+	}
+	else if (_var_from->type == CC_TYPE_BOOL)
+	{
 		bool v = false;
-		if (!VarValueGetBool(_parser, _var_from, &v)) {
+		if (!VarValueGetBool(_parser, _var_from, &v))
+		{
 			return NULL;
 		}
 		val = (float) v;
-	} else if (_var_from->type == CC_TYPE_STRING) {
-		char v[51] = { '\0' };
+	}
+	else if (_var_from->type == CC_TYPE_STRING)
+	{
+		char v[51] = {
+				'\0' };
 		size_t vl = 0;
-		if (!VarValueGetString(_parser, _var_from, v, &vl)) {
+		if (!VarValueGetString(_parser, _var_from, v, &vl))
+		{
 			return NULL;
 		}
 		val = (float) atof(v);
-	} else if (_var_from->type == CC_TYPE_CHAR) {
+	}
+	else if (_var_from->type == CC_TYPE_CHAR)
+	{
 		char v = 0;
-		if (!VarValueGetChar(_parser, _var_from, &v)) {
+		if (!VarValueGetChar(_parser, _var_from, &v))
+		{
 			return NULL;
 		}
 		val = (float) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_INT) {
+	else if (_var_from->type == CC_TYPE_INT)
+	{
 		int v = 0;
-		if (!VarValueGetInt(_parser, _var_from, &v)) {
+		if (!VarValueGetInt(_parser, _var_from, &v))
+		{
 			return NULL;
 		}
 		val = (float) v;
 	}
 
-	else if (_var_from->type == CC_TYPE_LONG) {
+	else if (_var_from->type == CC_TYPE_LONG)
+	{
 		long v = 0;
-		if (!VarValueGetLong(_parser, _var_from, &v)) {
+		if (!VarValueGetLong(_parser, _var_from, &v))
+		{
 			return false;
 		}
 		val = (float) v;
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 
@@ -1089,11 +1302,13 @@ var_s* VarCastToFloat(parser_s *_parser, var_s *_var_from) {
 
 	var_s *var = VarCreate("_", 1, CC_TYPE_FLOAT, _var_from->scope);
 
-	if (!var) {
+	if (!var)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetFloat(_parser, var, val)) {
+	if (!VarValueSetFloat(_parser, var, val))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -1101,7 +1316,8 @@ var_s* VarCastToFloat(parser_s *_parser, var_s *_var_from) {
 	return var;
 }
 
-const char* VarTypeToString(cc_type_t _type) {
+const char* VarTypeToString(cc_type_t _type)
+{
 
 	switch (_type) {
 		case CC_TYPE_BOOL:

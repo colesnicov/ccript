@@ -6,7 +6,7 @@
  * @file cc_configs.h
  * @brief Uzivatelske nastaveni.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -35,7 +35,15 @@
 
 #include <system/mathio.hpp>
 
-#define	CC_LOG_TAG	(char*)"CC"
+#if 0
+#define S1(x) #x
+#define S2(x) S1(x)
+#define CC_LOG_TAG __FILE__ " : " S2(__LINE__)
+#else
+
+#define	CC_LOG_TAG	__FUNCTION__
+
+#endif
 
 #define CONFIG_CC_MALLOC(s)		pvPortMalloc((s))
 #define CONFIG_CC_REALLOC(p, s)	pvPortRealloc((p),(s))

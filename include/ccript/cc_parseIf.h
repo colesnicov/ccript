@@ -6,7 +6,7 @@
  * @file cc_parseIf.h
  * @brief Definice funkci pro praci s podminkou IF.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>

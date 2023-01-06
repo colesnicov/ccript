@@ -6,7 +6,7 @@
  * @file cc_parseInt.c
  * @brief Implementace funkci pro parsovani typu 'INT'.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -15,10 +15,8 @@
  *
  */
 
-//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
-#include "ccript/cc_log.h"
 #include "ccript/cc_parser.h"
 #include "ccript/cc_types.h"
 #include "ccript/cc_var_ext.h"
@@ -35,14 +33,16 @@
 #define OP_MUL	3
 #define OP_DIV	4
 
-bool ParseDefineTypeInt(parser_s *_parser) {
+bool ParseDefineTypeInt(parser_s *_parser)
+{
 	char ch = '\0';
 
 	file_bufferSkipSpace(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (!isalpha(ch)) {
+	if (!isalpha(ch))
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -53,7 +53,8 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = {
+			'\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -61,11 +62,13 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 	 */
 	size_t identifier_len = 0;
 
-	if (!parseIdentifier(_parser, identifier_name, &identifier_len)) {
+	if (!parseIdentifier(_parser, identifier_name, &identifier_len))
+	{
 		return false;
 	}
 
-	if (identifier_len == 0) {
+	if (identifier_len == 0)
+	{
 		parseSetError(_parser, CC_CODE_KEYWORD);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -75,7 +78,8 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 	file_bufferSkipSpace(_parser->buffer);
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch == '=') {
+	if (ch == '=')
+	{
 		// definice a prirazeni promenne
 		// ziskej nazev promenne (uz mam: 'keyword_position')
 		// over neexistenci promenne
@@ -84,26 +88,27 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
-
 		int ival = 0;
-		if (!parseVarArgsInt(_parser, ';', &ival)) {
+		if (!parseVarArgsInt(_parser, ';', &ival))
+		{
 			return false;
 		}
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_INT, _parser->depth);
 
-		if (var == NULL) {
+		if (var == NULL)
+		{
 			return false;
 		}
 
-		if (!VarValueSetInt(_parser, var, ival)) {
+		if (!VarValueSetInt(_parser, var, ival))
+		{
 			VarDestroy(var);
 			return false;
 		}
 
-		if (!VarStore(_parser, var)) {
+		if (!VarStore(_parser, var))
+		{
 			VarDestroy(var);
 			return false;
 		}
@@ -114,15 +119,18 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 	}
 
-	else if (ch == ';') {
+	else if (ch == ';')
+	{
 		// definice promenne bez prirazeni
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_INT, _parser->depth);
-		if (var == NULL) {
+		if (var == NULL)
+		{
 			return false;
 		}
 
-		if (!VarStore(_parser, var)) {
+		if (!VarStore(_parser, var))
+		{
 			VarDestroy(var);
 			return false;
 		}
@@ -133,13 +141,15 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 	}
 
-	else if (ch == '(') {
+	else if (ch == '(')
+	{
 		// definice funkce
 
 		return parseDefineBlock(_parser, CC_TYPE_INT, identifier_name, identifier_len);
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -147,9 +157,11 @@ bool ParseDefineTypeInt(parser_s *_parser) {
 
 }
 
-bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
+bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value)
+{
 
-	char value_name[CONFIG_CC_NUMERIC_LEN] = { '\0' };
+	char value_name[CONFIG_CC_NUMERIC_LEN] = {
+			'\0' };
 	size_t value_len;
 	int ival = 0;
 	int ival_temp = 0;
@@ -157,7 +169,8 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 	char ch = 0;
 	file_bufferNext(_parser->buffer);
 	file_bufferGet(_parser->buffer, &ch);
-	if (ch == '\n') {
+	if (ch == '\n')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -166,7 +179,8 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 	file_bufferSkipSpace(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
-	if (ch == '\n') {
+	if (ch == '\n')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -177,7 +191,8 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (!isalnum(ch) && !charin(ch, "-(")) {
+		if (!isalnum(ch) && !charin(ch, "-("))
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -185,33 +200,37 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 		}
 	}
 
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	{
 		memset(value_name, '\0', CC_VALUE_NUMERIC_LEN);
 		ival_temp = 0;
 		parseSkipNewLine(_parser);
 
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (ch == '(') {
+		if (ch == '(')
+		{
 			// zanoreni
 
-//			file_bufferNext(_parser->buffer);
-
-			if (!parseVarArgsInt(_parser, ')', &ival_temp)) {
+			if (!parseVarArgsInt(_parser, ')', &ival_temp))
+			{
 				return false;
 			}
 		}
 
 		else
 
-		if (isdigit(ch) || ch == '-') {
+		if (isdigit(ch) || ch == '-')
+		{
 			// cislo
 
-			if (!parseValueInt(_parser, value_name, &value_len)) {
+			if (!parseValueInt(_parser, value_name, &value_len))
+			{
 				return false;
 			}
 
-			if (value_len == 0) {
+			if (value_len == 0)
+			{
 				parseSetError(_parser, CC_CODE_KEYWORD);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -222,16 +241,19 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
 		}
 
-		else {
+		else
+		{
 			// promenna nebo funkce
 
 			size_t pos = parseGetPos(_parser);
 
-			if (!parseIdentifier(_parser, value_name, &value_len)) {
+			if (!parseIdentifier(_parser, value_name, &value_len))
+			{
 				return false;
 			}
 
-			if (value_len == 0) {
+			if (value_len == 0)
+			{
 				parseSetError(_parser, CC_CODE_KEYWORD);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -242,21 +264,26 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
-			if (ch == '[') {
+			if (ch == '[')
+			{
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
-			} else if (ch == '(') {
+			}
+			else if (ch == '(')
+			{
 				// volani funkce
 
 				var_s *var = funcCall(_parser, value_name, value_len);
 
-				if (_parser->error > CC_CODE_RETURN) {
+				if (_parser->error > CC_CODE_RETURN)
+				{
 					VarDestroy(var);
 					return false;
 				}
 
-				if (var == NULL) {
+				if (var == NULL)
+				{
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
 
@@ -268,14 +295,16 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 				file_bufferSkipSpace(_parser->buffer);
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch != ';' && !charin(ch, "+-/*")) {
+				if (ch != ';' && !charin(ch, "+-/*"))
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					VarDestroy(var);
 					return false;
 				}
 
-				if (var->type != CC_TYPE_INT) {
+				if (var->type != CC_TYPE_INT)
+				{
 					CC_PRINT("ERROR: function '%s' returns bad type.\n", value_name);
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
@@ -283,31 +312,35 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 					return false;
 				}
 
-				if (!VarValueGetInt(_parser, var, &ival_temp)) {
+				if (!VarValueGetInt(_parser, var, &ival_temp))
+				{
 					VarDestroy(var);
 					return false;
 				}
 
 				VarDestroy(var);
-//				file_bufferNext(_parser->buffer);
 
 			}
 
-			else {
+			else
+			{
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch != _symbol_end && !charin(ch, "+-/*")) {
+				if (ch != _symbol_end && !charin(ch, "+-/*"))
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					return false;
 				}
 
 				var_s *var = VarGet(_parser, value_name, value_len);
-				if (var == NULL) {
+				if (var == NULL)
+				{
 					parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
 					return false;
 				}
 
-				if (!VarValueGetInt(_parser, var, &ival_temp)) {
+				if (!VarValueGetInt(_parser, var, &ival_temp))
+				{
 					return false;
 				}
 
@@ -315,25 +348,31 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 
 		}
 
-		if (last_op == OP_SUM) {
+		if (last_op == OP_SUM)
+		{
 			ival += ival_temp;
 			last_op = 0;
 		}
 
-		else if (last_op == OP_SUB) {
+		else if (last_op == OP_SUB)
+		{
 			ival -= ival_temp;
 			last_op = 0;
 		}
 
-		else if (last_op == OP_MUL) {
+		else if (last_op == OP_MUL)
+		{
 			ival *= ival_temp;
 			last_op = 0;
 		}
 
-		else if (last_op == OP_DIV) {
+		else if (last_op == OP_DIV)
+		{
 			ival /= ival_temp;
 			last_op = 0;
-		} else {
+		}
+		else
+		{
 			ival = ival_temp;
 
 		}
@@ -344,56 +383,65 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 			file_bufferGet(_parser->buffer, &ch);
 		}
 
-		if (ch == '+') {
+		if (ch == '+')
+		{
 			last_op = OP_SUM;
 			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
-		if (ch == '-') {
+		if (ch == '-')
+		{
 			last_op = OP_SUB;
 			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 
-		else if (ch == '/') {
+		else if (ch == '/')
+		{
 			last_op = OP_DIV;
 			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 
-		else if (ch == '*') {
+		else if (ch == '*')
+		{
 			last_op = OP_MUL;
 			file_bufferNext(_parser->buffer);
 
 			continue;
 		}
 
-		else if (ch == _symbol_end) {
+		else if (ch == _symbol_end)
+		{
 			*_value = ival;
 			file_bufferNext(_parser->buffer);
 
 			return true;
 
 		}
-
-		else if (ch == '(') {
-			CC_PRINT("ASA");
+// fixme tento blok muze byt treba: int ivar = 2 + (2 + 2)?
+// nebo: int ivar = 2 + (2)?
+// nebo: int ivar = (2)?
+		else if (ch == '(')
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 
 		}
 
-		else if (ch == '[') {
+		else if (ch == '[')
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 		}
 
-		else {
+		else
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -402,12 +450,14 @@ bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value) {
 	return false;
 }
 
-bool parseValueInt(parser_s *_parser, char *_value, size_t *_len) {
+bool parseValueInt(parser_s *_parser, char *_value, size_t *_len)
+{
 	char ch;
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (!isdigit(ch) && ch != '-') {
+	if (!isdigit(ch) && ch != '-')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -418,10 +468,12 @@ bool parseValueInt(parser_s *_parser, char *_value, size_t *_len) {
 
 	_value[i++] = ch;
 
-	while (FILEBUFFER_OK == file_bufferNext(_parser->buffer)) {
+	while (FILEBUFFER_OK == file_bufferNext(_parser->buffer))
+	{
 
 		file_bufferGet(_parser->buffer, &ch);
-		if (!isdigit(ch)) {
+		if (!isdigit(ch))
+		{
 			*_len = i;
 			return true;
 		}

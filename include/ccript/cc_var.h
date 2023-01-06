@@ -6,7 +6,7 @@
  * @file cc_var.h
  * @brief Definice funkci pro praci s promennymi.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>

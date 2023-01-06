@@ -6,7 +6,7 @@
  * @file cc_parseWhile.c
  * @brief Implementace funkci pro parsovani smycky 'WHILE'.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -15,10 +15,9 @@
  *
  */
 
-//#include <ccript/cc_buffer.h>
+
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
-#include <ccript/cc_log.h>
 #include <ccript/cc_parseIf.h>
 #include <ccript/cc_parser.h>
 #include <ccript/cc_parseWhile.h>

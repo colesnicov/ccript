@@ -6,7 +6,7 @@
  * @file cc_parseChar.c
  * @brief Implementace funkci pro parsovani typu 'CHAR'.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -15,7 +15,6 @@
  *
  */
 
-//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -29,7 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool ParseDefineTypeChar(parser_s *_parser) {
+bool ParseDefineTypeChar(parser_s *_parser)
+{
 	// parse name
 	// can be var name, function name,
 	//
@@ -46,7 +46,8 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (!isalpha(ch)) {
+	if (!isalpha(ch))
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -57,7 +58,8 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 	 * @brief Nazev promenne/funkce
 	 *
 	 */
-	char identifier_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
+	char identifier_name[CONFIG_CC_KEYWORD_LEN] = {
+			'\0' };
 	/**
 	 * @var size_t identifier_len
 	 * @brief Delka nazvu promenne/funkce
@@ -65,11 +67,13 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 	 */
 	size_t identifier_len = 0;
 
-	if (!parseIdentifier(_parser, identifier_name, &identifier_len)) {
+	if (!parseIdentifier(_parser, identifier_name, &identifier_len))
+	{
 		return false;
 	}
 
-	if (identifier_len == 0) {
+	if (identifier_len == 0)
+	{
 		parseSetError(_parser, CC_CODE_KEYWORD);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;\
@@ -79,7 +83,8 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 	file_bufferSkipSpace(_parser->buffer);
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch == '=') {
+	if (ch == '=')
+	{
 		// definice a prirazeni promenne
 		// ziskej nazev promenne (uz mam: 'keyword_position')
 		// over neexistenci promenne
@@ -87,27 +92,28 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 		// ';' konec vety
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
-//
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
 
 		char fval = 0;
-		if (!parseVarArgsChar(_parser, ';', &fval)) {
+		if (!parseVarArgsChar(_parser, ';', &fval))
+		{
 			return false;
 		}
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_CHAR, _parser->depth);
 
-		if (var == NULL) {
+		if (var == NULL)
+		{
 			return false;
 		}
 
-		if (!VarValueSetChar(_parser, var, fval)) {
+		if (!VarValueSetChar(_parser, var, fval))
+		{
 			VarDestroy(var);
 			return false;
 		}
 
-		if (!VarStore(_parser, var)) {
+		if (!VarStore(_parser, var))
+		{
 			VarDestroy(var);
 			return false;
 		}
@@ -116,15 +122,19 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 
 		return true;
 
-	} else if (ch == ';') {
+	}
+	else if (ch == ';')
+	{
 		// definice promenne bez prirazeni
 
 		var_s *var = VarCreate(identifier_name, identifier_len, CC_TYPE_CHAR, _parser->depth);
-		if (var == NULL) {
+		if (var == NULL)
+		{
 			return false;
 		}
 
-		if (!VarStore(_parser, var)) {
+		if (!VarStore(_parser, var))
+		{
 			VarDestroy(var);
 			return false;
 		}
@@ -133,7 +143,9 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 
 		return true;
 
-	} else {
+	}
+	else
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -141,14 +153,16 @@ bool ParseDefineTypeChar(parser_s *_parser) {
 
 }
 
-bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
+bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len)
+{
 
 	char ch;
 	char ch_temp;
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch == '\'') {
+	if (ch == '\'')
+	{
 		// prvni znak musi byt apostrof (')
 
 		file_bufferNext(_parser->buffer);
@@ -156,7 +170,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 
 		ch_temp = ch;
 
-		if (ch == '\\') {
+		if (ch == '\\')
+		{
 			// escape sequence?
 			// Nebezpecne znaky jsou:
 			// ',\ a kombinace jako
@@ -166,13 +181,15 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 			file_bufferNext(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
-			if (ch == '\'') {
+			if (ch == '\'')
+			{
 				// apostrof
 
 				file_bufferNext(_parser->buffer);
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch == '\'') {
+				if (ch == '\'')
+				{
 					// Konec komandy
 
 					_value[0] = '\'';
@@ -181,7 +198,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 					return true;
 				}
 
-				else {
+				else
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -190,13 +208,15 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 
 			}
 
-			else if (ch == '\\') {
+			else if (ch == '\\')
+			{
 				// zpetne lomitko (\)
 
 				file_bufferNext(_parser->buffer);
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch == '\'') {
+				if (ch == '\'')
+				{
 					// Konec komandy
 
 					_value[0] = '\\';
@@ -204,7 +224,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 					return true;
 				}
 
-				else if (ch == ';') {
+				else if (ch == ';')
+				{
 					// Konec komandy
 
 					_value[0] = ch_temp;
@@ -213,7 +234,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 					return true;
 				}
 
-				else {
+				else
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -222,7 +244,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 
 			}
 
-			else if (charin(ch, "nrt")) {
+			else if (charin(ch, "nrt"))
+			{
 				// znak novy radek, return nebo tab (\n,\r,\t)
 
 				ch_temp = ch;
@@ -230,14 +253,20 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 				file_bufferNext(_parser->buffer);
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch == '\'') {
+				if (ch == '\'')
+				{
 					// Konec komandy
 
-					if (ch_temp == 'n') {
+					if (ch_temp == 'n')
+					{
 						_value[0] = '\n';
-					} else if (ch_temp == 'r') {
+					}
+					else if (ch_temp == 'r')
+					{
 						_value[0] = '\r';
-					} else if (ch_temp == 't') {
+					}
+					else if (ch_temp == 't')
+					{
 						_value[0] = '\t';
 					}
 
@@ -245,7 +274,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 					return true;
 				}
 
-				else if (ch == ';') {
+				else if (ch == ';')
+				{
 					// Konec komandy
 
 					CC_PRINT("ERROR: 333 Todle je asi spatne. musi nejdrive koncit (') "
@@ -259,7 +289,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 					return true;
 				}
 
-				else {
+				else
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -268,7 +299,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 
 			}
 
-			else {
+			else
+			{
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -276,13 +308,15 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 			}
 		}
 
-		else {
+		else
+		{
 			// znak
 
 			file_bufferNext(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
-			if (ch == '\'' && ch_temp != '\\') {
+			if (ch == '\'' && ch_temp != '\\')
+			{
 				// Konec komandy
 
 // @fixme Znova projit takove funkce a overit si spravnost logiky. nektere sekce jsou zbytecne!?
@@ -292,25 +326,22 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 				*_value_len = 1;
 				return true;
 			}
+// fixme toto tady je asi zbytecne
+//			else if (ch == ';') {
+//				// Konec komandy
+//				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+//				parseSetErrorPos(_parser, parseGetPos(_parser));
+//
+//				return false;
+//
+//				_value[0] = '\0';
+//
+//				*_value_len = 1;
+//				return true;
+//			}
 
-			else if (ch == ';') {
-				// Konec komandy
-
-				CC_PRINT("ERROR: 334 Todle je asi spatne. musi nejdrive koncit (') "
-						"a az potom muze byt ',', ';', ')' a podobne.\n");
-
-				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-				parseSetErrorPos(_parser, parseGetPos(_parser));
-
-				return false;
-
-				_value[0] = '\0';
-
-				*_value_len = 1;
-				return true;
-			}
-
-			else {
+			else
+			{
 
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -319,17 +350,20 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len) {
 		}
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
 	}
 }
 
-bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
+bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value)
+{
 
 	size_t value_len = 0;
-	char value_name[CONFIG_CC_STRING_LEN] = { '\0' };
+	char value_name[CONFIG_CC_STRING_LEN] = {
+			'\0' };
 
 	size_t fval_temp_len = 0;
 	char fval_temp = 0;
@@ -339,7 +373,8 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 	file_bufferNext(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
-	if (ch == '\n') {
+	if (ch == '\n')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -348,7 +383,8 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 	file_bufferSkipSpace(_parser->buffer);
 
 	file_bufferGet(_parser->buffer, &ch);
-	if (ch == '\n') {
+	if (ch == '\n')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
@@ -361,7 +397,8 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (!isalpha(ch) && ch != '\'') {
+		if (!isalpha(ch) && ch != '\'')
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -369,12 +406,15 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 		}
 	}
 
-	if (ch == '\'') {
-		if (!ParseValueChar(_parser, &fval_temp, &fval_temp_len)) {
+	if (ch == '\'')
+	{
+		if (!ParseValueChar(_parser, &fval_temp, &fval_temp_len))
+		{
 			return false;
 		}
 
-		if (fval_temp_len == 0) { // fixme brani v prirazeni prazdneho retezce?
+		if (fval_temp_len == 0)
+		{ // fixme brani v prirazeni prazdneho retezce?
 			parseSetError(_parser, CC_CODE_KEYWORD);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -384,23 +424,26 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	}
 
-	else if (ch == '(') {
+	else if (ch == '(')
+	{
 
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
-		if (!parseVarArgsChar(_parser, ')', &fval_temp)) {
+		if (!parseVarArgsChar(_parser, ')', &fval_temp))
+		{
 			return false;
 		}
 	}
 
-	else {
+	else
+	{
 		// promenna nebo funkce
 
-		if (!parseIdentifier(_parser, value_name, &value_len)) {
+		if (!parseIdentifier(_parser, value_name, &value_len))
+		{
 			return false;
 		}
 
-		if (value_len == 0) {
+		if (value_len == 0)
+		{
 			parseSetError(_parser, CC_CODE_KEYWORD);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -410,23 +453,27 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 		file_bufferSkipSpace(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (ch == '[') {
+		if (ch == '[')
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 		}
 
-		else if (ch == '(') {
+		else if (ch == '(')
+		{
 			// volani funkce ...
 
 			var_s *var = funcCall(_parser, value_name, value_len);
 
-			if (_parser->error > CC_CODE_RETURN) {
+			if (_parser->error > CC_CODE_RETURN)
+			{
 				VarDestroy(var);
 				return false;
 			}
 
-			if (var == NULL) {
+			if (var == NULL)
+			{
 
 				CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
 				parseSetError(_parser, CC_CODE_LOGIC);
@@ -438,22 +485,26 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
-			if (ch != ';') {
+			if (ch != ';')
+			{
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				VarDestroy(var);
 				return false;
 			}
 
-			if (var->type == CC_TYPE_CHAR) {
+			if (var->type == CC_TYPE_CHAR)
+			{
 				value_len = 1;
-				if (!VarValueGetChar(_parser, var, &fval_temp)) {
+				if (!VarValueGetChar(_parser, var, &fval_temp))
+				{
 					VarDestroy(var);
 					return false;
 				}
 			}
 
-			else {
+			else
+			{
 
 				CC_PRINT("ERROR: function '%s' return bad type.\n", value_name);
 				VarDestroy(var);
@@ -464,20 +515,24 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 		}
 
-		else if (ch == ';') {
+		else if (ch == ';')
+		{
 
 			var_s *var = VarGet(_parser, value_name, value_len);
-			if (var == NULL) {
+			if (var == NULL)
+			{
 				return false;
 			}
 
-			if (!VarValueGetChar(_parser, var, &fval_temp)) {
+			if (!VarValueGetChar(_parser, var, &fval_temp))
+			{
 				return false;
 			}
 
 		}
 
-		else {
+		else
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -489,10 +544,12 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch == _symbol_end) {
+	if (ch == _symbol_end)
+	{
 		//konec vety
 
-		if (value_len + fval_temp_len > CC_VALUE_STRING_LEN) {
+		if (value_len + fval_temp_len > CC_VALUE_STRING_LEN)
+		{
 			parseSetError(_parser, CC_CODE_STRING_TOO_LONG);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -505,20 +562,23 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value) {
 
 	}
 
-	else if (ch == '(') {
+	else if (ch == '(')
+	{
 		parseSetError(_parser, CC_CODE_LOGIC);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
 
 	}
 
-	else if (ch == '[') {
+	else if (ch == '[')
+	{
 		parseSetError(_parser, CC_CODE_LOGIC);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return false;

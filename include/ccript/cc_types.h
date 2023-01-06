@@ -6,7 +6,7 @@
  * @file cc_types.h
  * @brief Definice typu a struktur.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -25,7 +25,7 @@
 #include <stdint.h>
 //#include <stdio.h>
 
-#include "ccript/cvector.h"
+#include "cvector/cvector.h"
 #include "ccript/cc_configs.h"
 
 #if CONFIG_CC_FUNC_DEBUG

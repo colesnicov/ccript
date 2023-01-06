@@ -6,7 +6,7 @@
  * @file cc_function.c
  * @brief Implementace funkci pro praci s funkcemi
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -16,14 +16,13 @@
  */
 
 #include <emblib/emblib.h>
-////#include "ccript/cc_buffer.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
 #include "ccript/cc_types.h"
 #include "ccript/cc_var.h"
 #include "ccript/ccript.h"
 #include "ccript/common.h"
-#include "ccript/cvector.h"
+#include "cvector/cvector.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -31,11 +30,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool funcInit(parser_s *_parser) {
+bool funcInit(parser_s *_parser)
+{
 	CC_ASSERT(_parser->funcs == NULL && "CONTAINER FOR FUNCTIONS ALERADY INITIALIZED");
 
 	cvector_s *funcs = (cvector_s*) CONFIG_CC_MALLOC(sizeof(cvector_s));
-	if (funcs == NULL) {
+	if (funcs == NULL)
+	{
 
 		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: not enough memmory for functions!\n");
@@ -48,7 +49,8 @@ bool funcInit(parser_s *_parser) {
 
 	_parser->funcs = funcs;
 
-	if (!cvector_init(_parser->funcs)) {
+	if (!cvector_init(_parser->funcs))
+	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: not enough memmory for functions!");
 
@@ -61,20 +63,24 @@ bool funcInit(parser_s *_parser) {
 	return true;
 }
 
-void funcDeinit(parser_s *_parser) {
+void funcDeinit(parser_s *_parser)
+{
 
 	CC_ASSERT(_parser != NULL && "PARSER IS NULL!");
 
 	fn_handler_s *handler;
 
-	if (_parser->funcs == NULL) {
+	if (_parser->funcs == NULL)
+	{
 		return;
 	}
 
-	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++) {
+	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++)
+	{
 		handler = cvector_get(_parser->funcs, i);
 
-		if (handler != NULL) {
+		if (handler != NULL)
+		{
 			CC_FUNC_DEBUG("DEBUG: remove function '%s'.\n", handler->name);
 			CONFIG_CC_FREE(handler);
 			handler = NULL;
@@ -88,42 +94,51 @@ void funcDeinit(parser_s *_parser) {
 
 }
 
-var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len) {
+var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len)
+{
 
 	var_s *var = NULL;
 
 	cc_block_s *block = blockGet(_parser, func_name, func_name_len);
-	if (block != NULL) {
+	if (block != NULL)
+	{
 		var = blockCall(_parser, block, func_name, func_name_len);
 
-		if (cc_errorGetCode(_parser) == CC_CODE_RETURN) {
+		if (cc_errorGetCode(_parser) == CC_CODE_RETURN)
+		{
 
 			parseSetError(_parser, CC_CODE_OK);
 		}
-
-		else {
-//			CC_PRINT("RET CODE: '%s'.\n", cc_errorToString(cc_errorGetCode(_parser)));
+// fixme co tady?
+		else
+		{
+			CC_PRINT("RET CODE: '%s'.\n", cc_errorToString(cc_errorGetCode(_parser)));
 		}
 
 		return var;
-	} else {
+	}
+	else
+	{
 
 		fn_handler_s *handler = funcGet(_parser, func_name, func_name_len);
 
-		if (handler == NULL) {
+		if (handler == NULL)
+		{
 			parseSetError(_parser, CC_CODE_FUNC_NOT_DEFINED);
 			CC_PRINT("ERROR: function '%s' not defined.\n", func_name);
 			return NULL;
 		}
 
-		var_s *args[CC_FUNC_NUMS_ARGS] = { NULL };
+		var_s *args[CC_FUNC_NUMS_ARGS] = {
+				NULL };
 		uint8_t args_count = 0;
 
 		file_bufferNext(_parser->buffer);
 		file_bufferSkipSpace(_parser->buffer);
 
-		if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count)) {
-			CC_PRINT("ERROR: arguments error.\n");
+		if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count))
+		{
+			CC_PRINT("ERROR: func '%s' arguments error.\n", func_name);
 			funcClearArguments(args, args_count);
 
 			return NULL;
@@ -138,13 +153,16 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len) 
 
 }
 
-fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len) {
+fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len)
+{
 
 	fn_handler_s *handler = NULL;
 
-	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++) {
+	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++)
+	{
 		handler = cvector_get(_parser->funcs, i);
-		if (_name_len == strlen(handler->name) && strncmp(_name, handler->name, _name_len) == 0) {
+		if (_name_len == strlen(handler->name) && strncmp(_name, handler->name, _name_len) == 0)
+		{
 			return handler;
 		}
 	}
@@ -153,13 +171,16 @@ fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len) {
 }
 
 bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
-		cc_fn_prototype _fn, void *_args) {
+		cc_fn_prototype _fn, void *_args)
+{
 	fn_handler_s *handler;
 
-	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++) {
+	for (uint8_t i = 0; i < cvector_total(_parser->funcs); i++)
+	{
 		handler = cvector_get(_parser->funcs, i);
 
-		if (_name_len == strlen(handler->name) && strncmp(_name, handler->name, _name_len) == 0) {
+		if (_name_len == strlen(handler->name) && strncmp(_name, handler->name, _name_len) == 0)
+		{
 			CC_PRINT("ERROR: duplicated function name '%s'!\n", _name);
 			parseSetError(_parser, CC_CODE_FUNC_EXISTS);
 			return false;
@@ -167,7 +188,8 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 	}
 
 	fn_handler_s *hn = (fn_handler_s*) CONFIG_CC_MALLOC(sizeof(fn_handler_s));
-	if (hn == NULL) {
+	if (hn == NULL)
+	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
 		CC_PRINT("ERROR: not enough memmory for function '%s'\n", _name);
 		return false;
@@ -181,17 +203,20 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 }
 
 bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
-		var_s **_args, uint8_t *_args_count) {
+		var_s **_args, uint8_t *_args_count)
+{
 	char ch;
 
 	size_t value_len = 0;
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	{
 
 		file_bufferSkipSpace(_parser->buffer);
 
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (ch == ',') {
+		if (ch == ',')
+		{
 			// dalsi argument
 
 			file_bufferNext(_parser->buffer);
@@ -200,32 +225,39 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 		}
 
-		else if (ch == '\'') {
+		else if (ch == '\'')
+		{
 			// pismeno/znak/symbol
 
 			char value = 0;
 
-			if (!ParseValueChar(_parser, &value, &value_len)) {
+			if (!ParseValueChar(_parser, &value, &value_len))
+			{
 				return false;
 			}
 
-			char buf[3] = { '\0' };
+			char buf[3] = {
+					'\0' };
 			size_t len = 1;
 
-			if (*_args_count == 0) {
+			if (*_args_count == 0)
+			{
 				memcpy(buf, "0", sizeof(char));
 			}
 
-			else {
+			else
+			{
 				len = strlen(itoa(*_args_count, buf, 10));
 			}
 
 			var_s *_var = VarCreate(buf, len, CC_TYPE_CHAR, _parser->depth);
-			if (_var == NULL) {
+			if (_var == NULL)
+			{
 				return false;
 			}
 
-			if (!VarValueSetChar(_parser, _var, value)) {
+			if (!VarValueSetChar(_parser, _var, value))
+			{
 				VarDestroy(_var);
 				return false;
 			}
@@ -237,32 +269,40 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			continue;
 		}
 
-		else if (ch == '"') {
+		else if (ch == '"')
+		{
 			// retezec
 
-			char value[CONFIG_CC_STRING_LEN] = { '\0' };
+			char value[CONFIG_CC_STRING_LEN] = {
+					'\0' };
 
-			if (!ParseValueString(_parser, value, &value_len)) {
+			if (!ParseValueString(_parser, value, &value_len))
+			{
 				return false;
 			}
 
-			char buf[3] = { '\0' };
+			char buf[3] = {
+					'\0' };
 			size_t len = 1;
 
-			if (*_args_count == 0) {
+			if (*_args_count == 0)
+			{
 				memcpy(buf, "0", sizeof(char));
 			}
 
-			else {
-				len = itoa(*_args_count, buf, 10);
+			else
+			{
+				len = strlen(itoa(*_args_count, buf, 10));
 			}
 
 			var_s *_var = VarCreate(buf, len, CC_TYPE_STRING, _parser->depth);
-			if (_var == NULL) {
+			if (_var == NULL)
+			{
 				return false;
 			}
 
-			if (!VarValueSetString(_parser, _var, value, value_len)) {
+			if (!VarValueSetString(_parser, _var, value, value_len))
+			{
 				VarDestroy(_var);
 				return false;
 			}
@@ -273,17 +313,21 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			continue;
 		}
 
-		else if (isdigit(ch) || ch == '-') {
+		else if (isdigit(ch) || ch == '-')
+		{
 			// cislo
 
-			char value[CC_VALUE_NUMERIC_LEN] = { '\0' };
+			char value[CC_VALUE_NUMERIC_LEN] = {
+					'\0' };
 
 			bool is_float = false;
-			if (!parseValueFloat(_parser, value, &value_len, &is_float)) {
+			if (!parseValueFloat(_parser, value, &value_len, &is_float))
+			{
 				return false;
 			}
 
-			if (value_len == 0) {
+			if (value_len == 0)
+			{
 				parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
 				CC_PRINT("ERROR: empty int/float value!\n");
 				return false;
@@ -292,54 +336,66 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 			var_s *_var = NULL;
 
-			if (is_float) {
+			if (is_float)
+			{
 
-				char buf[3] = { '\0' };
+				char buf[3] = {
+						'\0' };
 				size_t len = 1;
 
-				if (*_args_count == 0) {
+				if (*_args_count == 0)
+				{
 					memcpy(buf, "0", sizeof(char));
 				}
 
-				else {
-					len = itoa(*_args_count, buf, 10);
+				else
+				{
+					len = strlen(itoa(*_args_count, buf, 10));
 				}
 
 				_var = VarCreate(buf, len, CC_TYPE_FLOAT, _parser->depth);
 
-				if (_var == NULL) {
+				if (_var == NULL)
+				{
 					return false;
 				}
 
-				if (!VarValueSetFloat(_parser, _var, atof(value))) {
+				if (!VarValueSetFloat(_parser, _var, atof(value)))
+				{
 					VarDestroy(_var);
 					return false;
 				}
 
-			} else {
+			}
+			else
+			{
 				// fixme Proc buf jen 3 a samostatna promenna len?
 
-				char buf[3] = { '\0' };
+				char buf[3] = {
+						'\0' };
 				size_t len = 1;
 
-				if (*_args_count == 0) {
+				if (*_args_count == 0)
+				{
 					memcpy(buf, "0", sizeof(char));
 				}
 
-				else {
+				else
+				{
 					// fixme najit vsude itoa a opravit na novou verzi. ta uz nevraci delku ale retezec!
 					len = strlen(itoa(*_args_count, buf, 10));
 				}
 
 				_var = VarCreate(buf, len, CC_TYPE_INT, _parser->depth);
 
-				CC_PRINT("ERROR: empty int/float value '%d'!\n", value_len);
-				if (_var == NULL) {
+				if (_var == NULL)
+				{
 					CC_PRINT("CHYBA?\n\n");
 					return false;
 				}
 
-				if (!VarValueSetInt(_parser, _var, atoi(value))) {
+				if (!VarValueSetInt(_parser, _var, atoi(value)))
+				{
 					VarDestroy(_var);
 					return false;
 				}
@@ -352,16 +408,20 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			continue;
 		}
 
-		else if (isalpha(ch)) {
+		else if (isalpha(ch))
+		{
 
-			char var_name[CC_KEYWORD_LEN] = { '\0' };
+			char var_name[CC_KEYWORD_LEN] = {
+					'\0' };
 			size_t var_name_len = 0;
 
-			if (!parseIdentifier(_parser, var_name, &var_name_len)) {
+			if (!parseIdentifier(_parser, var_name, &var_name_len))
+			{
 				return false;
 			}
 
-			if (var_name_len == 0) {
+			if (var_name_len == 0)
+			{
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				parseSetError(_parser, CC_CODE_KEYWORD);
 				CC_PRINT("ERROR: empty identifier\n");
@@ -370,79 +430,97 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 			var_s *var = NULL;
 
-			if (var_name_len == 4 && strncmp(var_name, "true", var_name_len) == 0) {
+			if (var_name_len == 4 && strncmp(var_name, "true", var_name_len) == 0)
+			{
 
-				char buf[3] = { '\0' };
+				char buf[3] = {
+						'\0' };
 				size_t len = 1;
 
-				if (*_args_count == 0) {
+				if (*_args_count == 0)
+				{
 					memcpy(buf, "0", sizeof(char));
 				}
 
-				else {
+				else
+				{
 					len = strlen(itoa(*_args_count, buf, 10));
 				}
 
 				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);
 
-				if (var == NULL) {
+				if (var == NULL)
+				{
 					return false;
 				}
 
-				if (!VarValueSetBool(_parser, var, true)) {
+				if (!VarValueSetBool(_parser, var, true))
+				{
 					VarDestroy(var);
 					return false;
 				}
 
 			}
 
-			else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0) {
+			else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0)
+			{
 
-				char buf[3] = { '\0' };
+				char buf[3] = {
+						'\0' };
 				size_t len = 1;
 
-				if (*_args_count == 0) {
+				if (*_args_count == 0)
+				{
 					memcpy(buf, "0", sizeof(char));
 				}
 
-				else {
-					len = itoa(*_args_count, buf, 10);
+				else
+				{
+					len = strlen(itoa(*_args_count, buf, 10));
 				}
 
 				var = VarCreate(buf, len, CC_TYPE_BOOL, _parser->depth);
 
-				if (var == NULL) {
+				if (var == NULL)
+				{
 					return false;
 				}
 
-				if (!VarValueSetBool(_parser, var, false)) {
+				if (!VarValueSetBool(_parser, var, false))
+				{
 					VarDestroy(var);
 					return false;
 				}
 
-			} else {
+			}
+			else
+			{
 				// funkce nebo promenna
 
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch == '[') {
+				if (ch == '[')
+				{
 					CC_PRINT("ERROR: not implemented '%c'!\n", ch);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					return false;
 				}
 
-				else if (ch == '(') {
+				else if (ch == '(')
+				{
 					// funkce
 
 					var = funcCall(_parser, var_name, var_name_len);
 
-					if (_parser->error > CC_CODE_RETURN) {
+					if (_parser->error > CC_CODE_RETURN)
+					{
 						VarDestroy(var);
 						return false;
 					}
 
-					if (var == NULL) {
+					if (var == NULL)
+					{
 
 						CC_PRINT("ERROR: function returns 'NULL'..\n");
 						parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -455,7 +533,8 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 					file_bufferGet(_parser->buffer, &ch);
 
 					// fixme tady hledat carku ','? kdyz ji odstranim?
-					if (!charin(ch, ",)")) {
+					if (!charin(ch, ",)"))
+					{
 						parseSetErrorPos(_parser, parseGetPos(_parser));
 						parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 						VarDestroy(var);
@@ -464,18 +543,21 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 				}
 
-				else if (ch == ')' || ch == ',') {
+				else if (ch == ')' || ch == ',')
+				{
 					// promenna
 
 					var_s *_var = VarGet(_parser, var_name, var_name_len);
-					if (_var == NULL) {
+					if (_var == NULL)
+					{
 						parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
 						CC_PRINT("ERROR: undefined variable '%s'!\n", var_name);
 						// fixme nastavit navratove kody chyb!
 						return false;
 					}
 
-					if (!_var->valid) {
+					if (!_var->valid)
+					{
 						parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
 						CC_PRINT("ERROR: variable '%s' is uninitialized!\n", var_name);
 						return false;
@@ -483,67 +565,84 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 					var = VarCreate(_var->name, strlen(_var->name), _var->type, _var->scope);
 
-					if (var == NULL) {
+					if (var == NULL)
+					{
 						return false;
 					}
 
-					if (_var->type == CC_TYPE_BOOL) {
-						if (!VarValueSetBool(_parser, var, *(bool*) _var->data)) {
+					if (_var->type == CC_TYPE_BOOL)
+					{
+						if (!VarValueSetBool(_parser, var, *(bool*) _var->data))
+						{
 							VarDestroy(var);
 							return false;
 						}
 					}
 
-					else if (_var->type == CC_TYPE_CHAR) {
-						if (!VarValueSetChar(_parser, var, *(char*) _var->data)) {
+					else if (_var->type == CC_TYPE_CHAR)
+					{
+						if (!VarValueSetChar(_parser, var, *(char*) _var->data))
+						{
 							VarDestroy(var);
 							return false;
 						}
 					}
 
-					else if (_var->type == CC_TYPE_FLOAT) {
-						if (!VarValueSetFloat(_parser, var, *(float*) _var->data)) {
+					else if (_var->type == CC_TYPE_FLOAT)
+					{
+						if (!VarValueSetFloat(_parser, var, *(float*) _var->data))
+						{
 							VarDestroy(var);
 							return false;
 						}
 					}
 
-					else if (_var->type == CC_TYPE_INT) {
-						if (!VarValueSetInt(_parser, var, *(int*) _var->data)) {
+					else if (_var->type == CC_TYPE_INT)
+					{
+						if (!VarValueSetInt(_parser, var, *(int*) _var->data))
+						{
 							VarDestroy(var);
 							return false;
 						}
 					}
 
-					else if (_var->type == CC_TYPE_LONG) {
-						if (!VarValueSetLong(_parser, var, *(long*) _var->data)) {
+					else if (_var->type == CC_TYPE_LONG)
+					{
+						if (!VarValueSetLong(_parser, var, *(long*) _var->data))
+						{
 							VarDestroy(var);
 							return false;
 						}
 					}
 
-					else if (_var->type == CC_TYPE_STRING) {
+					else if (_var->type == CC_TYPE_STRING)
+					{
 						if (!VarValueSetString(_parser, var, _var->data,
-								strlen((char*) (_var->data)))) {
+								strlen((char*) (_var->data))))
+						{
 							VarDestroy(var);
 							return false;
 						}
 					}
 
-					else if (_var->type == CC_TYPE_ARRAY) {
+					else if (_var->type == CC_TYPE_ARRAY)
+					{
 						CC_PRINT("ERROR: not implemented\n");
 						parseSetError(_parser, CC_CODE_LOGIC);
 						VarDestroy(var);
 						return false;
 					}
 
-					else {
+					else
+					{
 						parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
 						CC_PRINT("ERROR: unknown type\n");
 						VarDestroy(var);
 						return false;
 					}
-				} else {
+				}
+				else
+				{
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					CC_PRINT("DBEUG: tady asi chyba?'%c'.\n", ch);
@@ -559,26 +658,30 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			continue;
 		}
 
-		else if (ch == ')') {
+		else if (ch == ')')
+		{
 			// konec
 
 			return true;
 		}
 
-		else {
+		else
+		{
 			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 		}
 
-	} // end - while (file_bufferValid(_parser->buffer)) {
+	}
 
 	return false;
 }
 
-void funcClearArguments(var_s **args, uint8_t args_count) {
-	for (uint8_t i = 0; i < args_count; i++) {
+void funcClearArguments(var_s **args, uint8_t args_count)
+{
+	for (uint8_t i = 0; i < args_count; i++)
+	{
 #if CONFIG_CC_FUNC_DEBUG
 		CC_PRINT("DEBUG: destroy function argument: '%d':'%s'.\n", i, args[i]->name);
 #endif

@@ -6,7 +6,7 @@
  * @file cc_parse.c
  * @brief Implementace funkci pro parsovani skriptu
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
@@ -18,7 +18,6 @@
 #include <ccript/cc_function.h>
 #include <ccript/cc_parseIf.h>
 #include <ccript/cc_parseWhile.h>
-//#include "ccript/cc_buffer.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_parser.h"
 #include "ccript/cc_types.h"
@@ -29,47 +28,47 @@
 #include <stddef.h>
 #include <string.h>
 
-var_s* parseBlock(parser_s *_parser, char _end_char) {
+var_s* parseBlock(parser_s *_parser, char _end_char)
+{
 	/**
 	 * @var char keyword_name[CONFIG_CC_KEYWORD_SIZE_CAPS]
 	 * @brief Nalezeny prvni vyraz ve vete
-	 * @details	Typicky: type(int,string,...), function, command(if,while,...)
+	 * @details	Typicky: type(int,string,...), function name, command(if,while,...)
 	 *
 	 */
-	char keyword_name[CONFIG_CC_KEYWORD_LEN] = { '\0' };
+	char keyword_name[CONFIG_CC_KEYWORD_LEN] = {
+			'\0' };
 
 	char ch = '\0';
-
-//	parseSkipNewLine(_parser);
-
-//	file_bufferGet(_parser->buffer, &ch);
 
 	uint8_t scope = _parser->depth;
 
 	var_s *ret_var = NULL;
 
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
-
-//		ch = 0; // fixme toto asi netreba. kdyz dojde k chybe s IO tak se musi ukoncit!?
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	{
 		memset(keyword_name, '\0', CC_KEYWORD_LEN);
 		size_t keyword_len = 0;
 
 		parseSkipNewLine(_parser);
 
-		if (FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch)) {
+		if (FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch))
+		{
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			parseSetError(_parser, CC_CODE_IO);
 			return NULL;
 		}
 
-		if (isdigit(ch)) {
+		if (isdigit(ch))
+		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 
 			return NULL;
 		}
 
-		if (_end_char != 0 && ch == _end_char) {
+		if (_end_char != 0 && ch == _end_char)
+		{
 			// Zrejme konec bloku
 
 			_parser->depth = scope;
@@ -79,7 +78,8 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 			return NULL;
 		}
 
-		if (ch == '{') {
+		if (ch == '{')
+		{
 			// Zrejme zanoreny blok
 
 			file_bufferNext(_parser->buffer);
@@ -88,22 +88,26 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 			ret_var = parseBlock(_parser, '}');
 // fixme co s tou promennou? overit jestli blok neco vraci a odstranit ji.
+// fixme nebo ji odstrani 'scope'?
 			_parser->depth = scope;
 			parseClearScope(_parser);
 
-			if (_parser->error == CC_CODE_OK) {
+			if (_parser->error == CC_CODE_OK)
+			{
 				file_bufferNext(_parser->buffer);
 
 				continue;
 			}
 
-			else if (_parser->error < CC_CODE_ERROR) {
+			else if (_parser->error < CC_CODE_ERROR)
+			{
 				// break/continue/return
 
 				return NULL;
 			}
 
-			else {
+			else
+			{
 				// nejaka chyba
 
 				return false;
@@ -111,10 +115,12 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 		}
 
-		else if (ch == '/') {
+		else if (ch == '/')
+		{
 			// komentar
 
-			if (!parseSkipComment(_parser)) {
+			if (!parseSkipComment(_parser))
+			{
 				return false;
 			}
 
@@ -122,11 +128,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 		}
 
-		else if (ch == '+') {
+		else if (ch == '+')
+		{
 			// inkrementace promenne
 			// ++var;
 
-			if (!parseVarIncrementLeft(_parser, keyword_name, keyword_len)) {
+			if (!parseVarIncrementLeft(_parser, keyword_name, keyword_len))
+			{
 				return NULL;
 			}
 
@@ -136,11 +144,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 		}
 
-		else if (ch == '-') {
+		else if (ch == '-')
+		{
 			// dekrementace promenne
 			// --var;
 
-			if (!parseVarDecrementLeft(_parser, keyword_name, keyword_len)) {
+			if (!parseVarDecrementLeft(_parser, keyword_name, keyword_len))
+			{
 				return NULL;
 			}
 
@@ -150,18 +160,19 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 		}
 
-		else if (isalpha(ch)) {
+		else if (isalpha(ch))
+		{
 			// promenna, funkce
-
-//			size_t pos = parseGetPos(_parser);
 
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 
-			if (!parseIdentifier(_parser, keyword_name, &keyword_len)) {
+			if (!parseIdentifier(_parser, keyword_name, &keyword_len))
+			{
 				return NULL;
 			}
 
-			if (keyword_len == 0) {
+			if (keyword_len == 0)
+			{
 				parseSetError(_parser, CC_CODE_KEYWORD);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return NULL;
@@ -170,94 +181,125 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 			file_bufferSkipSpace(_parser->buffer);
 
-			if (keyword_len == 4 && strncmp(keyword_name, "bool", keyword_len) == 0) {
-				if (ParseDefineTypeBool(_parser, keyword_name)) {
+			if (keyword_len == 4 && strncmp(keyword_name, "bool", keyword_len) == 0)
+			{
+				if (ParseDefineTypeBool(_parser, keyword_name))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 3 && strncmp(keyword_name, "int", keyword_len) == 0) {
-				if (ParseDefineTypeInt(_parser)) {
+			else if (keyword_len == 3 && strncmp(keyword_name, "int", keyword_len) == 0)
+			{
+				if (ParseDefineTypeInt(_parser))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 4 && strncmp(keyword_name, "long", keyword_len) == 0) {
-				if (ParseDefineTypeLong(_parser)) {
+			else if (keyword_len == 4 && strncmp(keyword_name, "long", keyword_len) == 0)
+			{
+				if (ParseDefineTypeLong(_parser))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 5 && strncmp(keyword_name, "float", keyword_len) == 0) {
-				if (ParseDefineTypeFloat(_parser)) {
+			else if (keyword_len == 5 && strncmp(keyword_name, "float", keyword_len) == 0)
+			{
+				if (ParseDefineTypeFloat(_parser))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 4 && strncmp(keyword_name, "char", keyword_len) == 0) {
-				if (ParseDefineTypeChar(_parser)) {
+			else if (keyword_len == 4 && strncmp(keyword_name, "char", keyword_len) == 0)
+			{
+				if (ParseDefineTypeChar(_parser))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 6 && strncmp(keyword_name, "string", keyword_len) == 0) {
-				if (ParseDefineTypeString(_parser)) {
+			else if (keyword_len == 6 && strncmp(keyword_name, "string", keyword_len) == 0)
+			{
+				if (ParseDefineTypeString(_parser))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 6 && strncmp(keyword_name, "delete", keyword_len) == 0) {
+			else if (keyword_len == 6 && strncmp(keyword_name, "delete", keyword_len) == 0)
+			{
 
-				if (parseVarDelete(_parser, keyword_name)) {
+				if (parseVarDelete(_parser, keyword_name))
+				{
 					continue;
-				} else {
+				}
+				else
+				{
 					return NULL;
 				}
 			}
 
-			else if (keyword_len == 2 && strncmp(keyword_name, "if", keyword_len) == 0) {
+			else if (keyword_len == 2 && strncmp(keyword_name, "if", keyword_len) == 0)
+			{
 				_parser->depth++;
 				ret_var = parseIf(_parser);
 
 				_parser->depth = scope;
 				parseClearScope(_parser);
-				if (_parser->error == CC_CODE_RETURN) {
-					// muzu se nachazet ve funkci
+				if (_parser->error == CC_CODE_RETURN)
+				{
 					// return
-//					CC_PRINT("\n\nNEJAKY RETURN z if\n\n");
 					return ret_var;
 				}
 
 				VarDestroy(ret_var);
 
-				if (_parser->error == CC_CODE_BREAK) {
+				if (_parser->error == CC_CODE_BREAK)
+				{
 					// muzu se nachazet ve smycce
 					// break
 
 					return NULL;
 				}
 
-				else if (_parser->error == CC_CODE_CONTINUE) {
+				else if (_parser->error == CC_CODE_CONTINUE)
+				{
 					// muzu se nachazet ve smycce
 					// continue
 
 					return NULL;
 				}
 
-				else if (_parser->error >= CC_CODE_ERROR) {
+				else if (_parser->error >= CC_CODE_ERROR)
+				{
 					return NULL;
 				}
 
@@ -265,18 +307,19 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 			}
 
-			else if (keyword_len == 5 && strncmp(keyword_name, "while", keyword_len) == 0) {
+			else if (keyword_len == 5 && strncmp(keyword_name, "while", keyword_len) == 0)
+			{
 				_parser->inLoop++;
 
 				ret_var = parseWhile(_parser);
 				_parser->inLoop--;
 
+				// fixme proc zde neupravuji 'scope'? V pripade 'IF' to delam..
 //				_parser->depth = scope;
 //				parseClearScope(_parser);
-				if (_parser->error == CC_CODE_RETURN) {
-					// muzu se nachazet ve funkci
+				if (_parser->error == CC_CODE_RETURN)
+				{
 					// return
-//					CC_PRINT("\n\nNEJAKY RETURN ve WHILE\n\n");
 					return ret_var;
 				}
 
@@ -294,7 +337,8 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 //					return NULL;
 //				}
 
-				else if (_parser->error >= CC_CODE_ERROR) {
+				else if (_parser->error >= CC_CODE_ERROR)
+				{
 					return NULL;
 				}
 
@@ -302,8 +346,10 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 			}
 
-			else if (keyword_len == 5 && strncmp(keyword_name, "break", keyword_len) == 0) {
-				if (!_parser->inLoop) {
+			else if (keyword_len == 5 && strncmp(keyword_name, "break", keyword_len) == 0)
+			{
+				if (!_parser->inLoop)
+				{
 					parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -315,8 +361,10 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 				return NULL;
 			}
 
-			else if (keyword_len == 8 && strncmp(keyword_name, "continue", keyword_len) == 0) {
-				if (!_parser->inLoop) {
+			else if (keyword_len == 8 && strncmp(keyword_name, "continue", keyword_len) == 0)
+			{
+				if (!_parser->inLoop)
+				{
 					parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -328,7 +376,8 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 				return NULL;
 			}
 
-			else if (keyword_len == 6 && strncmp(keyword_name, "return", keyword_len) == 0) {
+			else if (keyword_len == 6 && strncmp(keyword_name, "return", keyword_len) == 0)
+			{
 
 				parseSetError(_parser, CC_CODE_RETURN);
 				ret_var = parseReturnArguments(_parser);
@@ -336,38 +385,47 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 				return ret_var;
 			}
 
-			else {
+			else
+			{
 				// promenna nebo funkce
 
 				file_bufferSkipSpace(_parser->buffer);
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch == '=') {
+				if (ch == '=')
+				{
 					// prirazeni promenne
 
-					if (parseVarAssign(_parser, keyword_name, keyword_len)) {
+					if (parseVarAssign(_parser, keyword_name, keyword_len))
+					{
 						continue;
-					} else {
+					}
+					else
+					{
 						return NULL;
 					}
 				}
 
-				else if (ch == '[') {
+				else if (ch == '[')
+				{
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					return NULL;
 				}
 
-				else if (ch == '(') {
+				else if (ch == '(')
+				{
 					// volani funkce, nevracim nic
 
 					var_s *var = funcCall(_parser, keyword_name, keyword_len);
 
-					if (var != NULL) {
+					if (var != NULL)
+					{
 						VarDestroy(var);
 					}
 
-					if (_parser->error >= CC_CODE_ERROR) {
+					if (_parser->error >= CC_CODE_ERROR)
+					{
 						return NULL;
 					}
 
@@ -375,7 +433,8 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 					file_bufferSkipSpace(_parser->buffer);
 					file_bufferGet(_parser->buffer, &ch);
 
-					if (ch != ';') {
+					if (ch != ';')
+					{
 						parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 						parseSetErrorPos(_parser, parseGetPos(_parser));
 
@@ -387,11 +446,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 					continue;
 				}
 
-				else if (ch == '+') {
+				else if (ch == '+')
+				{
 					// inkrementace promenne
 					// var++;
 
-					if (!parseVarIncrementRight(_parser, keyword_name, keyword_len)) {
+					if (!parseVarIncrementRight(_parser, keyword_name, keyword_len))
+					{
 						return NULL;
 					}
 
@@ -401,11 +462,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 				}
 
-				else if (ch == '-') {
+				else if (ch == '-')
+				{
 					// Decrementace promenne
 					// var--;
 
-					if (!parseVarDecrementRight(_parser, keyword_name, keyword_len)) {
+					if (!parseVarDecrementRight(_parser, keyword_name, keyword_len))
+					{
 						return NULL;
 					}
 
@@ -415,11 +478,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 				}
 
-				else if (ch == '/') {
+				else if (ch == '/')
+				{
 					// Deleni promenne
 					// var /= 20;
 
-					if (!parseVarDivideRight(_parser, keyword_name, keyword_len)) {
+					if (!parseVarDivideRight(_parser, keyword_name, keyword_len))
+					{
 						return NULL;
 					}
 
@@ -429,11 +494,13 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 				}
 
-				else if (ch == '*') {
+				else if (ch == '*')
+				{
 					// Nasobeni promenne
 					// var *= 20;
 
-					if (!parseVarMultiplyRight(_parser, keyword_name, keyword_len)) {
+					if (!parseVarMultiplyRight(_parser, keyword_name, keyword_len))
+					{
 						return NULL;
 					}
 
@@ -443,19 +510,25 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 				}
 
-				else {
+				else
+				{
 					parseSetError(_parser, CC_CODE_KEYWORD);
-					parseSetErrorPos(_parser, parseGetPos(_parser)); // fixme tady se udava spatna pozice.
+					// fixme tady se udava spatna pozice.
+					parseSetErrorPos(_parser, parseGetPos(_parser));
 					return NULL;
 				}
 
 			}
 
-		} else if (_parser->buffer->fsize > _parser->error_pos) {
+		}
+		else if (_parser->buffer->fsize > _parser->error_pos)
+		{
 			CC_PRINT("ERROR: unexpected symbol 2 '%c'\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			return NULL;
-		} else {
+		}
+		else
+		{
 
 			return NULL;
 		}
@@ -468,29 +541,31 @@ var_s* parseBlock(parser_s *_parser, char _end_char) {
 
 }
 
-bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
+bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len)
+{
 	// funkce priradi hodnotu prommene ktera byla definovana jiz drive
 
 	parseSetErrorPos(_parser, parseGetPos(_parser));
 
 	var_s *var = VarGet(_parser, _var_name, _var_len);
-	if (var == NULL) {
+	if (var == NULL)
+	{
 		parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
 		CC_PRINT("ERROR: undefined variable '%s'!", _var_name);
 
 		return false;
 	}
 
-	if (var->type == CC_TYPE_BOOL) {
-//
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
+	if (var->type == CC_TYPE_BOOL)
+	{
 		bool ival = 0;
-		if (!parseVarArgsBool(_parser, ';', &ival)) {
+		if (!parseVarArgsBool(_parser, ';', &ival))
+		{
 			return false;
 		}
 
-		if (!VarValueSetBool(_parser, var, ival)) {
+		if (!VarValueSetBool(_parser, var, ival))
+		{
 			return false;
 		}
 
@@ -500,16 +575,16 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	else if (var->type == CC_TYPE_INT) {
-
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
+	else if (var->type == CC_TYPE_INT)
+	{
 		int ival = 0;
-		if (!parseVarArgsInt(_parser, ';', &ival)) {
+		if (!parseVarArgsInt(_parser, ';', &ival))
+		{
 			return false;
 		}
 
-		if (!VarValueSetInt(_parser, var, ival)) {
+		if (!VarValueSetInt(_parser, var, ival))
+		{
 			return false;
 		}
 
@@ -519,16 +594,16 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	else if (var->type == CC_TYPE_LONG) {
-
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
+	else if (var->type == CC_TYPE_LONG)
+	{
 		long val = 0;
-		if (!parseVarArgsLong(_parser, ';', &val)) {
+		if (!parseVarArgsLong(_parser, ';', &val))
+		{
 			return false;
 		}
 
-		if (!VarValueSetLong(_parser, var, val)) {
+		if (!VarValueSetLong(_parser, var, val))
+		{
 			return false;
 		}
 
@@ -538,13 +613,16 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	else if (var->type == CC_TYPE_FLOAT) {
+	else if (var->type == CC_TYPE_FLOAT)
+	{
 		float fval = 0;
-		if (!parseVarArgsFloat(_parser, ';', &fval)) {
+		if (!parseVarArgsFloat(_parser, ';', &fval))
+		{
 			return false;
 		}
 
-		if (!VarValueSetFloat(_parser, var, fval)) {
+		if (!VarValueSetFloat(_parser, var, fval))
+		{
 			return false;
 		}
 
@@ -554,16 +632,16 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	else if (var->type == CC_TYPE_CHAR) {
-
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
+	else if (var->type == CC_TYPE_CHAR)
+	{
 		char cval = 0;
-		if (!parseVarArgsChar(_parser, ';', &cval)) {
+		if (!parseVarArgsChar(_parser, ';', &cval))
+		{
 			return false;
 		}
 
-		if (!VarValueSetChar(_parser, var, cval)) {
+		if (!VarValueSetChar(_parser, var, cval))
+		{
 			return false;
 		}
 
@@ -573,17 +651,18 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	if (var->type == CC_TYPE_STRING) {
-
-//		file_bufferNext(_parser->buffer);
-//		file_bufferSkipSpace(_parser->buffer);
+	if (var->type == CC_TYPE_STRING)
+	{
 		size_t fval_len = 50;
-		char fval[CONFIG_CC_STRING_LEN] = { '\0' };
-		if (!parseVarArgsString(_parser, ';', fval, &fval_len)) {
+		char fval[CONFIG_CC_STRING_LEN] = {
+				'\0' };
+		if (!parseVarArgsString(_parser, ';', fval, &fval_len))
+		{
 			return false;
 		}
 
-		if (!VarValueSetString(_parser, var, fval, fval_len)) {
+		if (!VarValueSetString(_parser, var, fval, fval_len))
+		{
 			return false;
 		}
 
@@ -593,40 +672,48 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len) {
 
 	}
 
-	if (var->type == CC_TYPE_ARRAY) {
+	if (var->type == CC_TYPE_ARRAY)
+	{
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return false;
 	}
 
-	else {
+	else
+	{
 		parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
 		return false;
 	}
 
 }
 
-void parseSetErrorPos(parser_s *_parser, size_t _pos) {
+void parseSetErrorPos(parser_s *_parser, size_t _pos)
+{
 	_parser->error_pos = _pos;
 }
 
-size_t parseGetPos(parser_s *_parser) {
+size_t parseGetPos(parser_s *_parser)
+{
 	return ((size_t) _parser->buffer->offset) + _parser->buffer->fpos - _parser->buffer->length;
 }
-void parseSetError(parser_s *_parser, cc_code_t _error) {
+void parseSetError(parser_s *_parser, cc_code_t _error)
+{
 	_parser->error = _error;
 }
 
-bool parseSkipComment(parser_s *_parser) {
+bool parseSkipComment(parser_s *_parser)
+{
 	char ch = 0;
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch == '/') {
+	if (ch == '/')
+	{
 
 		file_bufferNext(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
 
-		if (ch == '/') {
+		if (ch == '/')
+		{
 			// komentar
 
 #if CONFIG_CC_PRINT_COMMENT
@@ -637,25 +724,19 @@ bool parseSkipComment(parser_s *_parser) {
 			file_bufferNext(_parser->buffer);
 			file_bufferSkipSpace(_parser->buffer);
 
-			while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
+			while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+			{
 
 				file_bufferGet(_parser->buffer, &ch);
 
-				if (ch == '\n') {
+				if (ch == '\n')
+				{
 					// konec radku
 
 #if CONFIG_CC_PRINT_COMMENT
 					CC_PRINT("\\comment: '%s'\n", buf);
 					memset(buf, 0, CC_COMMENT_SIZE);
 #endif
-
-//					file_bufferNext(_parser->buffer);
-//					file_bufferSkipSpace(_parser->buffer);
-//					file_bufferGet(_parser->buffer, &ch);
-//
-//					if (ch == '/') {
-//						return parseSkipComment(_parser);
-//					}
 
 					return true;
 				}
@@ -683,40 +764,37 @@ bool parseSkipComment(parser_s *_parser) {
 
 }
 
-void parseSkipNewLine(parser_s *_parser) {
+void parseSkipNewLine(parser_s *_parser)
+{
 	char ch = 0;
 
-	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch)) {
-		if (ch == '\n' || isspace(ch)) {
+	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch))
+	{
+		if (ch == '\n' || isspace(ch))
+		{
 			file_bufferNext(_parser->buffer);
-		} else {
+		}
+		else
+		{
 			break;
 		}
 	}
 }
 
-//void bufferSkipSpace(parser_s *_parser) {
-//	char ch = 0;
-//	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch)) {
-//		if (isspace(ch)) {
-//			_parser->buffer->fpos++;
-//		} else {
-//			break;
-//		}
-//	}
-//}
-
-bool parseIdentifier(parser_s *_parser, char *_name, size_t *_len) {
+bool parseIdentifier(parser_s *_parser, char *_name, size_t *_len)
+{
 
 	size_t i = 0;
 	char ch = 0;
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	while (isalpha(ch) || isdigit(ch) || ch == '_') {
+	while (isalpha(ch) || isdigit(ch) || ch == '_')
+	{
 		_name[i++] = ch;
 		if (FILEBUFFER_OK != file_bufferNext(_parser->buffer)
-				|| FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch)) {
+				|| FILEBUFFER_OK != file_bufferGet(_parser->buffer, &ch))
+		{
 			*_len = 0;
 			return false;
 		}
@@ -726,7 +804,8 @@ bool parseIdentifier(parser_s *_parser, char *_name, size_t *_len) {
 	return true;
 }
 
-bool parseVarDelete(parser_s *_parser, char *_var_name) {
+bool parseVarDelete(parser_s *_parser, char *_var_name)
+{
 
 	file_bufferSkipSpace(_parser->buffer);
 
@@ -734,20 +813,24 @@ bool parseVarDelete(parser_s *_parser, char *_var_name) {
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (!isalpha(ch)) {
+	if (!isalpha(ch))
+	{
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		return false;
 	}
 
-	char var_name[CC_KEYWORD_LEN] = { '\0' };
+	char var_name[CC_KEYWORD_LEN] = {
+			'\0' };
 	size_t var_name_len = 0;
 
-	if (!parseIdentifier(_parser, var_name, &var_name_len)) {
+	if (!parseIdentifier(_parser, var_name, &var_name_len))
+	{
 		return false;
 	}
 
-	if (var_name_len == 0) {
+	if (var_name_len == 0)
+	{
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_KEYWORD);
 		return false;
@@ -757,7 +840,8 @@ bool parseVarDelete(parser_s *_parser, char *_var_name) {
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch != ';') {
+	if (ch != ';')
+	{
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		return false;

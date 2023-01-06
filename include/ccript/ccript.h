@@ -6,7 +6,7 @@
  * @file ccript.h
  * @brief Definice verejnych funkci pro praci s interpreterem.
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>

@@ -8,7 +8,7 @@
  * @details these appear in <ctypes.h> too, but we don't want macros and we don't want to
  * 			 drag in a table of character flags
  *
- * @version 1b0
+ * @version 1b1
  * @date 26.06.2022
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
