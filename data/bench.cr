@@ -8,15 +8,16 @@
 // Pozor, protoze typ int nemuze pojmout typ long, funkce millis() vraci overflowed hodnotu.
 
 int limit = 100;
-int last = millis();
+long last = millis();
 
-int number1 = 0;
+long number1 = 0;
 int number2 = 0;
 
 println("WHILE 1");
 print('\n');
 
-while(number1 < limit) {
+while(number1 < limit)
+{
 	int number3 = 0;
 	int number4 = 0;
 	int number5 = 30;
@@ -27,15 +28,15 @@ while(number1 < limit) {
 }
 
 print('\n');
-print (number1);
-println(" iterations..."); 
-println("---------------"); 
+print(cast("string",number1));
+println(" iterations...");
+println("---------------");
 
 print('\n');
-println(strcat("millis: ",millis(), ", last: ", last, "."));
+println(strcat("millis: ", cast("string", millis()), ", last: ", cast("string", last), "."));
 number1 = millis() - last;
 
-println(strcat("time: ", number1, " ms."));
+println(strcat("time: ", cast("string", number1), " ms."));
 println("---------------");
 print('\n');
 

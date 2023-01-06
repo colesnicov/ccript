@@ -15,7 +15,7 @@
  *
  */
 
-//#include <ccript/cc_buffer.h>
+
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_parser.h>
@@ -159,7 +159,7 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len)
 	if (ch == '"')
 	{
 
-		memset(_value, '\0', CC_VALUE_STRING_LEN);
+//		memset(_value, '\0', CC_VALUE_STRING_LEN);
 		file_bufferNext(_parser->buffer);
 
 		while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
@@ -292,21 +292,21 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 		return false;
 	}
 
-	file_bufferGet(_parser->buffer, &ch);
+//	file_bufferGet(_parser->buffer, &ch);
 
-	{
+
 		// muze zacinat pouze pismenem, ' a "
 
-		file_bufferGet(_parser->buffer, &ch);
 
-		if (!isalpha(ch) && !charin(ch, "'\""))
-		{
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
+
+	if (!isalpha(ch) && !charin(ch, "'\""))
+	{
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
 
 			return false;
-		}
 	}
+
 
 	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
 	{
@@ -329,7 +329,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
 			}
-			file_bufferNext(_parser->buffer);
+//			file_bufferNext(_parser->buffer);
 
 		}
 
@@ -373,7 +373,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 			{
 				// volani funkce
 				size_t pos = parseGetPos(_parser);
-				var_s *var = funcCall(_parser, value_name, *_value_len);
+				var_s *var = funcCall(_parser, value_name, value_len);
 
 				if (_parser->error > CC_CODE_RETURN)
 				{

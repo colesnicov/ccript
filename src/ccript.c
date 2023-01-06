@@ -86,7 +86,7 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 	_parser->env_count = _env_count;
 	_parser->env = _env;
 
-// fixme napsat funkci printEnv?
+#if CONFIG_CC_PRINT_ENV
 	for (uint8_t i = 0; i < _parser->env_count; i++)
 	{
 		if (CC_TYPE_FLOAT == _parser->env[i].type)
@@ -129,6 +129,7 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 			CC_PRINT("env[%d] name(%s) unknown type\n", i, _parser->env[i].name);
 		}
 	}
+#endif
 
 	ret_var = parseBlock(_parser, 0);
 

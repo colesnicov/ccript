@@ -15,6 +15,7 @@
  *
  */
 
+#include "stdlib_impl.h"
 #include <ccript/cc_configs.h>
 #include <ccript/cc_parser.h>
 #include <ccript/cc_stdlib.h>

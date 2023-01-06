@@ -16,6 +16,7 @@
  */
 
 #include <ccript/cc_parser.h>
+#include <ccript/cc_var_ext.h>
 #include "ccript/cc_types.h"
 #include "ccript/cc_var.h"
 #include "cvector/cvector.h"

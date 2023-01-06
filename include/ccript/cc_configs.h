@@ -208,8 +208,7 @@
  * @brief Funkce pro vypis do konzole.
  *
  */
-#define CONFIG_CC_PRINT(...)	printf("%s: ", CC_LOG_TAG); \
-								printf(__VA_ARGS__)
+#define CONFIG_CC_PRINT(...)	printf(__VA_ARGS__)
 
 /**
  * @def CONFIG_CC_PRINT_COMMENT
@@ -218,6 +217,14 @@
  *
  */
 #define CONFIG_CC_PRINT_COMMENT	0
+
+/**
+ * @def CONFIG_CC_PRINT_ENV
+ * @brief Vypsat promenne prostredi do konzole?
+ * @see CONFIG_CC_PRINT
+ *
+ */
+#define CONFIG_CC_PRINT_ENV		0
 
 /**
  * @def CONFIG_CC_FUNC_DEBUG

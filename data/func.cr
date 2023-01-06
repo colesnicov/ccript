@@ -12,15 +12,15 @@ int sum(int a, int b) {
 int delay2(int ms) {
 	int m = ms;
 	while (true) {
-		println(ms);
+		print("delay: ");
+		print(cast("string", ms));
+		println(".");
 		if (ms == 0) {
 			m += 32;
 			return m;
 		}
 		ms--;
 	}
-
-	return 10;
 }
 
 int r2 = delay2(2);

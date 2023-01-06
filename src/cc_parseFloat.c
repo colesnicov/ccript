@@ -203,6 +203,13 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 			file_bufferGet(_parser->buffer, &ch);
 
+			if (ch == ' ')
+			{
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
+			}
+
 			if (ch != _symbol_end && !charin(ch, "+-/*"))
 			{
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
