@@ -1,5 +1,5 @@
 ﻿/*
- * This file is a part of "CCRipt" Embeddable C Like Scripting Language Interpreter
+ * This file is a part of "CCRipt" Embeddable Custom 'C' Like Scripting Language Interpreter
  */
 
 /**
