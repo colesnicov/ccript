@@ -16,6 +16,7 @@
  *
  */
 
+#include "ccript/cc_block.h"
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"

@@ -15,11 +15,11 @@
  * @copyright MIT License
  *
  */
-#include <ccript/cc_configs.h>
-#include <ccript/cc_function.h>
-#include <ccript/cc_stdlib.h>
-#include <ccript/cc_types.h>
-#include <ccript/ccript.h>
+#include "ccript/cc_configs.h"
+#include "ccript/cc_function.h"
+#include "ccript/cc_stdlib.h"
+#include "ccript/cc_types.h"
+#include "ccript/ccript.h"
 #include "ccript/cc_var.h"
 #include "ccript/cc_var_ext.h"
 

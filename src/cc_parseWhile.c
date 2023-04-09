@@ -16,16 +16,18 @@
  *
  */
 
-#include <ccript/cc_block.h>
-#include <ccript/cc_configs.h>
-#include <ccript/cc_function.h>
-#include <ccript/cc_parseIf.h>
-#include <ccript/cc_parser.h>
-#include <ccript/cc_parseWhile.h>
-#include <math.h>
+#include "ccript/cc_block.h"
+#include "ccript/cc_configs.h"
+#include "ccript/cc_function.h"
+#include "ccript/cc_parseIf.h"
+#include "ccript/cc_parser.h"
+#include "ccript/cc_parseWhile.h"
+#include "ccript/cc_var_ext.h"
 #include "ccript/ccript.h"
 #include "ccript/common.h"
 #include "ccript/cc_var.h"
+
+#include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>

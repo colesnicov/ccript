@@ -17,7 +17,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <ccript/cc_types.h>
+#include "ccript/cc_types.h"
 
 #ifdef __cplusplus
 extern "C" {
