@@ -54,6 +54,7 @@ Ke sve praci vyzaduje
 MIT
 
 ## TODO
+ - Restrukturovat strukturu projektu. Nazvy souboru a funkci musi mit rozumnejsi logiku a vhodnejsi umisteni.
  - Prace s poli. Napr. `int arr[5] = 3;` inicializuje pole s peti prvky typu `int` a priradi jim hodnotu '3'. A `arr[4] = 5;` priradi novou hodnotu poslednimu prvku (indexace zacina od nuly).
  
  
