@@ -60,3 +60,6 @@ while(1)
 	c++;
 	i++;
 }
+
+println("SCRIPT END");
+

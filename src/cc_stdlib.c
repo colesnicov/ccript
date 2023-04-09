@@ -1,13 +1,14 @@
-/*
+﻿/*
  * This file is a part of "CCRipt" Embeddable C Like Scripting Language Interpreter
  */
 
 /**
  * @file cc_stdlib.c
  * @brief Implementace  standardnich 'C' funkci pro volani ze skript.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -26,9 +27,11 @@
 #include "ccript/cc_var.h"
 
 #include <float.h>
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
-bool cc_stdlib_registrate(parser_s *_parser, void *_args)
+bool cc_stdlib_registrate(cc_parser_s *_parser, void *_args)
 {
 	bool ret = true;
 	ret &= cc_registerFunction(_parser, "dump", 4, stdlib_dump, _args);
@@ -36,7 +39,7 @@ bool cc_stdlib_registrate(parser_s *_parser, void *_args)
 	ret &= cc_registerFunction(_parser, "cast", 4, stdlib_cast, _args);
 	ret &= cc_registerFunction(_parser, "print", 5, stdlib_print, _args);
 	ret &= cc_registerFunction(_parser, "println", 7, stdlib_println, _args);
-	ret &= cc_registerFunction(_parser, "system", 6, stdlib_system, _args);
+//	ret &= cc_registerFunction(_parser, "system", 6, stdlib_system, _args);
 	ret &= cc_registerFunction(_parser, "strlen", 6, stdlib_strlen, _args);
 	ret &= cc_registerFunction(_parser, "strcat", 6, stdlib_strcat, _args);
 	ret &= cc_registerFunction(_parser, "env", 3, stdlib_env, _args);
@@ -44,20 +47,18 @@ bool cc_stdlib_registrate(parser_s *_parser, void *_args)
 	return ret;
 }
 
-var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_DebugInfo(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: no arguments!\n");
 		return NULL;
 	}
 
 	if (_vars[0]->type != CC_TYPE_STRING)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: bad argument type!\n");
 		return NULL;
 	}
 
@@ -66,7 +67,6 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, v
 	if (len == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: empty argument value!\n");
 		return false;
 
 	}
@@ -96,7 +96,6 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, v
 		{
 
 			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-			CC_PRINT("ERROR: wrong number of arguments!\n");
 
 			VarDestroy(var);
 			return NULL;
@@ -117,7 +116,6 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, v
 		if (_vars_count != 2)
 		{
 			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-			CC_PRINT("ERROR: wrong number of arguments!\n");
 
 			VarDestroy(var);
 			return NULL;
@@ -139,7 +137,6 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, v
 		if (_vars_count > 1)
 		{
 			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-			CC_PRINT("ERROR: wrong number of arguments!\n");
 
 			VarDestroy(var);
 			return NULL;
@@ -158,7 +155,6 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, v
 	else
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: unknown command '%s'!\n", (char* ) _vars[0]->data);
 
 		VarDestroy(var);
 		return NULL;
@@ -167,26 +163,24 @@ var_s* stdlib_DebugInfo(parser_s *_parser, var_s **_vars, uint8_t _vars_count, v
 	return var;
 }
 
-var_s* stdlib_exit(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_exit(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 	_parser->error = CC_CODE_ABORT;
 	return NULL;
 }
 
-var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_system(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: no arguments!\n");
 		return NULL;
 	}
 
 	if (_vars[0]->type != CC_TYPE_STRING)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: bad argument type!\n");
 		return NULL;
 	}
 
@@ -195,12 +189,11 @@ var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 	if (len == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: empty argument value!\n");
 		return false;
 
 	}
 
-	if (len == 5 && strncmp(_vars[0]->data, "abort", len) == 0)
+	else if (len == 5 && strncmp(_vars[0]->data, "abort", len) == 0)
 	{
 
 		_parser->error = CC_CODE_ABORT;
@@ -214,46 +207,18 @@ var_s* stdlib_system(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 		return NULL;
 	}
 
-	var_s *var = VarCreate("@", 1, CC_TYPE_INT, _parser->depth);
+	parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+	parseSetErrorPos(_parser, parseGetPos(_parser));
 
-	if (!var)
-	{
-		return NULL;
-	}
-
-	else if (len == 6 && strncmp(_vars[0]->data, "millis", len) == 0)
-	{
-
-		int siz = VarGetSize(_vars[1]);
-
-		if (!VarValueSetInt(_parser, var, siz))
-		{
-			VarDestroy(var);
-			return NULL;
-		}
-
-	}
-
-	else
-	{
-		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		parseSetErrorPos(_parser, parseGetPos(_parser));
-		CC_PRINT("ERROR: unknown command '%s'!\n", (char* ) _vars[0]->data);
-
-		VarDestroy(var);
-		return NULL;
-	}
-
-	return var;
+	return NULL;
 }
 
-var_s* stdlib_env(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_env(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count != 1)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: bad arguments count!\n");
 		return NULL;
 	}
 
@@ -276,15 +241,14 @@ var_s* stdlib_env(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_
 		}
 
 		cc_env_s env = _parser->env[i];
-		char buf[20] = {
-				'\0' };
+//		char buf[20] = {'\0' };
 
 		var_s *var = VarCreate(str, len, env.type, _parser->depth);
 
 		if (_parser->env[i].type == CC_TYPE_INT)
 		{
-			int *i = (int*) (env.data);
-			if (!VarValueSetInt(_parser, var, *i))
+			int *y = (int*) (env.data);
+			if (!VarValueSetInt(_parser, var, *y))
 			{
 				VarDestroy(var);
 				return NULL;
@@ -313,8 +277,6 @@ var_s* stdlib_env(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_
 
 		else if (env.type == CC_TYPE_FLOAT)
 		{
-
-			CC_PRINT("ERROR: return float '%s'!\n", str);
 			if (!VarValueSetFloat(_parser, var, (float) (*(float*) (env).data)))
 			{
 				VarDestroy(var);
@@ -345,25 +307,110 @@ var_s* stdlib_env(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_
 		return var;
 	}
 
-	CC_PRINT("ERROR: bad ENV!\n");
-
 	return NULL;
 }
 
-var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_abs(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+{
+
+	if (_vars_count != 1)
+	{
+		parseSetError(_parser, CC_CODE_LOGIC);
+		CC_PRINT("ERROR: wrong number of arguments!\n");
+		return NULL;
+	}
+
+	var_s *var = NULL;
+
+	if (_vars[0]->type == CC_TYPE_LONG)
+	{
+		long tt = 0;
+		var = VarCreate("@", 1, CC_TYPE_LONG, _parser->depth);
+
+		if (var == NULL)
+		{
+			return NULL;
+		}
+
+		if (!VarValueGetLong(_parser, _vars[0], &tt))
+		{
+			return NULL;
+		}
+
+		if (!VarValueSetLong(_parser, var, labs(tt)))
+		{
+			VarDestroy(var);
+			return NULL;
+		}
+	}
+
+	else if (_vars[0]->type == CC_TYPE_INT)
+	{
+		int tt = 0;
+		var = VarCreate("@", 1, CC_TYPE_INT, _parser->depth);
+
+		if (var == NULL)
+		{
+			return NULL;
+		}
+
+		if (!VarValueGetInt(_parser, _vars[0], &tt))
+		{
+			return NULL;
+		}
+
+		if (!VarValueSetInt(_parser, var, abs(tt)))
+		{
+			VarDestroy(var);
+			return NULL;
+		}
+
+	}
+
+	else if (_vars[0]->type == CC_TYPE_FLOAT)
+	{
+		float tt = 0;
+		var = VarCreate("@", 1, CC_TYPE_FLOAT, _parser->depth);
+
+		if (var == NULL)
+		{
+			return NULL;
+		}
+
+		if (!VarValueGetFloat(_parser, _vars[0], &tt))
+		{
+			return NULL;
+		}
+
+		if (!VarValueSetFloat(_parser, var, fabsf(tt)))
+		{
+			VarDestroy(var);
+			return NULL;
+		}
+
+	}
+
+	else
+	{
+		CC_PRINT("ERROR: wrong type of argument '%d'!\n", _vars[0]->type);
+		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
+	}
+
+	return var;
+}
+
+var_s* stdlib_cast(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: no arguments!\n");
 		return NULL;
 	}
 
 	if (_vars[0]->type != CC_TYPE_STRING)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: bad argument type!\n");
 		return NULL;
 	}
 
@@ -372,7 +419,6 @@ var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *
 	if (len == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: empty argument value!\n");
 		return false;
 
 	}
@@ -409,28 +455,21 @@ var_s* stdlib_cast(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *
 		var = VarCastToBool(_parser, _vars[1]);
 	}
 
-	else
-	{
-		CC_PRINT("ERROR: unknown type '%s'!\n", (char* )_vars[0]->data);
-	}
-
 	return var;
 }
 
-var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_strlen(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: no arguments!\n");
 		return NULL;
 	}
 
 	if (_vars[0]->type != CC_TYPE_STRING)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: bad argument type!\n");
 		return NULL;
 	}
 
@@ -439,7 +478,6 @@ var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 	if (len == 0)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: empty argument value!\n");
 		return false;
 
 	}
@@ -460,20 +498,19 @@ var_s* stdlib_strlen(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 	return var;
 }
 
-var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_strcat(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count < 2)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: wrong number of arguments!\n");
 		return NULL;
 	}
 
 	size_t len_total = 0;
-	char buf[CONFIG_CC_STRING_LEN] = {
+	char buf[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
-	char buf2[CONFIG_CC_STRING_LEN] = {
+	char buf2[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
 
 	size_t len = 0;
@@ -486,7 +523,6 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 		if (!_vars[i]->valid)
 		{
 			parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
-			CC_PRINT("ERROR: uninitialized variable '%s'!", _vars[i]->name);
 			return NULL;
 		}
 
@@ -509,12 +545,12 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 		}
 		else if (_vars[i]->type == CC_TYPE_FLOAT)
 		{
-			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%.*f",
-			CONFIG_CC_FLOAT_EXP_LEN, *(float*) (_vars[i]->data));
+			len = (size_t) snprintf(buf2, CC_VALUE_STRING_LEN, "%.*f",
+			CC_FLOAT_EXP_LEN, *(float*) (_vars[i]->data));
 		}
 		else if (_vars[i]->type == CC_TYPE_INT)
 		{
-			len = (size_t) snprintf(buf2, CONFIG_CC_STRING_LEN, "%d", *(int*) (_vars[i]->data));
+			len = (size_t) snprintf(buf2, CC_VALUE_STRING_LEN, "%d", *(int*) (_vars[i]->data));
 		}
 		else if (_vars[i]->type == CC_TYPE_STRING)
 		{
@@ -523,7 +559,6 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 		}
 		else if (_vars[i]->type == CC_TYPE_ARRAY)
 		{
-			CC_PRINT("ERROR: not supported!\n");
 			parseSetError(_parser, CC_CODE_LOGIC);
 			return NULL;
 
@@ -531,7 +566,6 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 
 		if (len_total + len > CC_VALUE_STRING_LEN)
 		{
-			CC_PRINT("ERROR: string is too long. @see CC_VALUE_STRING_LEN\n");
 			return NULL;
 		}
 
@@ -557,43 +591,41 @@ var_s* stdlib_strcat(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 
 }
 
-var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_print(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count != 1)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: wrong number of arguments!\n");
 		return NULL;
 	}
 
-	char buf[CONFIG_CC_STRING_LEN] = {
+	char buf[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
 
 	if (_vars[0]->type == CC_TYPE_BOOL)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(bool*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%d", *(bool*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_CHAR)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%c", *(char*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%c", *(char*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_FLOAT)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%.*f", CONFIG_CC_FLOAT_EXP_LEN,
-				*(float*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%.*f", CC_FLOAT_EXP_LEN, *(float*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_INT)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(int*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%d", *(int*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_STRING)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%s", (char*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%s", (char*) _vars[0]->data);
 	}
 
 	CC_PRINT("%s", buf);
@@ -601,43 +633,41 @@ var_s* stdlib_print(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void 
 	return NULL;
 }
 
-var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_println(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count != 1)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: wrong number of arguments!\n");
 		return NULL;
 	}
 
-	char buf[CONFIG_CC_STRING_LEN] = {
+	char buf[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
 
 	if (_vars[0]->type == CC_TYPE_BOOL)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(bool*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%d", *(bool*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_CHAR)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%c", *(char*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%c", *(char*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_FLOAT)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%.*f", CONFIG_CC_FLOAT_EXP_LEN,
-				*(float*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%.*f", CC_FLOAT_EXP_LEN, *(float*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_INT)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%d", *(int*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%d", *(int*) _vars[0]->data);
 	}
 
 	else if (_vars[0]->type == CC_TYPE_STRING)
 	{
-		snprintf(buf, CONFIG_CC_STRING_LEN, "%s", (char*) _vars[0]->data);
+		snprintf(buf, CC_VALUE_STRING_LEN, "%s", (char*) _vars[0]->data);
 	}
 
 	CC_PRINT("%s\n", buf);
@@ -645,13 +675,12 @@ var_s* stdlib_println(parser_s *_parser, var_s **_vars, uint8_t _vars_count, voi
 	return NULL;
 }
 
-var_s* stdlib_dump(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+var_s* stdlib_dump(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
 {
 
 	if (_vars_count != 1)
 	{
 		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		CC_PRINT("ERROR: wrong number of arguments!\n");
 		return NULL;
 	}
 

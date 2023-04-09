@@ -5,9 +5,10 @@
 /**
  * @file cc_types.h
  * @brief Definice typu a struktur.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -17,7 +18,6 @@
 
 #pragma once
 
-
 #include <filebuffer/filebuffer.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -26,18 +26,36 @@
 #include "cvector/cvector.h"
 #include "ccript/cc_configs.h"
 
+/**
+ * @def CC_FUNC_DEBUG
+ * @brief Vypise informace o zpracovani funkci na STD.
+ * @see CC_PRINT
+ *
+ */
 #if CONFIG_CC_FUNC_DEBUG
 #define CC_FUNC_DEBUG(...)	CC_PRINT(__VA_ARGS__)
 #else
 #define CC_FUNC_DEBUG(...)
 #endif
 
+/**
+ * @def CC_BLOCK_DEBUG
+ * @brief Vypise informace o zpracovani bloku na STD.
+ * @see CC_PRINT
+ *
+ */
 #if CONFIG_CC_BLOCK_DEBUG
 #define CC_BLOCK_DEBUG(...)	CC_PRINT(__VA_ARGS__)
 #else
 #define CC_BLOCK_DEBUG(...)
 #endif
 
+/**
+ * @def CC_VAR_DEBUG
+ * @brief Vypise informace o zpracovani promenne na STD.
+ * @see CC_PRINT
+ *
+ */
 #if CONFIG_CC_VAR_DEBUG
 #define CC_VAR_DEBUG(...)	CC_PRINT(__VA_ARGS__)
 #else
@@ -45,15 +63,105 @@
 #endif
 
 /**
+ * @def CC_MALLOC
+ * @brief Rezervuje pamet.
+ * @see CONFIG_CC_MALLOC
+ *
+ */
+#define CC_MALLOC		CONFIG_CC_MALLOC
+
+/**
+ * @def CC_REALLOC
+ * @brief Prerezervuje pamet.
+ * @see CONFIG_CC_RELLOC
+ *
+ */
+#define CC_REALLOC		CONFIG_CC_RELLOC
+
+/**
+ * @def CC_FREE
+ * @brief Uvolni pamet.
+ * @see CONFIG_CC_FREE
+ *
+ */
+#define CC_FREE		CONFIG_CC_FREE
+
+/**
+ * @def CC_COMMENT_LEN
+ * @brief Velikost zasobniku pro komentar.
+ * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik komentare.
+ * @see CC_PRINT_COMMENT
+ *
+ */
+#define CC_COMMENT_LEN			CONFIG_CC_COMMENT_LEN - 1
+
+/**
+ * @def CC_PRINT_COMMENT
+ * @brief Vypisovat komentare do konzole?
+ * @see CC_PRINT
+ *
+ */
+#define CC_PRINT_COMMENT			CONFIG_CC_PRINT_COMMENT
+
+/**
+ * @def CC_ASSIGN_EMPTY
+ * @brief Podpora prirazeni prazdneho redezce/znaku.
+ *
+ */
+#define CC_ASSIGN_EMPTY			CONFIG_CC_ASSIGN_EMPTY
+
+/**
+ * @def CC_IF_COND_MATH
+ * @brief Podpora matematickych operaci v podminkach.
+ * @details Napriklad: `if(1 + 2 == 3)`
+ *
+ */
+#define CC_IF_COND_MATH			CONFIG_CC_IF_COND_MATH
+
+/**
+ * @def CC_FLOAT_EXP_LEN
+ * @brief Delka exponentu cisla s plovouci desetinnou carkou.
+ * @details Pouziva se pri prevodu promenne typu `float` na typ `string`
+ * 			<code><pre>
+ * 			12.345;
+ * 			   ^^^
+ * 			</pre></code>
+ *
+ */
+#define CC_FLOAT_EXP_LEN			CONFIG_CC_FLOAT_EXP_LEN
+
+/**
+ * @def CC_BUFFER_LEN
+ * @brief Velikost zasobniku pro skript.
+ * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik skriptu nacteneho ze souboru.
+ *
+ */
+#define CC_BUFFER_LEN			CONFIG_CC_BUFFER_LEN
+
+/**
+ * @def CC_PRINT_ENV
+ * @brief Vypsat promenne prostredi do konzole?
+ * @see CC_PRINT
+ *
+ */
+#define CC_PRINT_ENV			CONFIG_CC_PRINT_ENV
+
+/**
  * @def	CC_KEYWORD_LEN
  * @brief Velikost zasobniku pro nazev promenne/bloku/funkce
  * @details Toto je soucasne maximalni delka nazvu promenne, funkce a vyrazu (while, break, continue, ...)
  * @see CONFIG_CC_KEYWORD_LEN - 1 znak.
- * FIXME PREJMENOVAL SIZE NA LEN
  */
 #define CC_KEYWORD_LEN 		CONFIG_CC_KEYWORD_LEN - 1
 
-#define CC_VAR_LONG_SIZE		sizeof(long) * 8 + 1
+/**
+ * @def CC_VALUE_LONG_LEN
+ * @brief Velikost zasobniku pro cislo vcetne ukoncovaci '\0'. int, long a float.
+ * @details Tolik mista bude rezervovano v pameti RAM.
+ * @details Vysledny vyraz bude o 1 znak kratsi!
+ *
+ */
+#define CC_VALUE_LONG_LEN		sizeof(long) * CONFIG_CC_VALUE_LONG_LEN
 
 /**
  * @def CC_VALUE_NUMERIC_LEN
@@ -120,10 +228,16 @@
 /**
  * @def PARSER_DEFAULT
  * @brief Pomucka pro snazsi vytvoreni vychozi (neinicializovane) struktury parseru
- * @see cc_init(parser_s*)
+ * @see cc_init(cc_parser_s*)
+ * @see cc_parser_
  *
  */
-#define PARSER_DEFAULT()	{0, 0, CC_CODE_OK, 0, 0, NULL, NULL, NULL, NULL, NULL}
+#define PARSER_DEFAULT()	{0, 0,  0, 0, CC_CODE_OK, NULL, NULL, NULL, NULL, NULL}
+
+/// forward declarations
+///
+struct var_;
+struct cc_parser_;
 
 /**
  * @enum cc_code_
@@ -186,6 +300,13 @@ typedef enum cc_code_ {
 	CC_CODE_KEYWORD, /**< Kod chyby ktery signalizuje ze vyraz je spatny. */
 
 	/**
+	 * @var CC_CODE_KEYWORD_EMPTY
+	 * @brief Kod chyby ktery signalizuje ze vyraz je prazdny.
+	 *
+	 */
+	CC_CODE_KEYWORD_EMPTY, /**< Kod chyby ktery signalizuje ze vyraz je prazdny. */
+
+	/**
 	 * @var CC_CODE_LOGIC
 	 * @brief Kod chyby ktery signalizuje logickou chybu.
 	 *
@@ -228,11 +349,11 @@ typedef enum cc_code_ {
 	CC_CODE_FUNC_EXISTS, /**< Kod chyby ktery signalizuje o registraci funkce se stejnym nazvem. */
 
 	/**
-	 * @var CC_CODE_FUNC_BAD_TYPE
+	 * @var CC_CODE_FUNC_RET_BAD_TYPE
 	 * @brief Kod chyby ktery signalizuje ze funkce vratila stejny typ.
 	 *
 	 */
-	CC_CODE_FUNC_BAD_TYPE, /**< Kod chyby ktery signalizuje ze funkce vratila stejny typ. */
+	CC_CODE_FUNC_RET_BAD_TYPE, /**< Kod chyby ktery signalizuje ze funkce vratila stejny typ. */
 
 	/**
 	 * @var CC_CODE_VAR_NOT_DEFINED
@@ -255,7 +376,12 @@ typedef enum cc_code_ {
 	 */
 	CC_CODE_VAR_BAD_TYPE, /**< Kod chyby ktery signalizuje pokus o pristup k datum promenne jineho typu. */
 
-	CC_CODE_ARGS_BAD_TYPE, /**< Kod chyby ktery signalizuje pokus o pristup k datum promenne jineho typu. */
+	/**
+	 * @var CC_CODE_ARGS_BAD_TYPE
+	 * @brief Kod chyby ktery signalizuje pokus o pristup k datum argumentu jineho typu.
+	 *
+	 */
+	CC_CODE_ARGS_BAD_TYPE, /**< Kod chyby ktery signalizuje pokus o pristup k datum argumentu jineho typu. */
 
 	/**
 	 * @var CC_CODE_VAR_EXISTS
@@ -357,6 +483,13 @@ typedef enum cc_code_ {
 	CC_CODE_STRING_TOO_LONG, /**< Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou.. */
 
 	/**
+	 * @var CC_CODE_ZERO_DIVIDED
+	 * @brief Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou..
+	 *
+	 */
+	CC_CODE_ZERO_DIVIDED, /**< Deleni nulou */
+
+	/**
 	 * @var CC_CODE_NOT_IMPLEMENTED
 	 * @brief Kod chyby ktery signalizuje delku retezce prekracujici maximalni moznou..
 	 *
@@ -364,6 +497,82 @@ typedef enum cc_code_ {
 	CC_CODE_NOT_IMPLEMENTED /**< Kod chyby ze funkce neni implementovana */
 
 } cc_code_t;
+
+/**
+ * @enum cc_op_
+ * @brief Vycet matematyckych operaci.
+ *
+ * @typedef cc_op_ cc_op_e
+ * @brief Typ logicke/matematycke operace.
+ */
+typedef enum cc_op_ {
+
+	/**
+	 * @var  CC_OP_NONE
+	 * @brief Zadna operace.
+	 */
+	CC_OP_NONE,
+
+	/**
+	 * @var  CC_OP_DIV
+	 * @brief Matematycka operace 'deleni'.
+	 */
+	CC_OP_DIV,
+
+	/**
+	 * @var  CC_OP_MUL
+	 * @brief Matematycka operace 'nasobeni'.
+	 */
+	CC_OP_MUL,
+
+	/**
+	 * @var  CC_OP_SUB
+	 * @brief Matematycka operace 'substrakce/odecitani'.
+	 */
+	CC_OP_SUB,
+
+	/**
+	 * @var  CC_OP_SUM
+	 * @brief Matematycka operace 'scitani'.
+	 */
+	CC_OP_SUM,
+
+	/**
+	 * @var  CC_OP_AND
+	 * @brief Logicka operace 'a take'.
+	 */
+	CC_OP_AND,
+
+	/**
+	 * @var  CC_OP_OR
+	 * @brief Logicka operace 'nebo'.
+	 */
+	CC_OP_OR,
+
+	/**
+	 * @var  CC_OP_GREAT
+	 * @brief Logicka operace 'vetsi nez'.
+	 */
+	CC_OP_GREAT,
+
+	/**
+	 * @var  CC_OP_LESS
+	 * @brief Logicka operace 'menzi nez'.
+	 */
+	CC_OP_LESS,
+
+	/**
+	 * @var  CC_OP_GREAT_EQ
+	 * @brief Logicka operace 'vetsi nez nebo rovna se'.
+	 */
+	CC_OP_GREAT_EQ,
+
+	/**
+	 * @var  CC_OP_LESS_EQ
+	 * @brief Logicka operace 'mensi nez nebo rovna se'.
+	 */
+	CC_OP_LESS_EQ
+} cc_op_e;
 
 /**
  * @enum cc_type_
@@ -444,13 +653,8 @@ typedef enum cc_type_ {
 
 } cc_type_t;
 
-/// forward declarations
-///
-struct var_;
-struct parser_;
-
 /**
- * @fn var_s * cc_fn_prototype(parser_s*, var_s**, uint8_t)
+ * @fn var_s * cc_fn_prototype(cc_parser_s*, var_s**, uint8_t)
  * @brief Prototyp 'C' funkce pro privazani k parseru
  *
  *
@@ -463,12 +667,37 @@ struct parser_;
  * @note	Vracena promenna, se musi po ukonceni praci s ni
  * 			odstranit volanim funkce @see varDestroy()
  */
-typedef struct var_* (*cc_fn_prototype)(struct parser_ *_parser, struct var_ **_vars,
+typedef struct var_* (*cc_fn_prototype)(struct cc_parser_ *_parser, struct var_ **_vars,
 		uint8_t _vars_count, void *_args);
 
+/**
+ * @struct cc_env_
+ * @brief Promenna 'prostredi'.
+ *
+ * @typedef  cc_env_ cc_env_s
+ * @brief Typ cc_env_
+ * @see cc_env_
+ *
+ */
 typedef struct cc_env_ {
-	const char * name;
+
+	/**
+	 * @var const char *name
+	 * @brief Nazev podle promenne.
+	 */
+	const char *name;
+
+	/**
+	 * @var cc_type_t type
+	 * @brief Typ dat.
+	 */
 	cc_type_t type;
+
+	/**
+	 * @var void *data
+	 * @brief Ukazatel na data.
+	 * @details Data se pred pouzitim musi pretypovat podle jejich typu.
+	 */
 	void *data;
 } cc_env_s;
 
@@ -535,7 +764,7 @@ typedef struct var_ {
 
 	/**
 	 * @var	uint8_t scope
-	 * @brief Hloubka zanoreni @see parser_s.depth
+	 * @brief Hloubka zanoreni @see cc_parser_s.depth
 	 */
 	uint8_t scope;
 
@@ -547,6 +776,14 @@ typedef struct var_ {
 
 } var_s;
 
+/**
+ * @struct cc_block_args_
+ * @brief Definice argumentu pro funkcni blok.
+ *
+ * @typedef cc_block_args_ cc_block_args_s
+ * @brief Typ cc_block_args_
+ * @see cc_block_args_
+ */
 typedef struct cc_block_args_ {
 
 	/**
@@ -556,6 +793,10 @@ typedef struct cc_block_args_ {
 	 */
 	cc_type_t type;
 
+	/**
+	 * @var size_t name_len
+	 * @brief Delka nazvu prmonne.
+	 */
 	size_t name_len;
 
 	/**
@@ -566,14 +807,60 @@ typedef struct cc_block_args_ {
 
 } cc_block_args_s;
 
+/**
+ * @struct cc_block_
+ * @brief Struktura definice funkcniho bloku.
+ *
+ *
+ * @typedef cc_block_ cc_block_s
+ * @brief Typ cc_block_
+ * @see buffer_
+ *
+ */
 typedef struct cc_block_ {
+
+	/**
+	 * @var char *name
+	 * @brief Nazev.
+	 */
 	char *name;
+
+	/**
+	 * @var size_t name_len
+	 * @brief Delka nazvu.
+	 */
 	size_t name_len;
+
+	/**
+	 * @var size_t pos_start
+	 * @brief Pozice kde zacina.
+	 */
 	size_t pos_start;
+
+	/**
+	 * @var size_t pos_end
+	 * @brief Pozice kde konci.
+	 */
 	size_t pos_end;
+
+	/**
+	 * @var uint8_t args_count
+	 * @brief Pocet argumentu ktere prijima.
+	 */
 	uint8_t args_count;
+
+	/**
+	 * @var cc_block_args_s **args
+	 * @brief Argumenty ktere prijima.
+	 */
 	cc_block_args_s **args;
+
+	/**
+	 * @var var_s *value
+	 * @brief To co vraci.
+	 */
 	var_s *value;
+
 } cc_block_s;
 
 /**
@@ -626,15 +913,15 @@ typedef struct buffer_ {
 } buffer_s;
 
 /**
- * @struct parser_
+ * @struct cc_parser_
  * @brief Struktura parseru
  *
- * @typedef parser_ parser_s
- * @brief Typ parser_
- * @see parser_
+ * @typedef cc_parser_ cc_parser_s
+ * @brief Typ cc_parser_
+ * @see cc_parser_
  *
  */
-typedef struct parser_ {
+typedef struct cc_parser_ {
 
 	/**
 	 * @var int8_t inLoop
@@ -649,11 +936,10 @@ typedef struct parser_ {
 	uint8_t depth;
 
 	/**
-	 * @var cc_code_t error
-	 * @brief Pracovni statovy KOD parseru.
-	 * @details Tento kod signalizuje pracovni stav parseru.
+	 * @var uint8_t env_count
+	 * @brief Pocet promennych 'prostredi'.
 	 */
-	cc_code_t error;
+	uint8_t env_count;
 
 	/**
 	 * @var size_t error_pos
@@ -661,7 +947,12 @@ typedef struct parser_ {
 	 */
 	size_t error_pos; // pozice kde doslo k potencialni chybe. // vzdy, pred rizikovym mistem musim volat parseSetStop(_parser)
 
-	uint8_t env_count;
+	/**
+	 * @var cc_code_t error
+	 * @brief Pracovni statovy KOD parseru.
+	 * @details Tento kod signalizuje pracovni stav parseru.
+	 */
+	cc_code_t error;
 
 	/**
 	 * @var cvector_s *funcs
@@ -685,12 +976,15 @@ typedef struct parser_ {
 	 * @var buffer_s *buffer
 	 * @brief Ukazatel na strukturu zasobniku
 	 */
-//	buffer_s *buffer;
 	filebuffer_s *buffer;
 
+	/**
+	 * @var cc_env_s *env
+	 * @brief Promenne 'prostredi'.
+	 */
 	cc_env_s *env;
 
-} parser_s;
+} cc_parser_s;
 
 ///
 ///

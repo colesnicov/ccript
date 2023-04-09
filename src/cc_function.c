@@ -4,10 +4,11 @@
 
 /**
  * @file cc_function.c
- * @brief Implementace funkci pro praci s funkcemi
+ * @brief Implementace funkci pro praci s funkcemi.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -30,16 +31,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool funcInit(parser_s *_parser)
+bool funcInit(cc_parser_s *_parser)
 {
 	CC_ASSERT(_parser->funcs == NULL && "CONTAINER FOR FUNCTIONS ALERADY INITIALIZED");
 
-	cvector_s *funcs = (cvector_s*) CONFIG_CC_MALLOC(sizeof(cvector_s));
+	cvector_s *funcs = (cvector_s*) CC_MALLOC(sizeof(cvector_s));
 	if (funcs == NULL)
 	{
 
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for functions!\n");
+		CC_FUNC_DEBUG("ERROR: not enough memmory for functions!\n");
 		_parser->funcs = NULL;
 
 		return false;
@@ -52,9 +53,9 @@ bool funcInit(parser_s *_parser)
 	if (!cvector_init(_parser->funcs))
 	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for functions!");
+		CC_FUNC_DEBUG("ERROR: not enough memmory for functions!");
 
-		CONFIG_CC_FREE(_parser->funcs);
+		CC_FREE(_parser->funcs);
 		_parser->funcs = NULL;
 
 		return false;
@@ -63,7 +64,7 @@ bool funcInit(parser_s *_parser)
 	return true;
 }
 
-void funcDeinit(parser_s *_parser)
+void funcDeinit(cc_parser_s *_parser)
 {
 
 	CC_ASSERT(_parser != NULL && "PARSER IS NULL!");
@@ -82,19 +83,19 @@ void funcDeinit(parser_s *_parser)
 		if (handler != NULL)
 		{
 			CC_FUNC_DEBUG("DEBUG: remove function '%s'.\n", handler->name);
-			CONFIG_CC_FREE(handler);
+			CC_FREE(handler);
 			handler = NULL;
 		}
 
 	}
 
 	cvector_deinit(_parser->funcs);
-	CONFIG_CC_FREE(_parser->funcs);
+	CC_FREE(_parser->funcs);
 	_parser->funcs = NULL;
 
 }
 
-var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len)
+var_s* funcCall(cc_parser_s *_parser, const char *func_name, size_t func_name_len)
 {
 
 	var_s *var = NULL;
@@ -102,17 +103,11 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len)
 	cc_block_s *block = blockGet(_parser, func_name, func_name_len);
 	if (block != NULL)
 	{
-		var = blockCall(_parser, block, func_name, func_name_len);
+		var = blockCall(_parser, block);
 
 		if (cc_errorGetCode(_parser) == CC_CODE_RETURN)
 		{
-
 			parseSetError(_parser, CC_CODE_OK);
-		}
-// fixme co tady?
-		else
-		{
-			CC_PRINT("RET CODE: '%s'.\n", cc_errorToString(cc_errorGetCode(_parser)));
 		}
 
 		return var;
@@ -125,7 +120,7 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len)
 		if (handler == NULL)
 		{
 			parseSetError(_parser, CC_CODE_FUNC_NOT_DEFINED);
-			CC_PRINT("ERROR: function '%s' not defined.\n", func_name);
+			CC_FUNC_DEBUG("ERROR: function '%s' not defined.\n", func_name);
 			return NULL;
 		}
 
@@ -136,24 +131,24 @@ var_s* funcCall(parser_s *_parser, const char *func_name, size_t func_name_len)
 		file_bufferNext(_parser->buffer);
 		file_bufferSkipSpace(_parser->buffer);
 
-		if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count))
+		if (!parseFuncArguments(_parser, (var_s**) args, &args_count))
 		{
-			CC_PRINT("ERROR: func '%s' arguments error.\n", func_name);
-			funcClearArguments(args, args_count);
+			CC_FUNC_DEBUG("ERROR: func '%s' arguments error.\n", func_name);
+			garbageFuncArguments(args, args_count);
 
 			return NULL;
 		}
 
 		var = handler->func(_parser, args, args_count, handler->args);
 
-		funcClearArguments(args, args_count);
+		garbageFuncArguments(args, args_count);
 
 		return var;
 	}
 
 }
 
-fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len)
+fn_handler_s* funcGet(cc_parser_s *_parser, const char *_name, size_t _name_len)
 {
 
 	fn_handler_s *handler = NULL;
@@ -170,7 +165,7 @@ fn_handler_s* funcGet(parser_s *_parser, const char *_name, size_t _name_len)
 	return NULL;
 }
 
-bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
+bool cc_registerFunction(cc_parser_s *_parser, const char *_name, size_t _name_len,
 		cc_fn_prototype _fn, void *_args)
 {
 	fn_handler_s *handler;
@@ -181,17 +176,17 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 
 		if (_name_len == strlen(handler->name) && strncmp(_name, handler->name, _name_len) == 0)
 		{
-			CC_PRINT("ERROR: duplicated function name '%s'!\n", _name);
+			CC_FUNC_DEBUG("ERROR: duplicated function name '%s'!\n", _name);
 			parseSetError(_parser, CC_CODE_FUNC_EXISTS);
 			return false;
 		}
 	}
 
-	fn_handler_s *hn = (fn_handler_s*) CONFIG_CC_MALLOC(sizeof(fn_handler_s));
+	fn_handler_s *hn = (fn_handler_s*) CC_MALLOC(sizeof(fn_handler_s));
 	if (hn == NULL)
 	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for function '%s'\n", _name);
+		CC_FUNC_DEBUG("ERROR: not enough memmory for function '%s'\n", _name);
 		return false;
 	}
 
@@ -202,8 +197,7 @@ bool cc_registerFunction(parser_s *_parser, const char *_name, size_t _name_len,
 
 }
 
-bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
-		var_s **_args, uint8_t *_args_count)
+bool parseFuncArguments(cc_parser_s *_parser, var_s **_args, uint8_t *_args_count)
 {
 	char ch;
 
@@ -217,10 +211,14 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 		if (ch == ',')
 		{
+			if (CC_FUNC_NUMS_ARGS <= *_args_count)
+			{
+				return false;
+			}
 			// dalsi argument
 
 			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
+
 			continue;
 
 		}
@@ -273,7 +271,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 		{
 			// retezec
 
-			char value[CONFIG_CC_STRING_LEN] = {
+			char value[CC_VALUE_STRING_LEN + 1] = {
 					'\0' };
 
 			if (!ParseValueString(_parser, value, &value_len))
@@ -329,7 +327,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			if (value_len == 0)
 			{
 				parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-				CC_PRINT("ERROR: empty int/float value!\n");
+				CC_FUNC_DEBUG("ERROR: empty int/float value!\n");
 				return false;
 
 			}
@@ -369,7 +367,6 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			}
 			else
 			{
-				// fixme Proc buf jen 3 a samostatna promenna len?
 
 				char buf[3] = {
 						'\0' };
@@ -389,7 +386,6 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 				if (_var == NULL)
 				{
-					CC_PRINT("CHYBA?\n\n");
 					return false;
 				}
 
@@ -423,7 +419,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 			{
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				parseSetError(_parser, CC_CODE_KEYWORD);
-				CC_PRINT("ERROR: empty identifier\n");
+				CC_FUNC_DEBUG("ERROR: empty identifier\n");
 				return false;
 			}
 
@@ -501,7 +497,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 				if (ch == '[')
 				{
-					CC_PRINT("ERROR: not implemented '%c'!\n", ch);
+					CC_FUNC_DEBUG("ERROR: not implemented '%c'!\n", ch);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					return false;
@@ -522,9 +518,9 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 					if (var == NULL)
 					{
 
-						CC_PRINT("ERROR: function returns 'NULL'..\n");
+						CC_FUNC_DEBUG("ERROR: function returns 'NULL'..\n");
 						parseSetErrorPos(_parser, parseGetPos(_parser));
-						parseSetError(_parser, CC_CODE_FUNC_BAD_TYPE);
+						parseSetError(_parser, CC_CODE_FUNC_RET_BAD_TYPE);
 						return false;
 					}
 
@@ -532,7 +528,6 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 					file_bufferSkipSpace(_parser->buffer);
 					file_bufferGet(_parser->buffer, &ch);
 
-					// fixme tady hledat carku ','? kdyz ji odstranim?
 					if (!charin(ch, ",)"))
 					{
 						parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -551,15 +546,14 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 					if (_var == NULL)
 					{
 						parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
-						CC_PRINT("ERROR: undefined variable '%s'!\n", var_name);
-						// fixme nastavit navratove kody chyb!
+						CC_FUNC_DEBUG("ERROR: undefined variable '%s'!\n", var_name);
 						return false;
 					}
 
 					if (!_var->valid)
 					{
 						parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
-						CC_PRINT("ERROR: variable '%s' is uninitialized!\n", var_name);
+						CC_FUNC_DEBUG("ERROR: variable '%s' is uninitialized4!\n", var_name);
 						return false;
 					}
 
@@ -627,7 +621,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 					else if (_var->type == CC_TYPE_ARRAY)
 					{
-						CC_PRINT("ERROR: not implemented\n");
+						CC_FUNC_DEBUG("ERROR: not implemented\n");
 						parseSetError(_parser, CC_CODE_LOGIC);
 						VarDestroy(var);
 						return false;
@@ -636,7 +630,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 					else
 					{
 						parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
-						CC_PRINT("ERROR: unknown type\n");
+						CC_FUNC_DEBUG("ERROR: unknown type\n");
 						VarDestroy(var);
 						return false;
 					}
@@ -645,7 +639,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 				{
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-					CC_PRINT("DBEUG: tady asi chyba?'%c'.\n", ch);
+					CC_FUNC_DEBUG("DBEUG: tady asi chyba?'%c'.\n", ch);
 					return false;
 				}
 			}
@@ -667,7 +661,7 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 
 		else
 		{
-			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
+			CC_FUNC_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -678,14 +672,14 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 	return false;
 }
 
-void funcClearArguments(var_s **args, uint8_t args_count)
+void garbageFuncArguments(var_s **args, uint8_t args_count)
 {
+	CC_FUNC_DEBUG("DEBUG: destroy functions.\n");
+
 	for (uint8_t i = 0; i < args_count; i++)
 	{
-#if CONFIG_CC_FUNC_DEBUG
-		CC_PRINT("DEBUG: destroy function argument: '%d':'%s'.\n", i, args[i]->name);
-#endif
 		VarDestroy(args[i]);
+		args[i] = NULL;
 	}
 }
 ///

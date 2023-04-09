@@ -5,7 +5,6 @@ float var1;
 
 float var2 = 10.5;
 
-//float var1 = 2; // error, duplicate variable 'var1'
 var1 = var2;
 
 var1 = 5.10 + 10;
@@ -22,20 +21,15 @@ var2++;
 
 var1 = 9.0 + 0.0 + 9.0 + 0.0 + (9.0 * 0.0) + 9.0;
 
-//var1 == var2;
-//var1 < var2;
-//var2 >= 10.5;
-
 {
 	float var3 = var1;
 }
-//var3 += 12.3; // error, undefined variable 'var2'
 
 dump (var1);
 
 delete var1;
 
-float var1 = 2.9; // ok
+float var1 = 2.9;
 
 dump (var2);
 dump (var1);

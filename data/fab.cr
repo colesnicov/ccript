@@ -19,3 +19,5 @@ while (nextTerm <= n) {
 
 println('.');
 
+println("SCRIPT END");
+

@@ -29,20 +29,24 @@
 #include <time.h>
 #include <unistd.h>
 
-static int64_t millis() {
+static int64_t millis()
+{
 	struct timespec now;
 	timespec_get(&now, TIME_UTC);
 	return ((int64_t) now.tv_sec) * 1000 + ((int64_t) now.tv_nsec) / 1000000;
 }
 
-var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
+var_s* stdlib_millis(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+{
 	var_s *var = VarCreate("@", 1, CC_TYPE_LONG, _parser->depth);
 
-	if (var == NULL) {
+	if (var == NULL)
+	{
 		return NULL;
 	}
 
-	if (!VarValueSetLong(_parser, var, millis())) {
+	if (!VarValueSetLong(_parser, var, millis()))
+	{
 		VarDestroy(var);
 		return NULL;
 	}
@@ -50,32 +54,51 @@ var_s* stdlib_millis(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void
 	return var;
 }
 
-static void sleep_us(long microseconds) {
+static void sleep_us(long microseconds)
+{
 	struct timespec ts;
 	ts.tv_sec = microseconds / 1000000l;
 	ts.tv_nsec = (microseconds % 1000000l) * 1000;
 	nanosleep(&ts, NULL);
 }
 
-var_s* stdlib_sleep(parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args) {
+var_s* stdlib_sleep(cc_parser_s *_parser, var_s **_vars, uint8_t _vars_count, void *_args)
+{
 
-	if (_vars_count != 1) {
+	long t = 0;
+
+	if (_vars_count != 1)
+	{
 		parseSetError(_parser, CC_CODE_LOGIC);
 		CC_PRINT("ERROR: wrong number of arguments!\n");
 		return NULL;
 	}
 
-	else if (_vars[0]->type != CC_TYPE_INT) {
-		CC_PRINT("ERROR: wrong type of argument!\n");
+	else if (_vars[0]->type == CC_TYPE_LONG)
+	{
+		if (!VarValueGetLong(_parser, _vars[0], &t))
+		{
+			return NULL;
+		}
+	}
+
+	else if (_vars[0]->type == CC_TYPE_INT)
+	{
+		int tt= 0;
+		if (!VarValueGetInt(_parser, _vars[0], &tt))
+		{
+			return NULL;
+		}
+		t = tt;
+	}
+
+	else
+	{
+		CC_PRINT("ERROR: wrong type of argument '%d'!\n", _vars[0]->type);
 		parseSetError(_parser, CC_CODE_VAR_BAD_TYPE);
 		return NULL;
 	}
 
-	uint32_t t = 0;
-
-	if (!VarValueGetInt(_parser, _vars[0], (int*) &t)) {
-		return NULL;
-	}
 
 	sleep_us(t * 1000);
 

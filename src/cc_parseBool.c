@@ -5,9 +5,10 @@
 /**
  * @file cc_parseBool.c
  * @brief Implementace funkci pro parsovani typu 'BOOL'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -15,6 +16,7 @@
  *
  */
 
+#include <ccript/cc_parseIf.h>
 #include "ccript/cc_configs.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
@@ -28,12 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define OP_AND	5
-#define OP_OR	6
-#define OP_AND2	7 // unused
-#define OP_OR2	8 // unused
-
-bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
+bool ParseDefineTypeBool(cc_parser_s *_parser, char *_identifier_name)
 {
 
 	char ch = '\0';
@@ -56,19 +53,18 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
 	 */
 	size_t identifier_len = 0;
 
-	memset(_keyword_name, '\0', CC_KEYWORD_LEN);
+	memset(_identifier_name, '\0', CC_KEYWORD_LEN);
 
 	{
 		size_t pos = parseGetPos(_parser);
-		if (!parseIdentifier(_parser, _keyword_name, &identifier_len))
+		if (!parseIdentifier(_parser, _identifier_name, &identifier_len))
 		{
 			return false;
 		}
 
 		if (identifier_len == 0)
 		{
-			// fixme jinou direktivu CC_CODE_KEYWORD_EMPTY
-			parseSetError(_parser, CC_CODE_KEYWORD);
+			parseSetError(_parser, CC_CODE_KEYWORD_EMPTY);
 			parseSetErrorPos(_parser, pos);
 			return false;
 
@@ -91,7 +87,7 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
 			return false;
 		}
 
-		var_s *var = VarCreate(_keyword_name, identifier_len, CC_TYPE_BOOL, _parser->depth);
+		var_s *var = VarCreate(_identifier_name, identifier_len, CC_TYPE_BOOL, _parser->depth);
 
 		if (var == NULL)
 		{
@@ -104,7 +100,7 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -119,13 +115,13 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
 	{
 		// definice promenne bez prirazeni
 
-		var_s *var = VarCreate(_keyword_name, identifier_len, CC_TYPE_BOOL, _parser->depth);
+		var_s *var = VarCreate(_identifier_name, identifier_len, CC_TYPE_BOOL, _parser->depth);
 		if (var == NULL)
 		{
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -136,6 +132,14 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
 		return true;
 
 	}
+
+	else if (ch == '(')
+	{
+		// definice funkce
+
+		return parseDefineBlock(_parser, CC_TYPE_BOOL, _identifier_name, identifier_len);
+	}
+
 	else
 	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -146,17 +150,31 @@ bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name)
 
 }
 
-bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
+bool parseVarArgsBool(cc_parser_s *_parser, char _symbol_end, bool *_value)
 {
 
-	char value_name[CONFIG_CC_KEYWORD_LEN] = {
+	char ch = 0;
+
+	float cond_passed = 0.0;
+	if (!parseIfArguments(_parser, &cond_passed, _symbol_end))
+	{
+		return false;
+	}
+
+	*_value = (bool) cond_passed;
+
+	file_bufferGet(_parser->buffer, &ch);
+//	file_bufferNext(_parser->buffer);
+	file_bufferGet(_parser->buffer, &ch);
+	return true;
+
+	char value_name[CC_KEYWORD_LEN + 1] = {
 			'\0' };
 	size_t value_len;
 	bool negation = 0;
 	bool ival = 1;
 	bool ival_temp = 0;
 	uint8_t last_op = 0;
-	char ch = 0;
 
 	file_bufferNext(_parser->buffer);
 
@@ -178,7 +196,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 		return false;
 	}
 
-	file_bufferGet(_parser->buffer, &ch);
+//	file_bufferGet(_parser->buffer, &ch);
 
 	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
 	{
@@ -229,7 +247,6 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 		{
 			// promenna nebo funkce
 
-			size_t pos = parseGetPos(_parser);
 			if (!parseIdentifier(_parser, value_name, &value_len))
 			{
 				return false;
@@ -278,10 +295,8 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 				if (var == NULL)
 				{
 
-					parseSetError(_parser, CC_CODE_LOGIC);
-					// fixme toto muze vypsat spatnou pozici?
+					parseSetError(_parser, CC_CODE_FUNC_RET_BAD_TYPE);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
-					CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
 					return false;
 				}
 
@@ -297,7 +312,6 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 					return false;
 				}
 
-				/// fixme kod chyby nastavovat ve funkci!
 				if (!VarValueGetBool(_parser, var, &ival_temp))
 				{
 					parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -315,7 +329,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 				var_s *var = VarGet(_parser, value_name, value_len);
 				if (var == NULL)
 				{
-					CC_PRINT("ERROR: undefined variable '%s'.\n", value_name);
+					CC_VAR_DEBUG("ERROR: undefined variable '%s'.\n", value_name);
 					return false;
 				}
 
@@ -324,7 +338,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 					return false;
 				}
 
-				last_op = OP_OR;
+				last_op = CC_OP_OR;
 
 			}
 
@@ -334,7 +348,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 				var_s *var = VarGet(_parser, value_name, value_len);
 				if (var == NULL)
 				{
-					CC_PRINT("ERROR: undefined variable '%s'.\n", value_name);
+					CC_VAR_DEBUG("ERROR: undefined variable '%s'.\n", value_name);
 					return false;
 				}
 
@@ -343,7 +357,76 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 					return false;
 				}
 
-				last_op = OP_AND;
+				last_op = CC_OP_AND;
+
+			}
+
+			else if (ch == '<')
+			{
+
+				size_t pos_offset = parseGetPos(_parser);
+
+				file_bufferNext(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
+
+				if (ch == '=')
+				{
+					last_op = CC_OP_LESS_EQ;
+				}
+				else
+				{
+					_parser->buffer->offset = pos_offset;
+					file_bufferReload(_parser->buffer);
+
+					last_op = CC_OP_LESS;
+				}
+
+				var_s *var = VarGet(_parser, value_name, value_len);
+				if (var == NULL)
+				{
+					CC_VAR_DEBUG("ERROR: undefined variable '%s'.\n", value_name);
+					return false;
+				}
+
+				if (!VarValueGetBool(_parser, var, &ival_temp))
+				{
+					return false;
+				}
+
+			}
+
+			else if (ch == '>')
+			{
+//fixme tady pouzit, pro parsovani boool `parseIfArguments`
+//fixme  prepracovat `parseIfArguments aby prijimala `end_char` parametr.
+				size_t pos_offset = parseGetPos(_parser);
+
+				file_bufferNext(_parser->buffer);
+				file_bufferGet(_parser->buffer, &ch);
+
+				if (ch == '=')
+				{
+					last_op = CC_OP_GREAT_EQ;
+				}
+				else
+				{
+					_parser->buffer->offset = pos_offset;
+					file_bufferReload(_parser->buffer);
+
+					last_op = CC_OP_GREAT;
+				}
+
+				var_s *var = VarGet(_parser, value_name, value_len);
+				if (var == NULL)
+				{
+					CC_VAR_DEBUG("ERROR: undefined variable '%s'.\n", value_name);
+					return false;
+				}
+
+				if (!VarValueGetBool(_parser, var, &ival_temp))
+				{
+					return false;
+				}
 
 			}
 
@@ -354,9 +437,6 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 				if (var == NULL)
 				{
 					parseSetErrorPos(_parser, parseGetPos(_parser));
-					// fixme odkomentovat?
-//					parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
-//					CC_PRINT("ERROR: undefined variable '%s'.\n", value_name);
 					return false;
 				}
 
@@ -382,7 +462,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 			return false;
 		}
 
-		file_bufferSkipSpace(_parser->buffer); // fixme je toto potreba?
+		file_bufferSkipSpace(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
 
 		if (negation)
@@ -394,14 +474,34 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 		{
 			//konec
 
-			if (last_op == OP_OR)
+			if (last_op == CC_OP_OR)
 			{
 				ival = ival | ival_temp;
 			}
 
-			else if (last_op == OP_AND)
+			else if (last_op == CC_OP_AND)
 			{
 				ival = ival & ival_temp;
+			}
+
+			else if (last_op == CC_OP_GREAT)
+			{
+				ival = ival > ival_temp;
+			}
+
+			else if (last_op == CC_OP_LESS_EQ)
+			{
+				ival = ival >= ival_temp;
+			}
+
+			else if (last_op == CC_OP_GREAT_EQ)
+			{
+				ival = ival >= ival_temp;
+			}
+
+			else if (last_op == CC_OP_LESS)
+			{
+				ival = ival > ival_temp;
 			}
 
 			else
@@ -433,12 +533,12 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 		else if (ch == '|')
 		{
 
-			if (last_op == OP_OR)
+			if (last_op == CC_OP_OR)
 			{
 				ival = ival | ival_temp;
 			}
 
-			else if (last_op == OP_AND)
+			else if (last_op == CC_OP_AND)
 			{
 				ival = ival & ival_temp;
 			}
@@ -448,7 +548,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 				ival = ival_temp;
 			}
 
-			last_op = OP_OR;
+			last_op = CC_OP_OR;
 			file_bufferNext(_parser->buffer);
 			file_bufferSkipSpace(_parser->buffer);
 			continue;
@@ -457,12 +557,12 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 		else if (ch == '&')
 		{
 
-			if (last_op == OP_OR)
+			if (last_op == CC_OP_OR)
 			{
 				ival = ival | ival_temp;
 			}
 
-			else if (last_op == OP_AND)
+			else if (last_op == CC_OP_AND)
 			{
 				ival = ival & ival_temp;
 			}
@@ -472,10 +572,78 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 				ival = ival_temp;
 			}
 
-			last_op = OP_AND;
+			last_op = CC_OP_AND;
 			file_bufferNext(_parser->buffer);
 			file_bufferSkipSpace(_parser->buffer);
 			continue;
+		}
+
+		else if (ch == '<')
+		{
+
+			size_t pos_offset = parseGetPos(_parser);
+
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch == '=')
+			{
+				last_op = CC_OP_LESS_EQ;
+			}
+			else
+			{
+				_parser->buffer->offset = pos_offset;
+				file_bufferReload(_parser->buffer);
+
+				last_op = CC_OP_LESS;
+			}
+
+			var_s *var = VarGet(_parser, value_name, value_len);
+			if (var == NULL)
+			{
+				CC_VAR_DEBUG("ERROR: undefined variable '%s'.\n", value_name);
+				return false;
+			}
+
+			if (!VarValueGetBool(_parser, var, &ival_temp))
+			{
+				return false;
+			}
+
+		}
+
+		else if (ch == '>')
+		{
+
+			size_t pos_offset = parseGetPos(_parser);
+
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch == '=')
+			{
+				last_op = CC_OP_GREAT_EQ;
+			}
+			else
+			{
+				_parser->buffer->offset = pos_offset;
+				file_bufferReload(_parser->buffer);
+
+				last_op = CC_OP_GREAT;
+			}
+
+			var_s *var = VarGet(_parser, value_name, value_len);
+			if (var == NULL)
+			{
+				CC_VAR_DEBUG("ERROR: undefined variable '%s'.\n", value_name);
+				return false;
+			}
+
+			if (!VarValueGetBool(_parser, var, &ival_temp))
+			{
+				return false;
+			}
+
 		}
 
 		else
@@ -490,7 +658,7 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value)
 	return false;
 }
 
-bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len)
+bool parseValueBool(cc_parser_s *_parser, char *_value, size_t *_value_len)
 {
 	char ch;
 

@@ -4,10 +4,11 @@
 
 /**
  * @file cc_block.c
- * @brief Implementace funkci pro praci s funkcnimi bloky
+ * @brief Implementace funkci pro praci s funkcnimi bloky.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -16,6 +17,7 @@
  */
 
 #include "ccript/cc_configs.h"
+#include "ccript/cc_block.h"
 #include "ccript/cc_function.h"
 #include "ccript/cc_parser.h"
 #include "ccript/cc_types.h"
@@ -29,50 +31,111 @@
 #include <stdlib.h>
 #include <string.h>
 
-void dumpBlockArgs(cc_block_args_s **_args, uint8_t _args_count)
+var_s* blockCall(cc_parser_s *_parser, cc_block_s *_block)
 {
-	CC_PRINT("DEBUG: dump block arguments start: '%d'.\n", _args_count);
-	for (uint8_t i = 0; i < _args_count; i++)
+
+	var_s *args[CC_FUNC_NUMS_ARGS];
+	uint8_t args_count = 0;
+
+	file_bufferNext(_parser->buffer);
+	file_bufferSkipSpace(_parser->buffer);
+
+	if (!parseBlockCallArguments(_parser, _block, (var_s**) args, &args_count))
 	{
-		CC_PRINT("DEBUG: dump block argument: '%d':'%s'.\n", i,
-				((cc_block_args_s* )_args[i])->name);
+		CC_BLOCK_DEBUG("ERROR: arguments error 1.\n");
+		garbageFuncArguments(args, args_count);
+
+		return NULL;
 	}
-	CC_PRINT("DEBUG: dump block arguments end.\n");
+
+	if (_block->args_count != args_count)
+	{
+		// kontrola jestli byl predan spravny pocet argumentu
+		CC_BLOCK_DEBUG("ERROR: bad number of arguments.\n");
+		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		garbageFuncArguments(args, args_count);
+
+		return NULL;
+	}
+
+	size_t pos = parseGetPos(_parser);
+
+	_parser->buffer->offset = _block->pos_start;
+	file_bufferReload(_parser->buffer);
+	cvector_s *vars = _parser->vars;
+	_parser->vars = NULL;
+
+	if (!VarInit(_parser))
+	{
+		_parser->vars = vars;
+		garbageFuncArguments(args, args_count);
+		return NULL;
+	}
+
+	for (int i = 0; i < vars->total; i++)
+	{
+		var_s *_var = VarCopy(_parser, vars->items[i]);
+		if (!VarStore(_parser, _var, false))
+		{
+			VarDestroy(_var);
+			VarDeinit(_parser);
+			_parser->vars = vars;
+			garbageFuncArguments(args, args_count);
+			return NULL;
+		}
+	}
+
+	for (int i = 0; i < args_count; i++)
+	{
+		// kontrola jestli predane argumenty jsou spravneho typu.
+		if (_block->args[i]->type != args[i]->type)
+		{
+			CC_BLOCK_DEBUG("ERROR: bad arg '%d' for function '%s'.\n", i, _block->name);
+			parseSetErrorPos(_parser, pos);
+			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+			VarDeinit(_parser);
+			_parser->vars = vars;
+			garbageFuncArguments(args, args_count);
+			return NULL;
+
+		}
+
+		args[i]->scope = _parser->depth;
+
+		var_s *_var = VarCopy(_parser, args[i]);
+		if (!VarStore(_parser, _var, true))
+		{
+			VarDestroy(_var);
+			VarDeinit(_parser);
+			_parser->vars = vars;
+			garbageFuncArguments(args, args_count);
+			return NULL;
+		}
+	}
+
+	var_s *ret_var = parseBlock(_parser, '}');
+
+	VarDeinit(_parser);
+	garbageFuncArguments(args, args_count);
+	_parser->vars = vars;
+	vars = NULL;
+
+	_parser->buffer->offset = pos;
+	file_bufferReload(_parser->buffer);
+
+	if (_parser->error == CC_CODE_RETURN)
+	{
+		return ret_var;
+	}
+
+	VarDestroy(ret_var);
+
+	return NULL;
 }
 
-bool blockInit(parser_s *_parser)
+void blockDeinit(cc_parser_s *_parser)
 {
-	CC_ASSERT(_parser->blocks == NULL && "CONTAINER FOR BLOCKS ALERADY INITIALIZED");
-
-	_parser->blocks = (cvector_s*) CONFIG_CC_MALLOC(sizeof(cvector_s));
-	if (_parser->blocks == NULL)
-	{
-
-		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: no memmory for blocks!\n");
-
-		return false;
-	}
-	memset(_parser->blocks, 0, sizeof(cvector_s));
-
-	if (!cvector_init(_parser->blocks))
-	{
-		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: no memmory for functions!\n");
-
-		CONFIG_CC_FREE(_parser->blocks);
-		_parser->funcs = NULL;
-
-		return false;
-	}
-
-	return true;
-}
-
-void blockDeinit(parser_s *_parser)
-{
-
-	CC_ASSERT(_parser != NULL && "PARSER IS NULL!");
 
 	cc_block_s *block;
 
@@ -91,12 +154,12 @@ void blockDeinit(parser_s *_parser)
 		if (block != NULL)
 		{
 			CC_BLOCK_DEBUG("DEBUG: destroy block '%s'.\n", block->name);
-			blockCleanArguments(block->args, &(block->args_count));
-			CONFIG_CC_FREE(block->args);
+			garbageBlockDefArgs(block->args, &(block->args_count));
+			CC_FREE(block->args);
 			block->args = NULL;
-			CONFIG_CC_FREE(block->name);
+			CC_FREE(block->name);
 			block->name = NULL;
-			CONFIG_CC_FREE(block);
+			CC_FREE(block);
 			block = NULL;
 
 		}
@@ -104,456 +167,12 @@ void blockDeinit(parser_s *_parser)
 	}
 
 	cvector_deinit(_parser->blocks);
-	CONFIG_CC_FREE(_parser->blocks);
+	CC_FREE(_parser->blocks);
 	_parser->blocks = NULL;
 
 }
 
-var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name,
-		size_t func_name_len)
-{
-
-	var_s *var = NULL;
-	var_s *args[CC_FUNC_NUMS_ARGS];
-	uint8_t args_count = 0;
-
-	file_bufferNext(_parser->buffer);
-	file_bufferSkipSpace(_parser->buffer);
-
-	if (!parseFuncArguments(_parser, func_name, func_name_len, (var_s**) args, &args_count))
-	{
-		CC_PRINT("ERROR: arguments error 1.\n");
-		funcClearArguments(args, args_count);
-
-		return NULL;
-	}
-
-	// fixme nastavovat kod chyby!
-	if (_block->args_count != args_count)
-	{
-		// kontrola jestli byl predan spravny pocet argumentu
-		CC_PRINT("ERROR: bad number of arguments.\n");
-		parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-		parseSetErrorPos(_parser, parseGetPos(_parser));
-		funcClearArguments(args, args_count);
-
-		return NULL;
-	}
-
-	size_t pos = parseGetPos(_parser);
-
-	_parser->buffer->offset = _block->pos_start;
-	file_bufferReload(_parser->buffer);
-	cvector_s *vars = _parser->vars;
-	_parser->vars = NULL;
-
-	if (!VarInit(_parser))
-	{
-		_parser->vars = vars;
-		funcClearArguments(args, args_count);
-		return NULL;
-	}
-
-	for (int i = 0; i < args_count; i++)
-	{
-		// kontrola jestli predane argumenty jsou spravneho typu.
-		if (_block->args[i]->type != args[i]->type)
-		{
-			CC_PRINT("ERROR: bad arg '%d' for function '%s'.\n", i, _block->name);
-			parseSetErrorPos(_parser, pos);
-			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-			VarDeinit(_parser);
-			_parser->vars = vars;
-			funcClearArguments(args, args_count);
-			return NULL;
-
-		}
-
-		var_s *_var = VarCreate(_block->args[i]->name, _block->args[i]->name_len,
-				_block->args[i]->type, _parser->depth);
-
-		VarValueSetInt(_parser, _var, *((int*) args[i]->data));
-
-		if (!VarStore(_parser, _var))
-		{
-			VarDestroy(_var);
-			VarDeinit(_parser);
-			_parser->vars = vars;
-			funcClearArguments(args, args_count);
-			return NULL;
-		}
-	}
-
-	var_s *ret_var = parseBlock(_parser, '}');
-
-	VarDeinit(_parser);
-	_parser->buffer->offset = pos;
-	file_bufferReload(_parser->buffer);
-
-	_parser->vars = vars;
-
-	funcClearArguments(args, args_count);
-
-	if (_parser->error == CC_CODE_RETURN)
-	{
-		return ret_var;
-	}
-
-	VarDestroy(ret_var);
-
-	return NULL;
-}
-
-bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
-		var_s **_args, uint8_t *_args_count)
-{
-	char ch;
-
-	size_t value_len = 0;
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
-	{
-
-		parseSkipNewLine(_parser);
-
-		file_bufferGet(_parser->buffer, &ch);
-
-		if (ch == ',')
-		{
-			// dalsi argument
-
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
-			continue;
-
-		}
-
-		else if (ch == '\'')
-		{
-			// pismeno/znak/symbol
-
-			char value = 0;
-
-			if (!ParseValueChar(_parser, &value, &value_len))
-			{
-				return false;
-			}
-
-			var_s *_var = VarCreate("_", 1, CC_TYPE_CHAR, _parser->depth);
-			if (_var == NULL)
-			{
-				return false;
-			}
-
-			if (!VarValueSetChar(_parser, _var, value))
-			{
-				VarDestroy(_var);
-				return false;
-			}
-
-			_args[*_args_count] = _var;
-			*_args_count += 1;
-
-			file_bufferNext(_parser->buffer);
-			continue;
-		}
-
-		else if (ch == '"')
-		{
-			// retezec
-
-			char value[CONFIG_CC_STRING_LEN] = {
-					'\0' };
-
-			if (!ParseValueString(_parser, value, &value_len))
-			{
-				return false;
-			}
-
-			var_s *_var = VarCreate("_", 1, CC_TYPE_STRING, _parser->depth);
-			if (_var == NULL)
-			{
-				return false;
-			}
-
-			if (!VarValueSetString(_parser, _var, value, value_len))
-			{
-				VarDestroy(_var);
-				return false;
-			}
-
-			_args[*_args_count] = _var;
-			*_args_count += 1;
-
-			continue;
-		}
-
-		else if (isdigit(ch) || ch == '-')
-		{
-			// cislo
-
-			char value[CC_VALUE_NUMERIC_LEN] = {
-					'\0' };
-
-			bool is_float = false;
-			if (!parseValueFloat(_parser, value, &value_len, &is_float))
-			{
-				return false;
-			}
-
-			if (value_len == 0)
-			{
-				parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-				CC_PRINT("ERROR: empty int/float value!\n");
-				return false;
-
-			}
-
-			var_s *_var = NULL;
-
-			if (is_float)
-			{
-				_var = VarCreate("_", 1, CC_TYPE_FLOAT, _parser->depth);
-
-				if (_var == NULL)
-				{
-					return false;
-				}
-
-				if (!VarValueSetFloat(_parser, _var, atof(value)))
-				{
-					VarDestroy(_var);
-					return false;
-				}
-
-			}
-			else
-			{
-				_var = VarCreate("_", 1, CC_TYPE_INT, _parser->depth);
-
-				if (_var == NULL)
-				{
-					return false;
-				}
-
-				if (!VarValueSetInt(_parser, _var, atoi(value)))
-				{
-					VarDestroy(_var);
-					return false;
-				}
-
-			}
-
-			_args[*_args_count] = _var;
-			*_args_count += 1;
-
-			continue;
-		}
-
-		else if (isalpha(ch))
-		{
-
-			char var_name[CC_KEYWORD_LEN] = {
-					'\0' };
-			size_t var_name_len = 0;
-
-			if (!parseIdentifier(_parser, var_name, &var_name_len))
-			{
-				return false;
-			}
-
-			if (var_name_len == 0)
-			{
-				parseSetErrorPos(_parser, parseGetPos(_parser));
-				parseSetError(_parser, CC_CODE_KEYWORD);
-				CC_PRINT("ERROR: empty identifier\n");
-				return false;
-			}
-
-			var_s *var = NULL;
-
-			if (var_name_len == 4 && strncmp(var_name, "true", var_name_len) == 0)
-			{
-				var = VarCreate("_", 1, CC_TYPE_BOOL, _parser->depth);
-
-				if (var == NULL)
-				{
-					return false;
-				}
-
-				if (!VarValueSetBool(_parser, var, true))
-				{
-					VarDestroy(var);
-					return false;
-				}
-
-			}
-
-			else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0)
-			{
-				var = VarCreate("_", 1, CC_TYPE_BOOL, _parser->depth);
-
-				if (var == NULL)
-				{
-					return false;
-				}
-
-				if (!VarValueSetBool(_parser, var, false))
-				{
-					VarDestroy(var);
-					return false;
-				}
-
-			}
-			else
-			{
-				// funkce nebo promenna
-
-				file_bufferGet(_parser->buffer, &ch);
-
-				if (ch == '[')
-				{
-					CC_PRINT("ERROR: not implemented '%c'!\n", ch);
-					parseSetErrorPos(_parser, parseGetPos(_parser));
-					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-					return false;
-				}
-
-				else if (ch == ')' || ch == ',')
-				{
-					// promenna
-
-					var_s *_var = VarGet(_parser, var_name, var_name_len);
-					if (_var == NULL)
-					{
-						parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
-						CC_PRINT("ERROR: undefined variable '%s'!\n", var_name);
-						// fixme nastavit navratove kody chyb!
-						return false;
-					}
-
-					if (!_var->valid)
-					{
-						parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
-						CC_PRINT("ERROR: variable '%s' is uninitialized!\n", var_name);
-						return false;
-					}
-
-					var = VarCreate(_var->name, strlen(_var->name), _var->type, _var->scope);
-
-					if (var == NULL)
-					{
-						return false;
-					}
-
-					if (_var->type == CC_TYPE_BOOL)
-					{
-						if (!VarValueSetBool(_parser, var, *(bool*) _var->data))
-						{
-							VarDestroy(var);
-							return false;
-						}
-					}
-
-					else if (_var->type == CC_TYPE_CHAR)
-					{
-						if (!VarValueSetChar(_parser, var, *(char*) _var->data))
-						{
-							VarDestroy(var);
-							return false;
-						}
-					}
-
-					else if (_var->type == CC_TYPE_FLOAT)
-					{
-						if (!VarValueSetFloat(_parser, var, *(float*) _var->data))
-						{
-							VarDestroy(var);
-							return false;
-						}
-					}
-
-					else if (_var->type == CC_TYPE_INT)
-					{
-						if (!VarValueSetInt(_parser, var, *(int*) _var->data))
-						{
-							VarDestroy(var);
-							return false;
-						}
-					}
-
-					else if (_var->type == CC_TYPE_LONG)
-					{
-						if (!VarValueSetLong(_parser, var, *(long*) _var->data))
-						{
-							VarDestroy(var);
-							return false;
-						}
-					}
-
-					else if (_var->type == CC_TYPE_STRING)
-					{
-						if (!VarValueSetString(_parser, var, _var->data,
-								strlen((char*) (_var->data))))
-						{
-							VarDestroy(var);
-							return false;
-						}
-					}
-
-					else if (_var->type == CC_TYPE_ARRAY)
-					{
-						CC_PRINT("ERROR: not implemented\n");
-						parseSetError(_parser, CC_CODE_LOGIC);
-						VarDestroy(var);
-						return false;
-					}
-
-					else
-					{
-						parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
-						CC_PRINT("ERROR: unknown type\n");
-						VarDestroy(var);
-						return false;
-					}
-				}
-				else
-				{
-					parseSetErrorPos(_parser, parseGetPos(_parser));
-					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-					CC_PRINT("DBEUG: tady asi chyba?'%c'.\n", ch);
-					return false;
-				}
-			}
-
-			_args[*_args_count] = var;
-			*_args_count += 1;
-
-			file_bufferSkipSpace(_parser->buffer);
-
-			continue;
-		}
-
-		else if (ch == ')')
-		{
-			// konec
-
-			return true;
-		}
-
-		else
-		{
-			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-			return false;
-		}
-
-	}
-
-	return false;
-}
-
-cc_block_s* blockGet(parser_s *_parser, const char *_name, size_t _name_len)
+cc_block_s* blockGet(cc_parser_s *_parser, const char *_name, size_t _name_len)
 {
 
 	cc_block_s *block = NULL;
@@ -571,121 +190,28 @@ cc_block_s* blockGet(parser_s *_parser, const char *_name, size_t _name_len)
 	return NULL;
 }
 
-bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name,
-		size_t block_name_len)
+bool blockInit(cc_parser_s *_parser)
 {
+	CC_ASSERT(_parser->blocks == NULL && "CONTAINER FOR BLOCKS ALERADY INITIALIZED");
 
-	char ch;
-
-	size_t value_len = 0;
-
-	parseSkipNewLine(_parser);
-
-	file_bufferGet(_parser->buffer, &ch);
-
-	if (ch != '(')
+	_parser->blocks = (cvector_s*) CC_MALLOC(sizeof(cvector_s));
+	if (_parser->blocks == NULL)
 	{
-		CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
-		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-		parseSetErrorPos(_parser, parseGetPos(_parser));
+
+		parseSetError(_parser, CC_CODE_NOT_MEM);
+		CC_BLOCK_DEBUG("ERROR: no memmory for blocks!\n");
+
 		return false;
 	}
+	memset(_parser->blocks, 0, sizeof(cvector_s));
 
-	file_bufferNext(_parser->buffer);
-
-	cc_block_s *block = (cc_block_s*) CONFIG_CC_MALLOC(sizeof(cc_block_s));
-	if (block == NULL)
+	if (!cvector_init(_parser->blocks))
 	{
 		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for block arguments.\n");
-		return false;
-	}
-	memset(block, 0, sizeof(cc_block_s));
+		CC_BLOCK_DEBUG("ERROR: no memmory for functions!\n");
 
-	cc_block_args_s *args[CC_FUNC_NUMS_ARGS] = {
-			NULL };
-	uint8_t args_count = 0;
-
-	if (!parseBlockArguments(_parser, block_name, block_name_len, args, &args_count))
-	{
-		blockCleanArguments(args, &args_count);
-		CONFIG_CC_FREE(block);
-		block = NULL;
-
-		return false;
-	}
-
-	file_bufferNext(_parser->buffer);
-	parseSkipNewLine(_parser);
-
-	file_bufferGet(_parser->buffer, &ch);
-
-	if (ch != '{')
-	{
-		CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
-		blockCleanArguments(args, &args_count);
-		CONFIG_CC_FREE(block);
-		block = NULL;
-
-		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-		parseSetErrorPos(_parser, parseGetPos(_parser));
-		return false;
-	}
-
-	file_bufferNext(_parser->buffer);
-	parseSkipNewLine(_parser);
-
-	block->pos_start = parseGetPos(_parser);
-
-	if (!parserSkipBlock(_parser, '{', '}'))
-	{
-		blockCleanArguments(args, &args_count);
-		CONFIG_CC_FREE(block);
-		block = NULL;
-
-		return false;
-	}
-
-	block->name = (char*) CONFIG_CC_MALLOC(block_name_len + 1 * sizeof(char));
-	if (block->name == NULL)
-	{
-		CC_PRINT("ERROR: not enough memmory for block name.\n");
-		parseSetError(_parser, CC_CODE_NOT_MEM);
-		blockCleanArguments(args, &args_count);
-		CONFIG_CC_FREE(block);
-		block = NULL;
-		return false;
-	}
-	memset(block->name, 0, block_name_len + 1 * sizeof(char));
-	memmove(block->name, block_name, block_name_len);
-
-	block->args = (cc_block_args_s**) CONFIG_CC_MALLOC(sizeof(cc_block_args_s));
-	if (block->args == NULL)
-	{
-		parseSetError(_parser, CC_CODE_NOT_MEM);
-		CC_PRINT("ERROR: not enough memmory for block arguments.\n");
-		CONFIG_CC_FREE(block);
-		block = NULL;
-		return false;
-	}
-	memset(block->args, 0, sizeof(cc_block_args_s));
-
-	for (int i = 0; i < args_count; i++)
-	{
-
-		block->args[i] = args[i];
-	}
-
-	block->pos_end = parseGetPos(_parser);
-	block->args_count = args_count;
-
-	if (!cvector_add(_parser->blocks, block))
-	{
-		blockCleanArguments(block->args, (uint8_t*) &block->args_count);
-		CONFIG_CC_FREE(block->name);
-		block->name = NULL;
-		CONFIG_CC_FREE(block);
-		block = NULL;
+		CC_FREE(_parser->blocks);
+		_parser->funcs = NULL;
 
 		return false;
 	}
@@ -693,8 +219,35 @@ bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name
 	return true;
 }
 
-bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block_name_len,
-		cc_block_args_s **_args, uint8_t *_args_count)
+void dumpBlockArgs(cc_block_args_s **_args, uint8_t _args_count)
+{
+	CC_BLOCK_DEBUG("DEBUG: dump block arguments start: '%d'.\n", _args_count);
+	for (uint8_t i = 0; i < _args_count; i++)
+	{
+		CC_BLOCK_DEBUG("DEBUG: dump block argument: '%d':'%s'.\n", i,
+				((cc_block_args_s* )_args[i])->name);
+	}CC_BLOCK_DEBUG("DEBUG: dump block arguments end.\n");
+}
+
+void garbageBlockDefArgs(cc_block_args_s **_args, uint8_t *_args_count)
+{
+	CC_BLOCK_DEBUG("DEBUG: destroy block arguments: '%d'.\n", *_args_count);
+	for (uint8_t i = 0; i < (*_args_count); i++)
+	{
+		if (_args[i] != NULL)
+		{
+			CC_BLOCK_DEBUG("DEBUG: destroy block argument: '%d':'%s'.\n", i, _args[i]->name);
+			CC_FREE(_args[i]->name);
+			_args[i]->name = NULL;
+			CC_FREE(_args[i]);
+			_args[i] = NULL;
+		}
+	}
+
+	*_args_count = 0;
+}
+
+bool parseBlockArguments(cc_parser_s *_parser, cc_block_args_s **_args, uint8_t *_args_count)
 {
 	char ch;
 
@@ -710,7 +263,7 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 
 		if (!isalpha(ch))
 		{
-			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
+			CC_BLOCK_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -728,16 +281,17 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 		{
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			parseSetError(_parser, CC_CODE_KEYWORD);
-			CC_PRINT("ERROR: empty identifier\n");
+			CC_BLOCK_DEBUG("ERROR: empty identifier\n");
 			return false;
 		}
 
 		cc_block_args_s *var = NULL;
-		var = (cc_block_args_s*) CONFIG_CC_MALLOC(sizeof(cc_block_args_s));
+		var = (cc_block_args_s*) CC_MALLOC(sizeof(cc_block_args_s));
 		if (var == NULL)
 		{
+			parseSetErrorPos(_parser, parseGetPos(_parser));
 			parseSetError(_parser, CC_CODE_NOT_MEM);
-			CC_PRINT("ERROR: not enought memmory for block args '%s'\n", block_name);
+			CC_BLOCK_DEBUG("ERROR: not enought memmory for block args\n");
 			return NULL;
 		}
 
@@ -776,8 +330,8 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 		else
 		{
 			parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
-			CC_PRINT("ERROR: unknown type\n");
-			CONFIG_CC_FREE(var);
+			CC_BLOCK_DEBUG("ERROR: unknown type\n");
+			CC_FREE(var);
 			return false;
 		}
 
@@ -786,10 +340,10 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 
 		if (!isalpha(ch))
 		{
-			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
+			CC_BLOCK_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
-			CONFIG_CC_FREE(var);
+			CC_FREE(var);
 			return false;
 		}
 
@@ -799,7 +353,7 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 
 		if (!parseIdentifier(_parser, var_name, &var_name_len))
 		{
-			CONFIG_CC_FREE(var);
+			CC_FREE(var);
 			return false;
 		}
 
@@ -807,17 +361,17 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 		{
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			parseSetError(_parser, CC_CODE_KEYWORD);
-			CC_PRINT("ERROR: empty identifier\n");
-			CONFIG_CC_FREE(var);
+			CC_BLOCK_DEBUG("ERROR: empty identifier\n");
+			CC_FREE(var);
 			return false;
 		}
 
-		var->name = (char*) CONFIG_CC_MALLOC((var_name_len + 1) * sizeof(char));
+		var->name = (char*) CC_MALLOC((var_name_len + 1) * sizeof(char));
 		if (var->name == NULL)
 		{
 			parseSetError(_parser, CC_CODE_NOT_MEM);
-			CC_PRINT("ERROR: not enough memmory for block arguments.\n");
-			CONFIG_CC_FREE(var);
+			CC_BLOCK_DEBUG("ERROR: not enough memmory for block arguments.\n");
+			CC_FREE(var);
 			return false;
 		}
 		memset(var->name, 0, (var_name_len + 1) * sizeof(char));
@@ -827,7 +381,6 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 		_args[index] = var;
 
 		index++;
-		*_args_count = index;
 
 		file_bufferSkipSpace(_parser->buffer);
 		file_bufferGet(_parser->buffer, &ch);
@@ -836,20 +389,20 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 		{
 			// dalsi argument
 			file_bufferNext(_parser->buffer);
-//			file_bufferSkipSpace(_parser->buffer);
 
 			continue;
 		}
 
 		else if (ch == ')')
 		{
+			*_args_count = index;
 			// konec
 			return true;
 		}
 
 		else
 		{
-			CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
+			CC_BLOCK_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -860,25 +413,483 @@ bool parseBlockArguments(parser_s *_parser, const char *block_name, size_t block
 	return false;
 }
 
-void blockCleanArguments(cc_block_args_s **_args, uint8_t *_args_count)
+bool parseBlockCallArguments(cc_parser_s *_parser, cc_block_s *_block, var_s **_args,
+		uint8_t *_args_count)
 {
-	CC_BLOCK_DEBUG("DEBUG: destroy block arguments: '%d'.\n", *_args_count);
-	for (uint8_t i = 0; i < (*_args_count); i++)
+	char ch;
+
+	size_t value_len = 0;
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
 	{
-		if (_args[i] != NULL)
+
+		parseSkipNewLine(_parser);
+
+		file_bufferGet(_parser->buffer, &ch);
+
+		if (ch == ')')
 		{
-			CC_BLOCK_DEBUG("DEBUG: destroy block argument: '%d':'%s'.\n", i, _args[i]->name);
-			CONFIG_CC_FREE(_args[i]->name);
-			_args[i]->name = NULL;
-			CONFIG_CC_FREE(_args[i]);
-			_args[i] = NULL;
+			// konec
+
+			return true;
 		}
+
+		else if (ch == ',')
+		{
+			// dalsi argument
+
+			file_bufferNext(_parser->buffer);
+
+			continue;
+		}
+
+		else if (ch == '\'')
+		{
+			// pismeno/znak/symbol
+
+			char value = 0;
+
+			if (!ParseValueChar(_parser, &value, &value_len))
+			{
+				return false;
+			}
+
+			var_s *_var = VarCreate(_block->args[*_args_count]->name,
+					_block->args[*_args_count]->name_len, CC_TYPE_CHAR, _parser->depth);
+			if (_var == NULL)
+			{
+				return false;
+			}
+
+			if (!VarValueSetChar(_parser, _var, value))
+			{
+				VarDestroy(_var);
+				return false;
+			}
+
+			_args[*_args_count] = _var;
+			*_args_count += 1;
+
+			file_bufferNext(_parser->buffer);
+
+		}
+
+		else if (ch == '"')
+		{
+			// retezec
+
+			char value[CC_VALUE_STRING_LEN + 1] = {
+					'\0' };
+
+			if (!ParseValueString(_parser, value, &value_len))
+			{
+				return false;
+			}
+
+			var_s *_var = VarCreate(_block->args[*_args_count]->name,
+					_block->args[*_args_count]->name_len, CC_TYPE_STRING, _parser->depth);
+			if (_var == NULL)
+			{
+				return false;
+			}
+
+			if (!VarValueSetString(_parser, _var, value, value_len))
+			{
+				VarDestroy(_var);
+				return false;
+			}
+
+			_args[*_args_count] = _var;
+			*_args_count += 1;
+
+		}
+
+		else if (isdigit(ch) || ch == '-')
+		{
+			// cislo
+
+			char value[CC_VALUE_NUMERIC_LEN + 1] = {
+					'\0' };
+
+			bool is_float = false;
+			if (!parseValueFloat(_parser, value, &value_len, &is_float))
+			{
+				return false;
+			}
+
+			if (value_len == 0)
+			{
+				parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
+				CC_BLOCK_DEBUG("ERROR: empty int/float value!\n");
+				return false;
+
+			}
+
+			var_s *_var = NULL;
+
+			if (is_float)
+			{
+				_var = VarCreate(_block->args[*_args_count]->name,
+						_block->args[*_args_count]->name_len, CC_TYPE_FLOAT, _parser->depth);
+
+				if (_var == NULL)
+				{
+					return false;
+				}
+
+				if (!VarValueSetFloat(_parser, _var, atof(value)))
+				{
+					VarDestroy(_var);
+					return false;
+				}
+
+			}
+			else
+			{
+				_var = VarCreate(_block->args[*_args_count]->name,
+						_block->args[*_args_count]->name_len, CC_TYPE_INT, _parser->depth);
+
+				if (_var == NULL)
+				{
+					return false;
+				}
+
+				if (!VarValueSetInt(_parser, _var, atoi(value)))
+				{
+					VarDestroy(_var);
+					return false;
+				}
+
+			}
+
+			_args[*_args_count] = _var;
+			*_args_count += 1;
+
+		}
+
+		else if (isalpha(ch))
+		{
+
+			char var_name[CC_KEYWORD_LEN] = {
+					'\0' };
+			size_t var_name_len = 0;
+
+			if (!parseIdentifier(_parser, var_name, &var_name_len))
+			{
+				return false;
+			}
+
+			if (var_name_len == 0)
+			{
+				parseSetErrorPos(_parser, parseGetPos(_parser));
+				parseSetError(_parser, CC_CODE_KEYWORD);
+				CC_BLOCK_DEBUG("ERROR: empty identifier\n");
+				return false;
+			}
+
+			var_s *var = NULL;
+
+			if (var_name_len == 4 && strncmp(var_name, "true", var_name_len) == 0)
+			{
+				var = VarCreate(_block->args[*_args_count]->name,
+						_block->args[*_args_count]->name_len, CC_TYPE_BOOL, _parser->depth);
+
+				if (var == NULL)
+				{
+					return false;
+				}
+
+				if (!VarValueSetBool(_parser, var, true))
+				{
+					VarDestroy(var);
+					return false;
+				}
+
+			}
+
+			else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0)
+			{
+				var = VarCreate(_block->args[*_args_count]->name,
+						_block->args[*_args_count]->name_len, CC_TYPE_BOOL, _parser->depth);
+
+				if (var == NULL)
+				{
+					return false;
+				}
+
+				if (!VarValueSetBool(_parser, var, false))
+				{
+					VarDestroy(var);
+					return false;
+				}
+
+			}
+			else
+			{
+				// funkce nebo promenna
+
+				file_bufferGet(_parser->buffer, &ch);
+
+				if (ch == '[')
+				{
+					CC_BLOCK_DEBUG("ERROR: not implemented '%c'!\n", ch);
+					parseSetErrorPos(_parser, parseGetPos(_parser));
+					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+					return false;
+				}
+
+				else if (ch == ')' || ch == ',')
+				{
+					// promenna
+
+					var_s *_var = VarGet(_parser, var_name, var_name_len);
+					if (_var == NULL)
+					{
+						parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
+						CC_BLOCK_DEBUG("ERROR: undefined variable '%s'!\n", var_name);
+						return false;
+					}
+
+					if (!_var->valid)
+					{
+						assert(0);
+						parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
+						CC_BLOCK_DEBUG("ERROR: variable '%s' is uninitialized2!\n", var_name);
+						return false;
+					}
+
+					var = VarCreate(_block->args[*_args_count]->name,
+							_block->args[*_args_count]->name_len, _var->type, _var->scope);
+
+					if (var == NULL)
+					{
+						return false;
+					}
+
+					if (_var->type == CC_TYPE_BOOL)
+					{
+						if (!VarValueSetBool(_parser, var, *(bool*) _var->data))
+						{
+							VarDestroy(var);
+							return false;
+						}
+					}
+
+					else if (_var->type == CC_TYPE_CHAR)
+					{
+						if (!VarValueSetChar(_parser, var, *(char*) _var->data))
+						{
+							VarDestroy(var);
+							return false;
+						}
+					}
+
+					else if (_var->type == CC_TYPE_FLOAT)
+					{
+						if (!VarValueSetFloat(_parser, var, *(float*) _var->data))
+						{
+							assert(0);
+							VarDestroy(var);
+							return false;
+						}
+					}
+
+					else if (_var->type == CC_TYPE_INT)
+					{
+						if (!VarValueSetInt(_parser, var, *(int*) _var->data))
+						{
+							VarDestroy(var);
+							return false;
+						}
+					}
+
+					else if (_var->type == CC_TYPE_LONG)
+					{
+						if (!VarValueSetLong(_parser, var, *(long*) _var->data))
+						{
+							VarDestroy(var);
+							return false;
+						}
+					}
+
+					else if (_var->type == CC_TYPE_STRING)
+					{
+						if (!VarValueSetString(_parser, var, _var->data,
+								strlen((char*) (_var->data))))
+						{
+							VarDestroy(var);
+							return false;
+						}
+					}
+
+					else if (_var->type == CC_TYPE_ARRAY)
+					{
+						CC_BLOCK_DEBUG("ERROR: not implemented\n");
+						parseSetError(_parser, CC_CODE_LOGIC);
+						VarDestroy(var);
+						return false;
+					}
+
+					else
+					{
+						parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
+						CC_BLOCK_DEBUG("ERROR: unknown type\n");
+						VarDestroy(var);
+						return false;
+					}
+				}
+				else
+				{
+					parseSetErrorPos(_parser, parseGetPos(_parser));
+					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+					CC_BLOCK_DEBUG("DBEUG: tady asi chyba?'%c'.\n", ch);
+					return false;
+				}
+			}
+
+			_args[*_args_count] = var;
+			*_args_count += 1;
+
+		}
+
+		else
+		{
+			CC_BLOCK_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
+			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+			parseSetErrorPos(_parser, parseGetPos(_parser));
+			return false;
+		}
+
+		if (*_args_count > _block->args_count)
+		{
+			return false;
+		}
+
 	}
 
-	*_args_count = 0;
+	return false;
 }
 
-var_s* parseReturnArguments(parser_s *_parser)
+bool parseDefineBlock(cc_parser_s *_parser, cc_type_t _type, const char *_block_name,
+		size_t _block_name_len)
+{
+
+	char ch;
+
+	parseSkipNewLine(_parser);
+
+	file_bufferGet(_parser->buffer, &ch);
+
+	if (ch != '(')
+	{
+		CC_BLOCK_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferNext(_parser->buffer);
+
+	cc_block_s *block = (cc_block_s*) CC_MALLOC(sizeof(cc_block_s));
+	if (block == NULL)
+	{
+		parseSetError(_parser, CC_CODE_NOT_MEM);
+		CC_BLOCK_DEBUG("ERROR: not enough memmory for block arguments.\n");
+		return false;
+	}
+	memset(block, 0, sizeof(cc_block_s));
+
+	cc_block_args_s *args[CC_FUNC_NUMS_ARGS] = {
+			NULL };
+	uint8_t args_count = 0;
+
+	if (!parseBlockArguments(_parser, args, &args_count))
+	{
+		garbageBlockDefArgs(args, &args_count);
+		CC_FREE(block);
+		block = NULL;
+
+		return false;
+	}
+
+	file_bufferNext(_parser->buffer);
+	parseSkipNewLine(_parser);
+
+	file_bufferGet(_parser->buffer, &ch);
+
+	if (ch != '{')
+	{
+		CC_BLOCK_DEBUG("ERROR: unexpected symbol '%c'.\n", ch);
+		garbageBlockDefArgs(args, &args_count);
+		CC_FREE(block);
+		block = NULL;
+
+		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+		parseSetErrorPos(_parser, parseGetPos(_parser));
+		return false;
+	}
+
+	file_bufferNext(_parser->buffer);
+	parseSkipNewLine(_parser);
+
+	block->pos_start = parseGetPos(_parser);
+
+	if (!parserSkipBlock(_parser, '{', '}'))
+	{
+		garbageBlockDefArgs(args, &args_count);
+		CC_FREE(block);
+		block = NULL;
+
+		return false;
+	}
+
+	block->name = (char*) CC_MALLOC(_block_name_len + 1 * sizeof(char));
+	if (block->name == NULL)
+	{
+		CC_BLOCK_DEBUG("ERROR: not enough memmory for block name.\n");
+		parseSetError(_parser, CC_CODE_NOT_MEM);
+		garbageBlockDefArgs(args, &args_count);
+		CC_FREE(block);
+		block = NULL;
+		return false;
+	}
+	memset(block->name, 0, _block_name_len + 1 * sizeof(char));
+	memmove(block->name, _block_name, _block_name_len);
+
+	block->args = (cc_block_args_s**) CC_MALLOC(sizeof(cc_block_args_s));
+	if (block->args == NULL)
+	{
+		parseSetError(_parser, CC_CODE_NOT_MEM);
+		CC_BLOCK_DEBUG("ERROR: not enough memmory for block arguments.\n");
+		CC_FREE(block);
+		block = NULL;
+		return false;
+	}
+	memset(block->args, 0, sizeof(cc_block_args_s));
+
+	for (int i = 0; i < args_count; i++)
+	{
+
+		block->args[i] = args[i];
+	}
+
+	block->pos_end = parseGetPos(_parser);
+	block->args_count = args_count;
+
+	if (!cvector_add(_parser->blocks, block))
+	{
+		garbageBlockDefArgs(block->args, (uint8_t*) &block->args_count);
+		CC_FREE(block->name);
+		block->name = NULL;
+		CC_FREE(block);
+		block = NULL;
+
+		return false;
+	}
+
+	return true;
+}
+
+var_s* parseReturnArguments(cc_parser_s *_parser)
 {
 	char ch;
 
@@ -913,15 +924,13 @@ var_s* parseReturnArguments(parser_s *_parser)
 			return NULL;
 		}
 
-//		file_bufferNext(_parser->buffer);
-
 	}
 
 	else if (ch == '"')
 	{
 		// retezec
 
-		char value[CONFIG_CC_STRING_LEN] = {
+		char value[CC_VALUE_STRING_LEN + 1] = {
 				'\0' };
 
 		if (!ParseValueString(_parser, value, &value_len))
@@ -959,7 +968,7 @@ var_s* parseReturnArguments(parser_s *_parser)
 		if (value_len == 0)
 		{
 			parseSetError(_parser, CC_CODE_FUNC_ARGS_ERROR);
-			CC_PRINT("ERROR: empty int/float value!\n");
+			CC_BLOCK_DEBUG("ERROR: empty int/float value!\n");
 			return NULL;
 
 		}
@@ -988,7 +997,7 @@ var_s* parseReturnArguments(parser_s *_parser)
 
 			if (_var == NULL)
 			{
-				CC_PRINT("CHYBA?\n\n");
+				CC_BLOCK_DEBUG("CHYBA?\n\n");
 				return NULL;
 			}
 
@@ -1017,8 +1026,8 @@ var_s* parseReturnArguments(parser_s *_parser)
 		if (var_name_len == 0)
 		{
 			parseSetErrorPos(_parser, parseGetPos(_parser));
-			parseSetError(_parser, CC_CODE_KEYWORD);
-			CC_PRINT("ERROR: empty identifier\n");
+			parseSetError(_parser, CC_CODE_KEYWORD_EMPTY);
+			CC_BLOCK_DEBUG("ERROR: empty identifier\n");
 			return NULL;
 		}
 
@@ -1066,9 +1075,9 @@ var_s* parseReturnArguments(parser_s *_parser)
 
 			if (ch == '[')
 			{
-				CC_PRINT("ERROR: not implemented '%c'!\n", ch);
+				CC_BLOCK_DEBUG("ERROR: not implemented '%c'!\n", ch);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
-				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+				parseSetError(_parser, CC_CODE_NOT_IMPLEMENTED);
 				return NULL;
 			}
 
@@ -1087,9 +1096,9 @@ var_s* parseReturnArguments(parser_s *_parser)
 				if (_var == NULL)
 				{
 
-					CC_PRINT("ERROR: function returns 'NULL'..\n");
+					CC_BLOCK_DEBUG("ERROR: function returns 'NULL'..\n");
 					parseSetErrorPos(_parser, parseGetPos(_parser));
-					parseSetError(_parser, CC_CODE_FUNC_BAD_TYPE);
+					parseSetError(_parser, CC_CODE_FUNC_RET_BAD_TYPE);
 					return NULL;
 				}
 
@@ -1097,7 +1106,6 @@ var_s* parseReturnArguments(parser_s *_parser)
 				file_bufferSkipSpace(_parser->buffer);
 				file_bufferGet(_parser->buffer, &ch);
 
-				// fixme tady hledat carku ','? kdyz ji odstranim?
 				if (!charin(ch, ",)"))
 				{
 					parseSetErrorPos(_parser, parseGetPos(_parser));
@@ -1116,15 +1124,14 @@ var_s* parseReturnArguments(parser_s *_parser)
 				if (var == NULL)
 				{
 					parseSetError(_parser, CC_CODE_VAR_NOT_DEFINED);
-					CC_PRINT("ERROR: undefined variable '%s'!\n", var_name);
-					// fixme nastavit navratove kody chyb!
+					CC_BLOCK_DEBUG("ERROR: undefined variable '%s'!\n", var_name);
 					return NULL;
 				}
 
 				if (!var->valid)
 				{
 					parseSetError(_parser, CC_CODE_VAR_NOT_ASSIGNED);
-					CC_PRINT("ERROR: variable '%s' is uninitialized!\n", var_name);
+					CC_BLOCK_DEBUG("ERROR: variable '%s' is uninitialized3!\n", var_name);
 					return NULL;
 				}
 
@@ -1192,8 +1199,8 @@ var_s* parseReturnArguments(parser_s *_parser)
 
 				else if (_var->type == CC_TYPE_ARRAY)
 				{
-					CC_PRINT("ERROR: not implemented\n");
-					parseSetError(_parser, CC_CODE_LOGIC);
+					CC_BLOCK_DEBUG("ERROR: not implemented\n");
+					parseSetError(_parser, CC_CODE_NOT_IMPLEMENTED);
 					VarDestroy(_var);
 					return NULL;
 				}
@@ -1201,7 +1208,7 @@ var_s* parseReturnArguments(parser_s *_parser)
 				else
 				{
 					parseSetError(_parser, CC_CODE_TYPE_UNKNOWN);
-					CC_PRINT("ERROR: unknown type\n");
+					CC_BLOCK_DEBUG("ERROR: unknown type\n");
 					VarDestroy(_var);
 					return NULL;
 				}
@@ -1212,7 +1219,7 @@ var_s* parseReturnArguments(parser_s *_parser)
 			{
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-				CC_PRINT("DBEUG: tady asi chyba?'%c'.\n", ch);
+				CC_BLOCK_DEBUG("DBEUG: tady asi chyba?'%c'.\n", ch);
 
 				return NULL;
 			}
@@ -1224,16 +1231,11 @@ var_s* parseReturnArguments(parser_s *_parser)
 
 	else if (ch == ';')
 	{
-		// fixme odkomentovat?
-//		CC_PRINT(" exit without return value '%c'.\n", ch);
-//		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-//		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return NULL;
 	}
 
 	else
 	{
-		CC_PRINT("ERROR: unexpected symbol '%c'.\n", ch);
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return NULL;

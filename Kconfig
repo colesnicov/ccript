@@ -1,0 +1,106 @@
+menu "CCRipt"
+
+    config CC_FLOAT_EXP_LEN
+		int "Delka exponentu cisla s plovouci desetinnou carkou."
+		default 3
+		help 
+			"Pouziva se pri prevodu promenne typu `float` na typ `string`"
+
+	config CC_FUNC_NUMS_ARGS
+		int "Maximalni pocet argumentu ktery funkce muze prijmout."
+		default 8
+		help 
+			""
+
+	config CC_PRINT_COMMENT
+		bool "Vypisovat komentare do konzole?"
+		default n
+		help 
+			""
+
+	config CC_PRINT_ENV
+		bool "Vypsat promenne prostredi do konzole?"
+		default n
+		help 
+			""
+
+	config CC_FUNC_DEBUG
+		bool "Vypisovat ladici informace o volanich funkci ve skriptech?"
+		default n
+		help 
+			""
+
+	config CC_VAR_DEBUG
+		bool "Vypisovat ladici informace o volanich promennych ve skriptech?"
+		default n
+		help 
+			""
+
+	config CC_BLOCK_DEBUG
+		bool "Vypisovat ladici informace o volanich zanorovani bloku ve skriptech?"
+		default n
+		help 
+			""
+
+	config CC_KEYWORD_LEN
+		int "Velikost zasobniku pro vyraz."
+		default 16
+		help
+			"Velikost zasobniku pro vyraz vcetne ukoncovaci '\0'. nazvy promennych, funkci, ..."
+ 			"Tolik mista bude rezervovano v pameti RAM pro zasobnik pro vyraz."
+ 			"Vysledny vyraz bude o 1 znak kratsi!"
+
+	config CC_VALUE_LONG_LEN
+		int "Velikost zasobniku pro cislo int, long a float."
+		default 9
+		help 
+			"Tolik mista bude rezervovano v pameti RAM."
+ 			"Vysledny vyraz bude o 1 znak kratsi!"
+
+	config CC_NUMERIC_LEN
+		int "Velikost zasobniku pro cislo"
+		default 51
+		help 
+			"Tolik mista bude rezervovano v pameti RAM pro zasobnik pro cislo."
+
+	config CC_STRING_LEN
+		int "Velikost zasobniku pro retezec"
+		default 51
+		help 
+			"Tolik mista bude rezervovano v pameti RAM pro zasobnik pro retezec."
+
+	config CC_COMMENT_LEN
+		int "Velikost zasobniku pro komentar"
+		default 150
+		help 
+			"Tolik mista bude rezervovano v pameti RAM pro zasobnik komentare."
+
+	config CC_BUFFER_LEN
+		int "Velikost zasobniku pro skript"
+		default 50 
+		help 
+			"Tolik mista bude rezervovano v pameti RAM pro zasobnik skriptu nacteneho ze souboru."
+
+	config CC_IF_COND_MATH
+		bool "Podpora matematickych operaci v podminkach."
+		default y
+		help 
+			"Napriklad: `if(1 + 2 == 3)`"
+
+	config CC_ASSIGN_EMPTY
+		bool "Podpora prirazeni prazdneho redezce/znaku."
+		default y
+		help 
+			""
+
+	config CC_TASK_DELAY
+		int "Umozni aby parser nevyplitval vsechen cas jen pro sebe."
+		default 5
+		help
+			"Tolik tiku se bude cekat pred zpracovanim dalsiho bloku."
+			"Uzitecne pokud se jedna o nekonecnou smycku nebo je potreba predavat rizeni i jinym uloham."
+			"Zaroven ale tento interval zpomaluje zacatek startu zpracovavani skriptu..!"
+			"Vola vTaskDelay()."
+
+endmenu
+

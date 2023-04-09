@@ -8,15 +8,29 @@ int number2 = 0;
 println("WHILE 1");
 print('\n');
 
-while(1) {
+int a = 5;
+int b = 0;
 
-	if(number1 == 5) {
+while(a - b>0)
+{
+	b++;
+	print('\n');
+	println("  - break");
+
+}
+
+while(1)
+{
+
+	if(number1 == 5)
+	{
 		print('\n');
 		println("  - break");
 
 		break;
 
-	}elif(number1 == 2) {
+	}elif(number1 == 2)
+	{
 		print('\n');
 		println("  - continue");
 		print('\n');
@@ -46,14 +60,16 @@ number1 = 2;
 println("WHILE 2");
 print('\n');
 
-while(number1) {
+while(number1)
+{
 
 	print("  iteration = ");
 	println(number1);
 
 	number2 = 0;
 
-	while(number2 <= 2) {
+	while(number2 <= 2)
+	{
 		print("   - inner loop ");
 		println(number2);
 		number2++;

@@ -1,20 +1,23 @@
 // testovaci skript
 // datovy typ 'BOOL'
 
-bool var1;
+bool pravdivost1;
 
-bool var2 = 1;
+bool pravdivost2 = 1;
 
-//bool var1 = 1; // error, duplicate variable 'var1'
-var1 = var2;
+dump (pravdivost2);
 
-var1 = true & false;
-var2 = var1 | true;
+pravdivost1 = pravdivost2;
 
-var1 = true & (true | 1);
-var2 = !var1;
+dump (pravdivost1);
 
-dump(var2);
-dump(var1);
+pravdivost1 = true && false;
+pravdivost2 = pravdivost1 || true;
+
+pravdivost1 = true && (true || 1);
+pravdivost2 = !pravdivost1;
+
+dump (pravdivost2);
+dump (pravdivost1);
 
 println("SCRIPT END");

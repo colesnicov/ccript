@@ -7,9 +7,10 @@
  * @brief Definice dodatecnych privatnich funkci pro praci se znaky.
  * @details these appear in <ctypes.h> too, but we don't want macros and we don't want to
  * 			 drag in a table of character flags
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *

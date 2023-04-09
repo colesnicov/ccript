@@ -5,9 +5,11 @@
 /**
  * @file cc_configs.h
  * @brief Uzivatelske nastaveni.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
+ *
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -17,10 +19,12 @@
 
 #pragma once
 
-#if 0
-#define S1(x) #x
-#define S2(x) S1(x)
-#define CC_LOG_TAG __FILE__ " : " S2(__LINE__)
+#if 1
+
+#define __SF(x) #x
+#define __SS(x) __SF(x)
+#define CC_LOG_TAG __FILE__ " : " __SS(__LINE__)
+
 #else
 
 #define	CC_LOG_TAG	__FUNCTION__
@@ -35,6 +39,7 @@
 //
 ///////////////////////////
 
+#include <sdkconfig.h>
 #include <esp_log.h>
 #include <stdio.h>
 #include <assert.h>
@@ -43,11 +48,27 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/private/portable.h>
 
-#include <system/mathio.hpp>
+/**
+ * @def CONFIG_CC_MALLOC
+ * @brief Rezervuje pamet.
+ *
+ */
+#define CONFIG_CC_MALLOC		pvPortMalloc
 
-#define CONFIG_CC_MALLOC(s)		pvPortMalloc((s))
-#define CONFIG_CC_REALLOC(p, s)	pvPortRealloc((p),(s))
-#define CONFIG_CC_FREE(p)		vPortFree((p))
+/**
+ * @def CONFIG_CC_REALLOC
+ * @brief Rezervuje pamet.
+ * @brief
+ *
+ */
+#define CONFIG_CC_REALLOC	pvPortRealloc
+
+/**
+ * @def CONFIG_CC_FREE
+ * @brief Uvolni pamet.
+ *
+ */
+#define CONFIG_CC_FREE		vPortFree
 
 /**
  * @def CONFIG_CC_INCLUDE_FILEIO
@@ -66,26 +87,6 @@
 #define CONFIG_CC_INCLUDE_SNPRINTF	<stdio.h>
 
 /**
- * @def CONFIG_CC_FLOAT_EXP_LEN
- * @brief Delka exponentu cisla s plovouci desetinnou carkou.
- * @details Pouziva se pri prevodu promenne typu `float` na typ `string`
- * 			<code><pre>
- * 			12.345;
- * 			   ^^^
- * 			</pre></code>
- *
- */
-#define CONFIG_CC_FLOAT_EXP_LEN		3
-
-/**
- * @def CONFIG_CC_FUNC_NUMS_ARGS
- * @brief Maximalni pocet argumentu ktery funkce muze prijmout.
- *
- * @fixme Pri spatnem poctu predanych funkci parametru dochazi k padu! Vyresit!!
- */
-#define CONFIG_CC_FUNC_NUMS_ARGS		5
-
-/**
  * @def CONFIG_CC_ASSERT
  * @brief ASSERT funkce
  *
@@ -97,61 +98,8 @@
  * @brief Funkce pro vypis do konzole.
  *
  */
-//#define CONFIG_CC_PRINT(...)	printf(__VA_ARGS__)
-#define CONFIG_CC_PRINT(...)	ESP_LOGI(CC_LOG_TAG, __VA_ARGS__)
+#define CONFIG_CC_PRINT(...)	printf(__VA_ARGS__)
 
-/**
- * @def CONFIG_CC_PRINT_COMMENT
- * @brief Vypisovat komentare do konzole?
- * @see CONFIG_CC_PRINT
- *
- */
-#define CONFIG_CC_PRINT_COMMENT	0
-
-/**
- * @def CONFIG_CC_FUNC_DEBUG
- * @brief Vypisovat ladici informace o volanich funkci ve skriptech?
- *
- */
-#define CONFIG_CC_FUNC_DEBUG	0
-
-#define CONFIG_CC_VAR_DEBUG	0
-
-/**
- * @def CONFIG_CC_KEYWORD_LEN
- * @brief Velikost zasobniku pro vyraz.
- * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro vyraz.
- *
- *
- */
-#define CONFIG_CC_KEYWORD_LEN	16
-
-#define CONFIG_CC_NUMERIC_LEN	51
-
-/**
- * @def CONFIG_CC_STRING_LEN
- * @brief Velikost zasobniku pro retezec.
- * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro retezec.
- *
- */
-#define CONFIG_CC_STRING_LEN	51
-
-/**
- * @def CONFIG_CC_COMMENT_LEN
- * @brief Velikost zasobniku pro komentar.
- * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik komentare.
- * @see CONFIG_CC_PRINT_COMMENT
- *
- */
-#define CONFIG_CC_COMMENT_LEN	150
-
-/**
- * @def CONFIG_CC_BUFFER_LEN
- * @brief Velikost zasobniku pro skript.
- * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik skriptu nacteneho ze souboru.
- *
- */
-#define CONFIG_CC_BUFFER_LEN		5
 
 #else
 
@@ -165,8 +113,25 @@
 #include <assert.h>
 #include <malloc.h>
 
+/**
+ * @def CONFIG_CC_MALLOC
+ * @brief Rezervuje pamet.
+ *
+ */
 #define CONFIG_CC_MALLOC(s)		malloc((s))
+
+/**
+ * @def CONFIG_CC_REALLOC
+ * @brief Prerezervuje pamet.
+ *
+ */
 #define CONFIG_CC_REALLOC(p, s)	realloc((p),(s))
+
+/**
+ * @def CONFIG_CC_FREE
+ * @brief Uvolni pamet.
+ *
+ */
 #define CONFIG_CC_FREE(p)		free((p))
 
 /**
@@ -194,7 +159,7 @@
  * @brief Maximalni pocet argumentu ktery funkce muze prijmout.
  *
  */
-#define CONFIG_CC_FUNC_NUMS_ARGS		4
+#define CONFIG_CC_FUNC_NUMS_ARGS		8
 
 /**
  * @def CONFIG_CC_ASSERT
@@ -216,7 +181,7 @@
  * @see CONFIG_CC_PRINT
  *
  */
-#define CONFIG_CC_PRINT_COMMENT	0
+#define CONFIG_CC_PRINT_COMMENT	1
 
 /**
  * @def CONFIG_CC_PRINT_ENV
@@ -224,7 +189,7 @@
  * @see CONFIG_CC_PRINT
  *
  */
-#define CONFIG_CC_PRINT_ENV		0
+#define CONFIG_CC_PRINT_ENV		1
 
 /**
  * @def CONFIG_CC_FUNC_DEBUG
@@ -233,8 +198,18 @@
  */
 #define CONFIG_CC_FUNC_DEBUG	0
 
+/**
+ * @def CONFIG_CC_VAR_DEBUG
+ * @brief  Vypisovat ladici informace o volanich promennych ve skriptech?
+ *
+ */
 #define CONFIG_CC_VAR_DEBUG		0
 
+/**
+ * @def CONFIG_CC_BLOCK_DEBUG
+ * @brief  Vypisovat ladici informace o volanich zanorovani bloku ve skriptech?
+ *
+ */
 #define CONFIG_CC_BLOCK_DEBUG	0
 
 /**
@@ -243,10 +218,24 @@
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro vyraz.
  * @details Vysledny vyraz bude o 1 znak kratsi!
  *
- *
  */
 #define CONFIG_CC_KEYWORD_LEN	16
 
+/**
+ * @def CONFIG_CC_VALUE_LONG_LEN
+ * @brief Velikost zasobniku pro cislo vcetne ukoncovaci '\0'. int, long a float.
+ * @details Tolik mista bude rezervovano v pameti RAM.
+ * @details Vysledny vyraz bude o 1 znak kratsi!
+ *
+ */
+#define CONFIG_CC_VALUE_LONG_LEN	9
+
+/**
+ * @def CONFIG_CC_NUMERIC_LEN
+ * @brief  Velikost zasobniku pro cislo.
+ * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik pro cislo.
+ *
+ */
 #define CONFIG_CC_NUMERIC_LEN	51
 
 /**
@@ -272,6 +261,21 @@
  * @details Tolik mista bude rezervovano v pameti RAM pro zasobnik skriptu nacteneho ze souboru.
  *
  */
-#define CONFIG_CC_BUFFER_LEN		5
+#define CONFIG_CC_BUFFER_LEN		50
+
+/**
+ * @def CONFIG_CC_IF_COND_MATH
+ * @brief Podpora matematickych operaci v podminkach.
+ * @details Napriklad: `if(1 + 2 == 3)`
+ *
+ */
+#define CONFIG_CC_IF_COND_MATH		1
+
+/**
+ * @def CONFIG_CC_ASSIGN_EMPTY
+ * @brief Podpora prirazeni prazdneho redezce/znaku.
+ *
+ */
+#define CONFIG_CC_ASSIGN_EMPTY		1
 
 #endif

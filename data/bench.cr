@@ -1,42 +1,55 @@
 // testovaci skript pro mereni rychlosti
-// Mereni probiha ve smycce
-// Pritom dojde k vytvoreni 3 promennych typu int
-// Promenne se inkrementuji a odstranise
-// Navrat na zacatek smycky i tak na 100 opakovani
+// Mereni probiha ve dvou smyckach kde jedna je zanorena do druhe.
+// Pritom dojde k vytvoreni 2 promennych typu int
+// Promenne se inkrementuji a odstrani se
+// Obe smycky maji stejny pocet opakovani, 1000.
 // Pak se vypise cas v milisekundach.
 
-// Pozor, protoze typ int nemuze pojmout typ long, funkce millis() vraci overflowed hodnotu.
-
-int limit = 100;
+int limit = 1000;
 long last = millis();
 
-long number1 = 0;
-int number2 = 0;
+int loop_1 = 0;
+int loop_2 = 0;
+long iterations = 0;
 
-println("WHILE 1");
+println("START");
 print('\n');
 
-while(number1 < limit)
+while(loop_1 < limit)
 {
-	int number3 = 0;
+	while(loop_2 < limit)
+	{
+		loop_2++;
+		iterations++;
+
+		int number4 = 0;
+		int number5 = 0;
+
+		number4++;
+		number5++;
+	}
+
+	loop_1 += 1;
+	loop_2 = 0;
+	iterations++;
+
 	int number4 = 0;
-	int number5 = 30;
-	number1++;
-	number2++;
-	number3++;
+	int number5 = 0;
+
 	number4++;
+	number5++;
 }
 
 print('\n');
-print(cast("string",number1));
+print(cast("string", iterations));
 println(" iterations...");
 println("---------------");
 
 print('\n');
 println(strcat("millis: ", cast("string", millis()), ", last: ", cast("string", last), "."));
-number1 = millis() - last;
+iterations = millis() - last;
 
-println(strcat("time: ", cast("string", number1), " ms."));
+println(strcat("time: ", cast("string", iterations), " ms."));
 println("---------------");
 print('\n');
 

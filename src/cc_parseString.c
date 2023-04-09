@@ -5,16 +5,16 @@
 /**
  * @file cc_parseString.c
  * @brief Implementace funkci pro parsovani typu 'STRING'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
  * @copyright MIT License
  *
  */
-
 
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
@@ -28,7 +28,7 @@
 
 #include "ccript/cc_var.h"
 
-bool ParseDefineTypeString(parser_s *_parser)
+bool ParseDefineTypeString(cc_parser_s *_parser)
 {
 	char ch = '\0';
 
@@ -43,18 +43,8 @@ bool ParseDefineTypeString(parser_s *_parser)
 		return false;
 	}
 
-	/**
-	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
-	 * @brief Nazev promenne/funkce
-	 *
-	 */
-	char identifier_name[CONFIG_CC_KEYWORD_LEN] = {
+	char identifier_name[CC_KEYWORD_LEN + 1] = {
 			'\0' };
-	/**
-	 * @var size_t identifier_len
-	 * @brief Delka nazvu promenne/funkce
-	 *
-	 */
 	size_t identifier_len = 0;
 
 	if (!parseIdentifier(_parser, identifier_name, &identifier_len))
@@ -84,7 +74,7 @@ bool ParseDefineTypeString(parser_s *_parser)
 		// 'operator (+-/*)' scitani nekolika cisel
 		// '(' volani funkce ktera vraci numeric
 
-		char fval[CONFIG_CC_STRING_LEN] = {
+		char fval[CC_VALUE_STRING_LEN + 1] = {
 				'\0' };
 		size_t len = 0;
 		if (!parseVarArgsString(_parser, ';', fval, &len))
@@ -105,7 +95,7 @@ bool ParseDefineTypeString(parser_s *_parser)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -126,7 +116,7 @@ bool ParseDefineTypeString(parser_s *_parser)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -137,6 +127,13 @@ bool ParseDefineTypeString(parser_s *_parser)
 		return true;
 
 	}
+
+	else if (ch == '(')
+	{
+		// definice funkce
+
+		return parseDefineBlock(_parser, CC_TYPE_STRING, identifier_name, identifier_len);
+	}
 	else
 	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -146,7 +143,7 @@ bool ParseDefineTypeString(parser_s *_parser)
 
 }
 
-bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len)
+bool ParseValueString(cc_parser_s *_parser, char *_value, size_t *_value_len)
 {
 
 	size_t len = 0;
@@ -259,15 +256,16 @@ bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len)
 
 }
 
-bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_t *_value_len)
+bool parseVarArgsString(cc_parser_s *_parser, char _symbol_end, char *_value,
+		size_t *_value_len)
 {
 
 	size_t value_len = 0;
-	char value_name[CONFIG_CC_STRING_LEN] = {
+	char value_name[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
 
 	size_t fval_temp_len = 0;
-	char fval_temp[CONFIG_CC_STRING_LEN] = {
+	char fval_temp[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
 
 	char ch = 0;
@@ -294,19 +292,15 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 //	file_bufferGet(_parser->buffer, &ch);
 
-
-		// muze zacinat pouze pismenem, ' a "
-
-
+	// muze zacinat pouze pismenem, ' a "
 
 	if (!isalpha(ch) && !charin(ch, "'\""))
 	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 
-			return false;
+		return false;
 	}
-
 
 	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
 	{
@@ -386,7 +380,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
 
-					CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
+					CC_VAR_DEBUG("ERROR: function '%s' return 'null'.\n", value_name);
 					return false;
 				}
 
@@ -423,7 +417,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
 
 				else
 				{
-					CC_PRINT("ERROR: function '%s' return bad type.\n", value_name);
+					CC_VAR_DEBUG("ERROR: function '%s' return bad type.\n", value_name);
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 

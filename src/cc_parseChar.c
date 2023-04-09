@@ -5,9 +5,10 @@
 /**
  * @file cc_parseChar.c
  * @brief Implementace funkci pro parsovani typu 'CHAR'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -28,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool ParseDefineTypeChar(parser_s *_parser)
+bool ParseDefineTypeChar(cc_parser_s *_parser)
 {
 	// parse name
 	// can be var name, function name,
@@ -53,18 +54,9 @@ bool ParseDefineTypeChar(parser_s *_parser)
 		return false;
 	}
 
-	/**
-	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
-	 * @brief Nazev promenne/funkce
-	 *
-	 */
-	char identifier_name[CONFIG_CC_KEYWORD_LEN] = {
+	char identifier_name[CC_KEYWORD_LEN + 1] = {
 			'\0' };
-	/**
-	 * @var size_t identifier_len
-	 * @brief Delka nazvu promenne/funkce
-	 *
-	 */
+
 	size_t identifier_len = 0;
 
 	if (!parseIdentifier(_parser, identifier_name, &identifier_len))
@@ -112,7 +104,7 @@ bool ParseDefineTypeChar(parser_s *_parser)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -133,7 +125,7 @@ bool ParseDefineTypeChar(parser_s *_parser)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -144,6 +136,13 @@ bool ParseDefineTypeChar(parser_s *_parser)
 		return true;
 
 	}
+
+	else if (ch == '(')
+	{
+		// definice funkce
+
+		return parseDefineBlock(_parser, CC_TYPE_CHAR, identifier_name, identifier_len);
+	}
 	else
 	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -153,7 +152,7 @@ bool ParseDefineTypeChar(parser_s *_parser)
 
 }
 
-bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len)
+bool ParseValueChar(cc_parser_s *_parser, char *_value, size_t *_value_len)
 {
 
 	char ch;
@@ -278,8 +277,8 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len)
 				{
 					// Konec komandy
 
-					CC_PRINT("ERROR: 333 Todle je asi spatne. musi nejdrive koncit (') "
-							"a az potom muze byt ',' nebo ';' nebo ')' a podobne.\n");
+					CC_VAR_DEBUG("ERROR: Todle je asi spatne. musi nejdrive koncit (') "
+							"a az potom muze byt ',' nebo ';' nebo ')' a podobne?\n");
 
 					return false;
 
@@ -319,26 +318,13 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len)
 			{
 				// Konec komandy
 
-// @fixme Znova projit takove funkce a overit si spravnost logiky. nektere sekce jsou zbytecne!?
+//fixme Znova projit takove funkce a overit si spravnost logiky. nektere sekce jsou zbytecne!?
 
 				_value[0] = ch_temp;
 
 				*_value_len = 1;
 				return true;
 			}
-// fixme toto tady je asi zbytecne
-//			else if (ch == ';') {
-//				// Konec komandy
-//				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-//				parseSetErrorPos(_parser, parseGetPos(_parser));
-//
-//				return false;
-//
-//				_value[0] = '\0';
-//
-//				*_value_len = 1;
-//				return true;
-//			}
 
 			else
 			{
@@ -358,15 +344,15 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len)
 	}
 }
 
-bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value)
+bool parseVarArgsChar(cc_parser_s *_parser, char _symbol_end, char *_value)
 {
 
 	size_t value_len = 0;
-	char value_name[CONFIG_CC_STRING_LEN] = {
+	char value_name[CC_VALUE_STRING_LEN + 1] = {
 			'\0' };
 
 	size_t fval_temp_len = 0;
-	char fval_temp = 0;
+	char fval_temp = '\0';
 
 	char ch = 0;
 
@@ -413,13 +399,16 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value)
 			return false;
 		}
 
+#if 0 == CC_ASSIGN_EMPTY
 		if (fval_temp_len == 0)
-		{ // fixme brani v prirazeni prazdneho retezce?
+		{
 			parseSetError(_parser, CC_CODE_KEYWORD);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 
 			return false;
 		}
+#endif
+
 		file_bufferNext(_parser->buffer);
 
 	}
@@ -475,7 +464,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value)
 			if (var == NULL)
 			{
 
-				CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
+				CC_VAR_DEBUG("ERROR: function '%s' return 'null'.\n", value_name);
 				parseSetError(_parser, CC_CODE_LOGIC);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
@@ -506,7 +495,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value)
 			else
 			{
 
-				CC_PRINT("ERROR: function '%s' return bad type.\n", value_name);
+				CC_VAR_DEBUG("ERROR: function '%s' return bad type.\n", value_name);
 				VarDestroy(var);
 				return false;
 			}

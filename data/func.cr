@@ -1,5 +1,5 @@
 // testovaci skript
-// datovy typ 'LONG'
+// funkce
 
 int sum(int a, int b) {
 	int res = a + b;

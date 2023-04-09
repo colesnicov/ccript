@@ -5,9 +5,10 @@
 /**
  * @file cc_parseWhile.c
  * @brief Implementace funkci pro parsovani smycky 'WHILE'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -15,7 +16,7 @@
  *
  */
 
-
+#include <ccript/cc_block.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_function.h>
 #include <ccript/cc_parseIf.h>
@@ -30,37 +31,41 @@
 #include <stdlib.h>
 #include <string.h>
 
-var_s* parseWhile(parser_s *_parser) {
+var_s* parseWhile(cc_parser_s *_parser)
+{
 	char ch = 0;
 
 	parseSkipNewLine(_parser);
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch != '(') {
+	if (ch != '(')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return NULL;
 	}
 
-	bool cond_passed = false;
+	float cond_passed = 0.0;
 
 	size_t pos_condition_o;
 
 	pos_condition_o = parseGetPos(_parser);
 
-	if (!parseIfArguments(_parser, &cond_passed)) {
+	if (!parseIfArguments(_parser, &cond_passed, ')'))
+	{
 		return NULL;
 	}
 
-	file_bufferNext(_parser->buffer);
+//	file_bufferNext(_parser->buffer);
 	parseSkipNewLine(_parser);
 
 	size_t pos_block_o = parseGetPos(_parser);
 
 	file_bufferGet(_parser->buffer, &ch);
 
-	if (ch != '{') {
+	if (ch != '{')
+	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 		parseSetErrorPos(_parser, parseGetPos(_parser));
 		return NULL;
@@ -68,9 +73,11 @@ var_s* parseWhile(parser_s *_parser) {
 
 	uint8_t scope = _parser->depth;
 
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer)) {
+	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	{
 
-		if (cond_passed) {
+		if ((bool) cond_passed)
+		{
 
 // todo tady musim posunout o 1 dopredu? zda se ze to jinak nefunguje. mozna new line?
 // preskakuji znak '{'
@@ -80,15 +87,17 @@ var_s* parseWhile(parser_s *_parser) {
 			var_s *ret_var = parseBlock(_parser, '}');
 
 			_parser->depth = scope;
-			parseClearScope(_parser);
+			VarGarbageScope(_parser);
 
-			if (_parser->error == CC_CODE_RETURN) {
+			if (_parser->error == CC_CODE_RETURN)
+			{
 				return ret_var;
 			}
 
 			VarDestroy(ret_var);
 
-			if (_parser->error == CC_CODE_BREAK) {
+			if (_parser->error == CC_CODE_BREAK)
+			{
 				// break
 				// Navrat na zacatek bloku WHILE abych ho mohl preskocit
 
@@ -99,7 +108,8 @@ var_s* parseWhile(parser_s *_parser) {
 				file_bufferReload(_parser->buffer);
 				file_bufferNext(_parser->buffer);
 
-				if (!parserSkipBlock(_parser, '{', '}')) {
+				if (!parserSkipBlock(_parser, '{', '}'))
+				{
 					return NULL;
 				}
 
@@ -108,7 +118,8 @@ var_s* parseWhile(parser_s *_parser) {
 				return NULL;
 			}
 
-			else if (_parser->error == CC_CODE_CONTINUE) {
+			else if (_parser->error == CC_CODE_CONTINUE)
+			{
 				// continue
 				// Navrat k podmince
 
@@ -118,7 +129,8 @@ var_s* parseWhile(parser_s *_parser) {
 
 				file_bufferReload(_parser->buffer);
 
-				if (!parseIfArguments(_parser, &cond_passed)) {
+				if (!parseIfArguments(_parser, &cond_passed, ')'))
+				{
 					return NULL;
 				}
 
@@ -132,7 +144,8 @@ var_s* parseWhile(parser_s *_parser) {
 
 			}
 
-			else if (_parser->error == CC_CODE_OK) {
+			else if (_parser->error == CC_CODE_OK)
+			{
 				// Dosel do ukoncovaci zavorky
 				// Navrat k podmince
 
@@ -140,7 +153,8 @@ var_s* parseWhile(parser_s *_parser) {
 
 				file_bufferReload(_parser->buffer);
 
-				if (!parseIfArguments(_parser, &cond_passed)) {
+				if (!parseIfArguments(_parser, &cond_passed, ')'))
+				{
 					return NULL;
 				}
 
@@ -154,10 +168,8 @@ var_s* parseWhile(parser_s *_parser) {
 
 			}
 
-			else if (_parser->error >= CC_CODE_ERROR) {
-				CC_PRINT("ERROR: while exit with code: '%s(%d)' '%c' %d.\n",
-						cc_errorToString(_parser->error), _parser->error, ch, _parser->depth);
-
+			else if (_parser->error >= CC_CODE_ERROR)
+			{
 				return NULL;
 			}
 
@@ -165,12 +177,15 @@ var_s* parseWhile(parser_s *_parser) {
 
 			return NULL;
 
-		} else {
+		}
+		else
+		{
 			//	preskocit blok while
 
 			parseSkipNewLine(_parser);
 
-			if (!parserSkipBlock(_parser, '{', '}')) {
+			if (!parserSkipBlock(_parser, '{', '}'))
+			{
 				return NULL;
 			}
 

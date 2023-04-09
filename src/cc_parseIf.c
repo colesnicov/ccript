@@ -5,9 +5,10 @@
 /**
  * @file cc_parseIf.c
  * @brief Implementace funkci pro parsovani podminky 'IF'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -15,6 +16,7 @@
  *
  */
 
+#include <ccript/cc_block.h>
 #include <ccript/ccript.h>
 #include "ccript/cc_parseIf.h"
 #include "ccript/cc_configs.h"
@@ -30,114 +32,61 @@
 #include <stdlib.h>
 #include <string.h>
 
-void cleanIf(var_s **args, uint8_t *args_count)
+/**
+ * @var static char *m_excluded_sym
+ * @brief Operatory zakazane na zacatku logickych vyrazu.
+ */
+static char *m_excluded_sym = "=<>&|";
+
+void garbageIf(var_s **args, uint8_t *args_count)
 {
 
 	for (uint8_t i = 0; i < *args_count; i++)
 	{
-		CC_PRINT("DEBUG: destroy var: '%s'\n", args[i]->name);
+		CC_VAR_DEBUG("DEBUG: destroy var: '%s'\n", args[i]->name);
 		VarDestroy(args[i]);
 	}
 	*args_count = 0;
 }
 
-bool parseIfArguments(parser_s *_parser, bool *_cond_passed)
+bool parseIfArguments(cc_parser_s *_parser, float *_cond_value, char _end_sym)
 {
 
-	char ch = 0;
+	char ch;
 
-	bool cond_result_left = true;
-	bool cond_result_right = false;
+	float cond_result_right;
+	float cond_result;
 
 	file_bufferNext(_parser->buffer);
 	file_bufferSkipSpace(_parser->buffer);
 
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
+	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch))
 	{
 
-		file_bufferGet(_parser->buffer, &ch);
+//		for (uint8_t w = 0; w < 5; w++)
+//		{
+//			if (ch == m_excluded[w])
+//			{
+//				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+//				parseSetErrorPos(_parser, parseGetPos(_parser));
+//				return false;
+//			}
+//		}
 
-		if (ch == '!')
+		if (false == charin(ch, m_excluded_sym))
 		{
-			// negace
-
-			if (!parseIfArguments(_parser, &cond_result_right))
-			{
-
-				return false;
-			}
-
-			cond_result_right = !cond_result_right;
-
-		}
-
-		else if (ch == '(')
-		{
-			// zanoreni
-
-			if (!parseIfArguments(_parser, &cond_result_right))
-			{
-
-				return false;
-			}
-		}
-
-// fixme tento vycet je tady asi spatne. lepsi bude overit jestli znake ja alphanumeric?
-
-		else if (ch == '=')
-		{
-			// rovna se, tady nesmi
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-			return false;
-		}
-
-		else if (ch == '<')
-		{
-			// mensi, tady nesmi
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-			return false;
-		}
-
-		else if (ch == '>')
-		{
-			// vetsi, tady nesmi
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-			return false;
-		}
-
-		else if (ch == '&')
-		{
-			// and, tady nesmi
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-			return false;
-		}
-
-		else if (ch == '|')
-		{
-			// nebo, tady nesmi
-
-			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-			parseSetErrorPos(_parser, parseGetPos(_parser));
-			return false;
-		}
-
-		else
-		{
-			// ostatni
-
-			if (!parseIfPair(_parser, &cond_result_right))
+			if (!parseIfCond(_parser, &cond_result))
 			{
 				return false;
 			}
+
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+			if (_end_sym == ch)
+			{
+				// printf("%s: falesne vynoreni (tady [ne]posouvat znak?)\n", CC_LOG_TAG);
+			}
 		}
-
-		file_bufferSkipSpace(_parser->buffer);
-
-		file_bufferGet(_parser->buffer, &ch);
 
 		if (ch == '&')
 		{
@@ -146,16 +95,14 @@ bool parseIfArguments(parser_s *_parser, bool *_cond_passed)
 			file_bufferGet(_parser->buffer, &ch);
 			if (ch == '&')
 			{
-				// operator '&&'
 
-				bool value = false;
-				if (!parseIfArguments(_parser, &value))
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
 				{
 					return false;
 				}
 
-				cond_result_right = (cond_result_right == value);
-				*_cond_passed = (cond_result_left == cond_result_right);
+				*_cond_value = (float) ((bool) cond_result && (bool) cond_result_right);
+
 				return true;
 			}
 
@@ -167,18 +114,250 @@ bool parseIfArguments(parser_s *_parser, bool *_cond_passed)
 			}
 		}
 
-		else if (ch == ')')
+		else if (ch == '|')
+		{
+
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+			if (ch == '|')
+			{
+
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+				{
+					return false;
+				}
+
+				*_cond_value = (float) ((bool) cond_result || (bool) cond_result_right);
+				return true;
+			}
+
+			else
+			{
+				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+				parseSetErrorPos(_parser, parseGetPos(_parser));
+				return false;
+			}
+		}
+
+		else if (ch == '=')
+		{
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch == '=')
+			{
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+				{
+					return false;
+				}
+
+				*_cond_value = (float) (cond_result == cond_result_right);
+				return true;
+			}
+		}
+
+		else if (ch == '!')
+		{
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch == '=')
+			{
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+				{
+					return false;
+				}
+
+				*_cond_value = (float) (cond_result != cond_result_right);
+				return true;
+			}
+		}
+
+		else if (ch == '<')
+		{
+			size_t pos_offset = parseGetPos(_parser);
+
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch == '=')
+			{
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+				{
+					return false;
+				}
+
+				*_cond_value = (float) (cond_result <= cond_result_right);
+				return true;
+			}
+
+			_parser->buffer->offset = pos_offset;
+			file_bufferReload(_parser->buffer);
+
+			if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+			{
+				return false;
+			}
+
+			*_cond_value = (float) (cond_result < cond_result_right);
+			return true;
+
+		}
+
+		else if (ch == '>')
+		{
+			size_t pos_offset = parseGetPos(_parser);
+
+			file_bufferNext(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+
+			if (ch == '=')
+			{
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+				{
+					return false;
+				}
+
+				*_cond_value = (float) (cond_result >= cond_result_right);
+				return true;
+			}
+			else
+			{
+				_parser->buffer->offset = pos_offset;
+				file_bufferReload(_parser->buffer);
+
+				if (!parseIfArguments(_parser, &cond_result_right, _end_sym))
+				{
+					return false;
+				}
+
+				*_cond_value = (float) (cond_result > cond_result_right);
+				return true;
+			}
+
+		}
+
+#if CC_IF_COND_MATH
+		else if (ch == '-')
+		{
+
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			if (!parseIfCond(_parser, &cond_result_right))
+			{
+				return false;
+			}
+
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+			if (ch == _end_sym)
+			{
+
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				*_cond_value = cond_result - cond_result_right;
+				return true;
+			}
+
+			cond_result -= cond_result_right;
+			continue;
+		}
+
+		else if (ch == '+')
+		{
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			if (!parseIfCond(_parser, &cond_result_right))
+			{
+				return false;
+			}
+
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+			if (ch == _end_sym)
+			{
+
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				*_cond_value = cond_result + cond_result_right;
+				return true;
+			}
+
+			cond_result += cond_result_right;
+			continue;
+		}
+
+		else if (ch == '/')
+		{
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			if (!parseIfCond(_parser, &cond_result_right))
+			{
+				return false;
+			}
+
+			if (cond_result_right == 0)
+			{
+
+				parseSetError(_parser, CC_CODE_ZERO_DIVIDED);
+				parseSetErrorPos(_parser, parseGetPos(_parser));
+				return false;
+			}
+
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+			if (ch == _end_sym)
+			{
+
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				*_cond_value = cond_result / cond_result_right;
+				return true;
+			}
+
+			cond_result /= cond_result_right;
+			continue;
+
+		}
+
+		else if (ch == '*')
+		{
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+			if (!parseIfCond(_parser, &cond_result_right))
+			{
+				return false;
+			}
+			file_bufferSkipSpace(_parser->buffer);
+			file_bufferGet(_parser->buffer, &ch);
+			if (ch == _end_sym)
+			{
+
+				file_bufferNext(_parser->buffer);
+				file_bufferSkipSpace(_parser->buffer);
+				*_cond_value = cond_result * cond_result_right;
+				return true;
+			}
+
+			cond_result *= cond_result_right;
+			continue;
+
+		}
+#endif
+
+		else if (ch == _end_sym)
 		{
 			// konec argumentu
 
-			*_cond_passed = (cond_result_left == cond_result_right);
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+
+			*_cond_value = cond_result;
 
 			return true;
 		}
 		else
 		{
-			// chyba syntaxe?
-
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
@@ -192,40 +371,80 @@ bool parseIfArguments(parser_s *_parser, bool *_cond_passed)
 	return false;
 }
 
-bool parseIfArg(parser_s *_parser, float *_cond_arg)
+bool parseIfCond(cc_parser_s *_parser, float *_cond_value)
+{
+
+	char ch = 0;
+
+	float cond_result;
+
+	bool negatted = false;
+
+	while (FILEBUFFER_OK == file_bufferGet(_parser->buffer, &ch))
+	{
+		if (ch == '!')
+		{
+
+			negatted = true;
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+
+		}
+
+		if (ch == '(')
+		{
+
+			// zanoreni
+			if (!parseIfArguments(_parser, &cond_result, ')'))
+			{
+
+				return false;
+			}
+
+		}
+
+		else
+		{
+			if (!parseIfArg(_parser, &cond_result))
+			{
+				return false;
+			}
+		}
+
+		if (negatted)
+		{
+			if (cond_result)
+			{
+				*_cond_value = 0.0;
+			}
+			else
+			{
+				*_cond_value = 1.0;
+			}
+		}
+		else
+		{
+			*_cond_value = cond_result;
+		}
+		return true;
+	}
+
+	parseSetError(_parser, CC_CODE_IO);
+	parseSetErrorPos(_parser, parseGetPos(_parser));
+
+	return false;
+}
+
+bool parseIfArg(cc_parser_s *_parser, float *_arg)
 {
 
 	char ch;
 
-	float left_arg = 0.0f;
-
-	bool negation = false;
-
 	file_bufferGet(_parser->buffer, &ch);
-
-	if (ch == '!')
-	{
-
-		while (FILEBUFFER_OK == file_bufferNext(_parser->buffer))
-		{
-			negation = !negation;
-
-			file_bufferSkipSpace(_parser->buffer);
-			file_bufferGet(_parser->buffer, &ch);
-
-			if (ch != '!')
-			{
-				break;
-			}
-		}
-
-	}
 
 	if (isdigit(ch) || ch == '-')
 	{
-		// cislo
-
-		char value[CONFIG_CC_NUMERIC_LEN] = {
+		char value[CC_VALUE_NUMERIC_LEN + 1] = {
 				'\0' };
 
 		size_t value_len = 0;
@@ -244,7 +463,7 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg)
 
 		}
 
-		*_cond_arg = (float) atof(value);
+		*_arg = (float) atof(value);
 		return true;
 	}
 
@@ -252,7 +471,7 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg)
 	{
 		// promenna nebo funkce
 
-		char var_name[CONFIG_CC_KEYWORD_LEN] = {
+		char var_name[CC_KEYWORD_LEN + 1] = {
 				'\0' };
 		size_t var_name_len = 0;
 
@@ -271,186 +490,160 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg)
 		}
 
 		var_s *_var = NULL;
-		bool var_is_int = true;
+		bool var_protected = true;
 
 		if (var_name_len == 4 && strncmp(var_name, "true", var_name_len) == 0)
 		{
 
-			*_cond_arg = 1.0f;
+			*_arg = 1.0f;
 			return true;
 		}
 
 		else if (var_name_len == 5 && strncmp(var_name, "false", var_name_len) == 0)
 		{
 
-			*_cond_arg = 0.0f;
+			*_arg = 0.0f;
 			return true;
+		}
+
+		// funkce nebo promenna
+
+		file_bufferSkipSpace(_parser->buffer);
+
+		file_bufferGet(_parser->buffer, &ch);
+
+		if (ch == '[')
+		{
+			// pole ...
+
+			parseSetError(_parser, CC_CODE_NOT_IMPLEMENTED);
+			parseSetErrorPos(_parser, parseGetPos(_parser));
+
+			return false;
+		}
+
+		else if (ch == '(')
+		{
+			// volani funkce ...
+
+			_var = funcCall(_parser, var_name, var_name_len);
+
+			if (_parser->error > CC_CODE_RETURN)
+			{
+				VarDestroy(_var);
+				return false;
+			}
+
+			file_bufferNext(_parser->buffer);
+			file_bufferSkipSpace(_parser->buffer);
+
+			var_protected = false;
+
 		}
 
 		else
 		{
+			// promenna
 
+			_var = VarGet(_parser, var_name, var_name_len);
+
+			var_protected = true;
+
+		}
+
+		if (_var == NULL)
+		{
+			return false;
+		}
+
+		bool ret = true;
+
+		if (_var->type == (cc_type_t) CC_TYPE_BOOL)
+		{
+			bool _bool = false;
+
+			if (VarValueGetBool(_parser, _var, &_bool))
 			{
-				// funkce nebo promenna
+				*_arg = (float) _bool;
+			}
+			else
+			{
+				ret = false;
+			}
 
-				file_bufferSkipSpace(_parser->buffer);
+		}
+		else if (_var->type == CC_TYPE_CHAR)
+		{
+			char _char = 0;
 
-				file_bufferGet(_parser->buffer, &ch);
+			if (VarValueGetChar(_parser, _var, &_char))
+			{
+				*_arg = (float) _char;
+			}
+			else
+			{
+				ret = false;
+			}
+		}
+		else if (_var->type == CC_TYPE_FLOAT)
+		{
 
-				if (ch == '[')
-				{
-					// pole ...
-
-					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-					parseSetErrorPos(_parser, parseGetPos(_parser));
-
-					return false;
-				}
-
-				else if (ch == '(')
-				{
-					// volani funkce ...
-
-					_var = funcCall(_parser, var_name, var_name_len);
-
-					if (_parser->error > CC_CODE_RETURN)
-					{
-						VarDestroy(_var);
-						return false;
-					}
-
-					file_bufferNext(_parser->buffer);
-					file_bufferSkipSpace(_parser->buffer);
-
-					var_is_int = false;
-
-				}
-
-				else
-				{
-					// promenna
-
-					_var = VarGet(_parser, var_name, var_name_len);
-
-					var_is_int = true;
-
-				}
-
-				if (_var == NULL)
-				{
-					return false;
-				}
-
-				if (_var->type == (cc_type_t) CC_TYPE_BOOL)
-				{
-					bool _bool = false;
-
-					if (!VarValueGetBool(_parser, _var, &_bool))
-					{
-						if (var_is_int == false)
-						{
-							VarDestroy(_var);
-						}
-						return false;
-					}
-
-					left_arg = (float) _bool;
-
-				}
-				else if (_var->type == CC_TYPE_CHAR)
-				{
-					char _char = 0;
-
-					if (!VarValueGetChar(_parser, _var, &_char))
-					{
-
-						if (var_is_int == false)
-						{
-							VarDestroy(_var);
-						}
-						return false;
-					}
-
-					left_arg = (float) _char;
-
-				}
-				else if (_var->type == CC_TYPE_FLOAT)
-				{
-
-					if (!VarValueGetFloat(_parser, _var, _cond_arg))
-					{
-
-						if (var_is_int == false)
-						{
-							VarDestroy(_var);
-						}
-						return false;
-					}
-				}
-
-				else if (_var->type == CC_TYPE_INT)
-				{
-					int _int = 0;
-
-					if (!VarValueGetInt(_parser, _var, &_int))
-					{
-
-						if (var_is_int == false)
-						{
-							VarDestroy(_var);
-						}
-						return false;
-					}
-					left_arg = (float) _int;
-
-				}
-
-				else if (_var->type == CC_TYPE_LONG)
-				{
-					long _int = 0;
-
-					if (!VarValueGetLong(_parser, _var, &_int))
-					{
-
-						if (var_is_int == false)
-						{
-							VarDestroy(_var);
-						}
-						return false;
-					}
-					left_arg = (float) _int;
-
-				}
-
-				else
-				{
-
-					parseSetError(_parser, CC_CODE_LOGIC);
-					parseSetErrorPos(_parser, parseGetPos(_parser));
-					if (var_is_int == false)
-					{
-						VarDestroy(_var);
-					}
-					return false;
-				}
-
+			if (!VarValueGetFloat(_parser, _var, _arg))
+			{
+				ret = false;
 			}
 		}
 
-		if (var_is_int == false)
+		else if (_var->type == CC_TYPE_INT)
+		{
+			int _int = 0;
+
+			if (VarValueGetInt(_parser, _var, &_int))
+			{
+				*_arg = (float) _int;
+			}
+			else
+			{
+				ret = false;
+			}
+
+		}
+
+		else if (_var->type == CC_TYPE_LONG)
+		{
+			long _int = 0;
+
+			if (VarValueGetLong(_parser, _var, &_int))
+			{
+				*_arg = (float) _int;
+			}
+			else
+			{
+				ret = false;
+			}
+
+		}
+
+		else
+		{
+			parseSetError(_parser, CC_CODE_ARGS_BAD_TYPE);
+			parseSetErrorPos(_parser, parseGetPos(_parser));
+
+			ret = false;
+		}
+
+		if (var_protected == false)
 		{
 			VarDestroy(_var);
 		}
 
-		*_cond_arg = left_arg;
-
-		return true;
+		return ret;
 	}
 
 	else if (ch == '(')
 	{
-		bool cond_passed = false;
-		return parseIfArguments(_parser, &cond_passed);
+
+		return parseIfArguments(_parser, _arg, ')');
 	}
 
 	else
@@ -464,143 +657,7 @@ bool parseIfArg(parser_s *_parser, float *_cond_arg)
 
 }
 
-bool parseIfPair(parser_s *_parser, bool *_cond_passed)
-{
-
-	// Ziska jeden argument 'a' nebo par 'a==b'
-	// Kdyz narazi na '&', '|', ')' vraci true
-	// nebo kdyz narazi na dalsi serii logickych operatoru, selze.
-
-	char ch = 0;
-
-	float left_arg = 0.0f;
-
-	if (!parseIfArg(_parser, &left_arg))
-	{
-		return false;
-	}
-
-	file_bufferSkipSpace(_parser->buffer);
-	file_bufferGet(_parser->buffer, &ch);
-
-	if (ch == '=')
-	{
-		file_bufferNext(_parser->buffer);
-		file_bufferGet(_parser->buffer, &ch);
-
-		if (ch == '=')
-		{
-			file_bufferNext(_parser->buffer);
-// fixme upravit funkci skipSpace
-// musi nejdrive posunout vpred a pak overit ziskany znak.
-// Nemudu tak muset pred jejim volanim volat f-ci bufferNext!?
-			file_bufferSkipSpace(_parser->buffer);
-
-			float right_arg = 0;
-			if (!parseIfArg(_parser, &right_arg))
-			{
-				return false;
-			}
-
-			*_cond_passed = left_arg == right_arg;
-			return true;
-		}
-	}
-
-	else if (ch == '!')
-	{
-		file_bufferNext(_parser->buffer);
-		file_bufferGet(_parser->buffer, &ch);
-
-		if (ch == '=')
-		{
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
-
-			float right_arg = 0;
-			if (!parseIfArg(_parser, &right_arg))
-			{
-				return false;
-			}
-
-			*_cond_passed = (left_arg != right_arg);
-			return true;
-		}
-	}
-
-	else if (ch == '<')
-	{
-		file_bufferNext(_parser->buffer);
-		file_bufferGet(_parser->buffer, &ch);
-
-		float right_arg = 0;
-
-		if (ch == '=')
-		{
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
-
-			if (!parseIfArg(_parser, &right_arg))
-			{
-				return false;
-			}
-
-			*_cond_passed = (left_arg <= right_arg);
-			return true;
-		}
-
-		file_bufferSkipSpace(_parser->buffer);
-		if (!parseIfArg(_parser, &right_arg))
-		{
-			return false;
-		}
-
-		*_cond_passed = left_arg < right_arg;
-		return true;
-
-	}
-
-	else if (ch == '>')
-	{
-		file_bufferNext(_parser->buffer);
-		file_bufferGet(_parser->buffer, &ch);
-
-		float right_arg = 0;
-
-		if (ch == '=')
-		{
-			file_bufferNext(_parser->buffer);
-			file_bufferSkipSpace(_parser->buffer);
-
-			if (!parseIfArg(_parser, &right_arg))
-			{
-				return false;
-			}
-
-			*_cond_passed = left_arg >= right_arg;
-			return true;
-		}
-		else
-		{
-
-			file_bufferSkipSpace(_parser->buffer);
-			if (!parseIfArg(_parser, &right_arg))
-			{
-				return false;
-			}
-
-			*_cond_passed = (left_arg > right_arg);
-			return true;
-		}
-
-	}
-
-	*_cond_passed = (bool) left_arg;
-	return true;
-
-}
-
-var_s* parseIf(parser_s *_parser)
+var_s* parseIf(cc_parser_s *_parser)
 {
 	char ch = 0;
 
@@ -615,17 +672,13 @@ var_s* parseIf(parser_s *_parser)
 		return NULL;
 	}
 
-	bool cond_passed = false;
+	float cond_passed = 0.0;
 
-	if (!parseIfArguments(_parser, &cond_passed))
+	if (!parseIfArguments(_parser, &cond_passed, ')'))
 	{
 		return NULL;
 	}
 
-	file_bufferNext(_parser->buffer);
-	// fixme upravit funkci skipNewLine
-	// musi nejdrive posunout vpred a pak overit ziskany znak.
-	// Nemudu tak muset pred jejim volanim volat f-ci bufferNext!?
 	parseSkipNewLine(_parser);
 
 	file_bufferGet(_parser->buffer, &ch);
@@ -637,7 +690,7 @@ var_s* parseIf(parser_s *_parser)
 		return NULL;
 	}
 
-	if (cond_passed)
+	if ((bool) cond_passed)
 	{
 		file_bufferNext(_parser->buffer);
 
@@ -671,11 +724,10 @@ var_s* parseIf(parser_s *_parser)
 		file_bufferNext(_parser->buffer);
 		parseSkipNewLine(_parser);
 
-		char _name[CONFIG_CC_STRING_LEN] = {
+		char _name[CC_VALUE_STRING_LEN + 1] = {
 				'\0' };
 
-		size_t pos_total = 0;
-		size_t pos_f = 0;
+		size_t pos_offset = 0;
 		while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
 		{
 
@@ -683,8 +735,7 @@ var_s* parseIf(parser_s *_parser)
 
 			if (ch == 'e')
 			{
-				pos_total = _parser->buffer->offset;
-				pos_f = _parser->buffer->fpos;
+				pos_offset = parseGetPos(_parser);
 
 				memset(_name, '\0', sizeof(char) * CC_VALUE_STRING_LEN);
 
@@ -733,13 +784,9 @@ var_s* parseIf(parser_s *_parser)
 					// else neni. konec
 					// vracim buffer do pozice pred hledanim
 
-					_parser->buffer->fpos = pos_f;
-					_parser->buffer->offset = pos_total;
+					_parser->buffer->offset = pos_offset;
 
 					file_bufferReload(_parser->buffer);
-
-					// fixme tento radek zpusobuje problem? zakomentuj ho
-					parseSkipNewLine(_parser);
 
 					return NULL;
 
@@ -774,8 +821,7 @@ var_s* parseIf(parser_s *_parser)
 		if (ch == 'e')
 		{
 
-			size_t pos_total = _parser->buffer->offset;
-			size_t pos_f = _parser->buffer->fpos;
+			size_t pos_offset = parseGetPos(_parser);
 			char _name[51] = {
 					'\0' };
 
@@ -787,7 +833,6 @@ var_s* parseIf(parser_s *_parser)
 
 			if (ll == 4 && strncmp(_name, "elif", ll) == 0)
 			{
-
 				var_s *ret_var = parseIf(_parser);
 
 				if (_parser->error == CC_CODE_RETURN)
@@ -799,14 +844,17 @@ var_s* parseIf(parser_s *_parser)
 
 				if (_parser->error == CC_CODE_BREAK)
 				{
-					CC_PRINT("\nCOTO?\n");
-					// fixme kontrolovat jestli se zrovna nachazim ve smycce (a switch)?
+					if (0 == _parser->inLoop)
+					{
+						parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
+						parseSetErrorPos(_parser, parseGetPos(_parser));
+					}
+
 					return NULL;
 				}
 
 				else if (_parser->error == CC_CODE_CONTINUE)
 				{
-					CC_PRINT("\nCOTO?\n");
 					return NULL;
 				}
 
@@ -820,8 +868,6 @@ var_s* parseIf(parser_s *_parser)
 
 			else if (ll == 4 && strncmp(_name, "else", ll) == 0)
 			{
-				// preskocit
-
 				parseSkipNewLine(_parser);
 
 				file_bufferGet(_parser->buffer, &ch);
@@ -848,7 +894,12 @@ var_s* parseIf(parser_s *_parser)
 
 				if (_parser->error == CC_CODE_BREAK)
 				{
-					// fixme kontrolovat jestli se zrovna nachazim ve smycce (a switch)?
+					if (0 == _parser->inLoop)
+					{
+						parseSetError(_parser, CC_CODE_OUT_OF_LOOP);
+						parseSetErrorPos(_parser, parseGetPos(_parser));
+					}
+
 					return NULL;
 				}
 
@@ -872,8 +923,7 @@ var_s* parseIf(parser_s *_parser)
 			{
 				// neni 'else', vratit buffer do pozice pred hledanim
 
-				_parser->buffer->fpos = pos_f;
-				_parser->buffer->offset = pos_total;
+				_parser->buffer->offset = pos_offset;
 
 				file_bufferReload(_parser->buffer);
 
@@ -884,72 +934,13 @@ var_s* parseIf(parser_s *_parser)
 		}
 		else
 		{
-			// no else/elif. go out
+			// neni else/elif
 
 			return NULL;
 		}
 
 	}
 
-}
-
-// fixme presunout jinam. Je to 'univerzalni' f-ce.
-bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char)
-{
-	char ch = 0;
-	uint8_t depth = 1;
-
-	file_bufferNext(_parser->buffer);
-
-	while (FILEBUFFER_OK == file_bufferValid(_parser->buffer))
-	{
-
-		file_bufferGet(_parser->buffer, &ch);
-
-		if (ch == '/')
-		{
-			// komentar/operator
-
-			if (!parseSkipComment(_parser))
-			{
-				return false;
-			}
-
-			continue;
-		}
-
-		if (ch == _start_char)
-		{
-			depth++;
-
-			file_bufferNext(_parser->buffer);
-			continue;
-		}
-
-		else if (ch == _end_char)
-		{
-
-			file_bufferNext(_parser->buffer);
-			if (depth > 1)
-			{
-				depth--;
-				continue;
-			}
-
-			else
-			{
-				return true;
-			}
-
-		}
-		file_bufferNext(_parser->buffer);
-
-	}
-
-	parseSetError(_parser, CC_CODE_LOGIC);
-	parseSetErrorPos(_parser, parseGetPos(_parser));
-
-	return false;
 }
 
 ///

@@ -4,10 +4,12 @@
 
 /**
  * @file cc_parseMath.c
- * @brief Implementace matematickych funkci (var++,--var,var/=,...) pro promenne 'INT' a 'FLOAT'.
+ * @brief Implementace matematickych funkci (var++,--var,var/=,...) pro
+ * 			promenne 'INT', 'LONG' a 'FLOAT'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -29,12 +31,8 @@
 
 #include "ccript/cc_var.h"
 
-#define OP_SUM	1
-#define OP_SUB	2
-#define OP_MUL	3
-#define OP_DIV	4
 
-bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_len)
+bool parseVarDecrementLeft(cc_parser_s *_parser, char *_var_name, size_t _var_name_len)
 {
 
 	// dekrementace promenne?
@@ -167,7 +165,7 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 	return false;
 }
 
-bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_len)
+bool parseVarIncrementLeft(cc_parser_s *_parser, char *_var_name, size_t _var_name_len)
 {
 
 	// Inkrementace promenne?
@@ -299,7 +297,7 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 	return false;
 }
 
-bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name_len)
+bool parseVarDecrementRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len)
 {
 	char ch = 0;
 	file_bufferGet(_parser->buffer, &ch);
@@ -508,7 +506,7 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 	return 0;
 }
 
-bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name_len)
+bool parseVarIncrementRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len)
 {
 	char ch = 0;
 	file_bufferGet(_parser->buffer, &ch);
@@ -692,7 +690,7 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 
 			else if (var->type == CC_TYPE_STRING)
 			{
-				char sval[CONFIG_CC_STRING_LEN] = {
+				char sval[CC_VALUE_STRING_LEN + 1] = {
 						'\0' };
 				size_t sval_len = 0;
 				if (!parseVarArgsString(_parser, ';', sval, &sval_len))
@@ -700,7 +698,7 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 					return 0;
 				}
 
-				char sval_l[CONFIG_CC_STRING_LEN] = {
+				char sval_l[CC_VALUE_STRING_LEN + 1] = {
 						'\0' };
 				size_t sval_l_len = 0;
 				if (!VarValueGetString(_parser, var, sval_l, &sval_l_len))
@@ -747,7 +745,7 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
 	return 0;
 }
 
-bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_len)
+bool parseVarMultiplyRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len)
 {
 
 	char ch = 0;
@@ -863,7 +861,7 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
 	return 0;
 }
 
-bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_len)
+bool parseVarDivideRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len)
 {
 
 	char ch = 0;

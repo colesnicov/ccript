@@ -5,9 +5,10 @@
 /**
  * @file cc_parser.h
  * @brief Funkce pro parsovani skriptu
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -23,82 +24,76 @@
 extern "C" {
 #endif
 
-/**
- * @fn bool parseBlock(parser_s*, char)
- * @brief Zpracuje blok.
- *
- * @param _parser Ukazatel na parser.
- * @param _end_char Ukoncovaci znak.
- *
- * @details	doplnit
- *
- * @return FALSE jestli dojde k chybe, jinak TRUE.
- */
-var_s* parseBlock(parser_s *_parser, char _end_char);
-
 ////////////////////////////////
 //
-// Definice nebo definice a rirazeni promenne
+// Definice nebo definice a prirazeni promenne
 //
-// type var;
-// ^^^^^^^^
-// type var = ...;
-// ^^^^^^^^^^^
+// <type> var;
+// ^^^^^^^^^^
+// <type> var = ...;
+// ^^^^^^^^^^^^^^^^
 //
 ////////////////////////////////
 
 /**
- * @fn bool ParseDefineTypeBool(parser_s*, char*)
+ * @fn bool ParseDefineTypeBool(cc_parser_s*, char*)
  * @brief Parsuje definici nove promenne nebo funkce typu BOOL.
  *
  * @param _parser Ukazatel na parser.
- * @param _keyword_name Sdilene uloziste pro ziskany retezec. Kvuli setreni ram?
+ * @param _identifier_name Sdilene uloziste pro ziskany retezec. Kvuli setreni ram?
  *
  * @return FALSE ,jinak TRUE.
  */
-bool ParseDefineTypeBool(parser_s *_parser, char *_keyword_name);
+bool ParseDefineTypeBool(cc_parser_s *_parser, char *_identifier_name);
 
 /**
- * @fn bool ParseDefineTypeInt(parser_s*)
+ * @fn bool ParseDefineTypeInt(cc_parser_s*)
  * @brief Parsuje definici nove promenne nebo funkce typu INT.
  *
  * @param _parser Ukazatel na parser.
  *
  * @return FALSE ,jinak TRUE.
  */
-bool ParseDefineTypeInt(parser_s *_parser);
-
-bool ParseDefineTypeLong(parser_s *_parser);
+bool ParseDefineTypeInt(cc_parser_s *_parser);
 
 /**
- * @fn bool ParseDefineTypeFloat(parser_s*)
+ * @fn bool ParseDefineTypeLong(cc_parser_s*)
+ * @brief Parsuje definici nove promenne nebo funkce typu LONG.
+ *
+ * @param _parser Ukazatel na parser.
+ * @return False nebo TRUE.
+ */
+bool ParseDefineTypeLong(cc_parser_s *_parser);
+
+/**
+ * @fn bool ParseDefineTypeFloat(cc_parser_s*)
  * @brief Parsuje definici nove promenne nebo funkce typu FLOAT.
  *
  * @param _parser Ukazatel na parser.
  *
  * @return FALSE ,jinak TRUE.
  */
-bool ParseDefineTypeFloat(parser_s *_parser);
+bool ParseDefineTypeFloat(cc_parser_s *_parser);
 
 /**
- * @fn bool ParseDefineTypeChar(parser_s*)
+ * @fn bool ParseDefineTypeChar(cc_parser_s*)
  * @brief Parsuje definici nove promenne nebo funkce typu CHAR.
  *
  * @param _parser Ukazatel na parser.
  *
  * @return FALSE ,jinak TRUE.
  */
-bool ParseDefineTypeChar(parser_s *_parser);
+bool ParseDefineTypeChar(cc_parser_s *_parser);
 
 /**
- * @fn bool ParseDefineTypeString(parser_s*)
+ * @fn bool ParseDefineTypeString(cc_parser_s*)
  * @brief Parsuje definici nove promenne nebo funkce typu STRING.
  *
  * @param _parser Ukazatel na parser.
  *
  * @return FALSE ,jinak TRUE.
  */
-bool ParseDefineTypeString(parser_s *_parser);
+bool ParseDefineTypeString(cc_parser_s *_parser);
 
 ////////////////////////////////
 //
@@ -112,7 +107,7 @@ bool ParseDefineTypeString(parser_s *_parser);
 ////////////////////////////////
 
 /**
- * @fn bool parseVarAssign(parser_s*, char*, size_t)
+ * @fn bool parseVarAssign(cc_parser_s*, char*, size_t)
  * @brief Parsuje prirazeni promenne.
  *
  * @param _parser Ukazatel na parser.
@@ -121,10 +116,10 @@ bool ParseDefineTypeString(parser_s *_parser);
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len);
+bool parseVarAssign(cc_parser_s *_parser, char *_var_name, size_t _var_len);
 
 /**
- * @fn bool parseVarDelete(parser_s*, char*)
+ * @fn bool parseVarDelete(cc_parser_s*, char*)
  * @brief Parsuje odstraneni promenne.
  *
  * @param _parser Ukazatel na parser.
@@ -132,7 +127,7 @@ bool parseVarAssign(parser_s *_parser, char *_var_name, size_t _var_len);
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarDelete(parser_s *_parser, char *_var_name);
+bool parseVarDelete(cc_parser_s *_parser, char *_var_name);
 
 ////////////////////////////////
 //
@@ -144,7 +139,7 @@ bool parseVarDelete(parser_s *_parser, char *_var_name);
 ////////////////////////////////
 
 /**
- * @fn bool parseVarArgsBool(parser_s*, char, bool*)
+ * @fn bool parseVarArgsBool(cc_parser_s*, char, bool*)
  * @brief Parsuje argumenty typu BOOL.
  *
  * @details Ukoncovaci znak muze byt:
@@ -166,10 +161,10 @@ bool parseVarDelete(parser_s *_parser, char *_var_name);
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value);
+bool parseVarArgsBool(cc_parser_s *_parser, char _symbol_end, bool *_value);
 
 /**
- * @fn bool parseVarArgsFloat(parser_s*, char, float*)
+ * @fn bool parseVarArgsFloat(cc_parser_s*, char, float*)
  * @brief Parsuje argumenty typu FLOAT.
  *
  * @details Ukoncovaci znak muze byt:
@@ -191,10 +186,10 @@ bool parseVarArgsBool(parser_s *_parser, char _symbol_end, bool *_value);
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value);
+bool parseVarArgsFloat(cc_parser_s *_parser, char _symbol_end, float *_value);
 
 /**
- * @fn bool parseVarArgsInt(parser_s*, char, int*)
+ * @fn bool parseVarArgsInt(cc_parser_s*, char, int*)
  * @brief Parsuje argumenty typu INT.
  *
  * @details Ukoncovaci znak muze byt:
@@ -215,14 +210,23 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value);
  * @param _value Sem se ulozi ziskay argument.
  *
  * @return FALSE ,jinak TRUE.
- * @return
  */
-bool parseVarArgsInt(parser_s *_parser, char _symbol_end, int *_value);
-
-bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value);
+bool parseVarArgsInt(cc_parser_s *_parser, char _symbol_end, int *_value);
 
 /**
- * @fn bool parseVarArgsString(parser_s*, char, char*, size_t*)
+ * @fn bool parseVarArgsLong(cc_parser_s*, char, long*)
+ * @brief Parsuje argumenty typu LONG.
+ *
+ * @param _parser Ukazatel na parser.
+ * @param _symbol_end Ukoncovaci symbol.
+ * @param _value Sem se ulozi ziskay argument.
+ *
+ * @return FALSE ,jinak TRUE.
+ */
+bool parseVarArgsLong(cc_parser_s *_parser, char _symbol_end, long *_value);
+
+/**
+ * @fn bool parseVarArgsString(cc_parser_s*, char, char*, size_t*)
  * @brief Parsuje argumenty typu STRING.
  *
  * @details Ukoncovaci znak muze byt:
@@ -245,10 +249,11 @@ bool parseVarArgsLong(parser_s *_parser, char _symbol_end, long *_value);
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_t *_value_len);
+bool parseVarArgsString(cc_parser_s *_parser, char _symbol_end, char *_value,
+		size_t *_value_len);
 
 /**
- * @fn bool parseVarArgsChar(parser_s*, char, char*)
+ * @fn bool parseVarArgsChar(cc_parser_s*, char, char*)
  * @brief Parsuje argumenty typu CHAR.
  *
  * @details Ukoncovaci znak muze byt:
@@ -270,7 +275,7 @@ bool parseVarArgsString(parser_s *_parser, char _symbol_end, char *_value, size_
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value);
+bool parseVarArgsChar(cc_parser_s *_parser, char _symbol_end, char *_value);
 
 ////////////////////////////////
 //
@@ -282,7 +287,7 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value);
 ////////////////////////////////
 
 /**
- * @fn bool parseVarIncrementLeft(parser_s*, char*, size_t)
+ * @fn bool parseVarIncrementLeft(cc_parser_s*, char*, size_t)
  * @brief Parsuje levou matematickou operaci odecteni 1 '--'.
  *
  * @param _parser Ukazatel na parser.
@@ -291,10 +296,10 @@ bool parseVarArgsChar(parser_s *_parser, char _symbol_end, char *_value);
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_len);
+bool parseVarIncrementLeft(cc_parser_s *_parser, char *_var_name, size_t _var_name_len);
 
 /**
- * @fn bool parseVarDecrementLeft(parser_s*, char*, size_t)
+ * @fn bool parseVarDecrementLeft(cc_parser_s*, char*, size_t)
  * @brief  Parsuje levou matematickou operaci pricteni 1 '++'.
  *
  * @param _parser Ukazatel na parser.
@@ -303,7 +308,7 @@ bool parseVarIncrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_len);
+bool parseVarDecrementLeft(cc_parser_s *_parser, char *_var_name, size_t _var_name_len);
 
 ////////////////////////////////
 //
@@ -319,7 +324,7 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
 ////////////////////////////////
 
 /**
- * @fn bool parseVarIncrementRight(parser_s*, char*, size_t)
+ * @fn bool parseVarIncrementRight(cc_parser_s*, char*, size_t)
  * @brief  Parsuje pravou matematickou operaci pricteni nebo prirazeni a operaci.
  * @details Napriklad toto `var++;` nebo toto `var += 1;`.
  *
@@ -329,10 +334,10 @@ bool parseVarDecrementLeft(parser_s *_parser, char *_var_name, size_t _var_name_
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name_len);
+bool parseVarIncrementRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len);
 
 /**
- * @fn bool parseVarDecrementRight(parser_s*, char*, size_t)
+ * @fn bool parseVarDecrementRight(cc_parser_s*, char*, size_t)
  * @brief  Parsuje pravou matematickou operaci odecteni nebo prirazeni a operaci.
  * @details Napriklad toto `var--;` nebo toto `var -= 1;`.
  *
@@ -342,10 +347,10 @@ bool parseVarIncrementRight(parser_s *_parser, char *_var_name, size_t _var_name
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name_len);
+bool parseVarDecrementRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len);
 
 /**
- * @fn bool parseVarMultiplyRight(parser_s*, char*, size_t)
+ * @fn bool parseVarMultiplyRight(cc_parser_s*, char*, size_t)
  * @brief  Parsuje pravou matematickou operaci a prirazeni.
  * @details Toto `var *= 2;`.
  *
@@ -355,10 +360,10 @@ bool parseVarDecrementRight(parser_s *_parser, char *_var_name, size_t _var_name
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_len);
+bool parseVarMultiplyRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len);
 
 /**
- * @fn bool parseVarDivideRight(parser_s*, char*, size_t)
+ * @fn bool parseVarDivideRight(cc_parser_s*, char*, size_t)
  * @brief  Parsuje pravou matematickou operaci a prirazeni.
  * @details Toto `var /= 2;`.
  *
@@ -368,7 +373,7 @@ bool parseVarMultiplyRight(parser_s *_parser, char *_var_name, size_t _var_name_
  *
  * @return FALSE ,jinak TRUE.
  */
-bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_len);
+bool parseVarDivideRight(cc_parser_s *_parser, char *_var_name, size_t _var_name_len);
 
 //////////////////////////////
 //
@@ -380,27 +385,17 @@ bool parseVarDivideRight(parser_s *_parser, char *_var_name, size_t _var_name_le
 //////////////////////////////
 
 /**
- * @fn void parseSkipNewLine(parser_s*)
+ * @fn void parseSkipNewLine(cc_parser_s*)
  * @brief Preskoci nove radky a mezery dokud nenarazi na neco jineho.
  *
  * @note V pripade selhani nastavuje navratovy kod. @see cc_setError()
  *
  * @param _parser Ukazatel na parser.
  */
-void parseSkipNewLine(parser_s *_parser);
+void parseSkipNewLine(cc_parser_s *_parser);
 
 /**
- * @fn void bufferSkipSpace(parser_s*)
- * @brief Preskoci mezery dokud nenarazi na neco jineho.
- *
- * @note V pripade selhani nastavuje navratovy kod. @see cc_setError()
- *
- * @param _parser Ukazatel na parser.
- */
-//void bufferSkipSpace(parser_s *_parser);
-
-/**
- * @fn bool parseSkipComment(parser_s*)
+ * @fn bool parseSkipComment(cc_parser_s*)
  * @brief Preskoci komentar.
  *
  * @param _parser Ukazatel na parser.
@@ -410,10 +405,10 @@ void parseSkipNewLine(parser_s *_parser);
  * @see bufferNext()
  * @see bufferGet()
  */
-bool parseSkipComment(parser_s *_parser);
+bool parseSkipComment(cc_parser_s *_parser);
 
 /**
- * @fn bool parserSkipBlock(parser_s*, char, char)
+ * @fn bool parserSkipBlock(cc_parser_s*, char, char)
  * @brief Preskoci blok.
  *
  * @param _parser Ukazatel na parser.
@@ -445,7 +440,7 @@ bool parseSkipComment(parser_s *_parser);
  * @see bufferNext()
  * @see bufferGet()
  */
-bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char);
+bool parserSkipBlock(cc_parser_s *_parser, char _start_char, char _end_char);
 
 /////////////////////////
 //
@@ -454,20 +449,21 @@ bool parserSkipBlock(parser_s *_parser, char _start_char, char _end_char);
 /////////////////////////
 
 /**
- * @fn size_t parseIdentifier(parser_s*, char*)
+ * @fn bool parseIdentifier(cc_parser_s*, char*, size_t*)
  * @brief Ziska nazev promenne nebo funkce.
  * @note V pripade selhani nastavuje navratovy kod. @see cc_setError()
  * @note Nekontroluje jestli vyraz nezacina cislici, vrati vyraz '2string' ale nevrati 'to_string'!
  *
  * @param _parser Ukazatel na parser.
  * @param _name Sem se ulozi nazev.
+ * @param _name_len Sem se ulozi delka nazvu.
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool parseIdentifier(parser_s *_parser, char *_name, size_t *_name_len);
+bool parseIdentifier(cc_parser_s *_parser, char *_name, size_t *_name_len);
 
 /**
- * @fn int parseValueBool(parser_s*, char*)
+ * @fn int parseValueBool(cc_parser_s*, char*, size_t *)
  * @brief Parsuje 'hodnotu' typu BOOL.
  * @details Je to v pripade kdy `bool var = 1;` nebo `var = 1;`.
  *
@@ -477,10 +473,10 @@ bool parseIdentifier(parser_s *_parser, char *_name, size_t *_name_len);
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len);
+bool parseValueBool(cc_parser_s *_parser, char *_value, size_t *_value_len);
 
 /**
- * @fn size_t parseValueInt(parser_s*, char*)
+ * @fn size_t parseValueInt(cc_parser_s*, char*, size_t *)
  * @brief Parsuje 'hodnotu' typu INT.
  * @details Je to v pripade kdy `int var = 1;` nebo `var = 1;`.
  *
@@ -490,36 +486,34 @@ bool parseValueBool(parser_s *_parser, char *_value, size_t *_value_len);
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool parseValueInt(parser_s *_parser, char *_value, size_t *_value_len);
-
-bool parseValueLong(parser_s *_parser, char *_value, size_t *_value_len);
-
-var_s* parseReturnArguments(parser_s *_parser);
-
-bool blockInit(parser_s *_parser);
-
-void blockDeinit(parser_s *_parser);
-
-cc_block_s* blockGet(parser_s *_parser, const char *_name, size_t _name_len);
-
-var_s* blockCall(parser_s *_parser, cc_block_s *_block, const char *func_name,
-		size_t func_name_len);
-
-bool parseDefineBlock(parser_s *_parser, cc_type_t _type, const char *block_name,
-		size_t block_name_len);
-
-bool parseBlockArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
-		cc_block_args_s **_args, uint8_t *_args_count);
-
-void blockCleanArguments(cc_block_args_s **_args, uint8_t *_args_count);
-
-bool parseBlockCallArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
-		var_s **_args, uint8_t *_args_count);
-
-void dumpBlockArgs(cc_block_args_s **_args, uint8_t _args_count);
+bool parseValueInt(cc_parser_s *_parser, char *_value, size_t *_value_len);
 
 /**
- * @fn size_t parseValueFloat(parser_s*, char*, bool*)
+ * @fn bool parseValueLong(cc_parser_s*, char*, size_t*)
+ * @brief Ziska LONG.
+ *
+ * @param _parser Ukazatel na parser.
+ * @param _value Sem se ulozi ziskana data.
+ * @param _value_len	Sem se ulozi delka ziskanych dat.
+ *
+ * @return TRUE jestli bez problemu, jinak FALSE.
+ */
+bool parseValueLong(cc_parser_s *_parser, char *_value, size_t *_value_len);
+
+/**
+ * @fn var_s* parseReturnArguments(cc_parser_s*)
+ * @brief Ziska navracenou hodnotu.
+ * @details Vracena promenna se pak musi odstranit!
+ * @see VarDestroy
+ *
+ * @param _parser Ukazatel na parser.
+ *
+ * @return Ukazatel na vracenou promennou.
+ */
+var_s* parseReturnArguments(cc_parser_s *_parser);
+
+/**
+ * @fn size_t parseValueFloat(cc_parser_s*, char*, size_t *, bool*)
  * @brief Parsuje 'hodnotu' typu FLOAT.
  * @details Je to v pripade kdy `float var = 1.5;` nebo `var = 1.5;`.
  *
@@ -530,10 +524,10 @@ void dumpBlockArgs(cc_block_args_s **_args, uint8_t _args_count);
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *_is_float);
+bool parseValueFloat(cc_parser_s *_parser, char *_value, size_t *_value_len, bool *_is_float);
 
 /**
- * @fn size_t ParseValueChar(parser_s*, char*, size_t)
+ * @fn size_t ParseValueChar(cc_parser_s*, char*, size_t*)
  * @brief Parsuje 'hodnotu' typu CHAR.
  * @details Je to v pripade kdy `char var = 'a';` nebo `var = 'a';`.
  *
@@ -543,10 +537,10 @@ bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len);
+bool ParseValueChar(cc_parser_s *_parser, char *_value, size_t *_value_len);
 
 /**
- * @fn size_t ParseValueString(parser_s*, char*)
+ * @fn size_t ParseValueString(cc_parser_s*, char*, size_t *)
  * @brief Parsuje 'hodnotu' typu STRING.
  * @details Je to v pripade kdy `string var = "hello";` nebo `var = "hello";`.
  *
@@ -556,22 +550,19 @@ bool ParseValueChar(parser_s *_parser, char *_value, size_t *_value_len);
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool ParseValueString(parser_s *_parser, char *_value, size_t *_value_len);
+bool ParseValueString(cc_parser_s *_parser, char *_value, size_t *_value_len);
 
 /**
- * @fn bool parseFuncArguments(parser_s*, const char*, size_t, var_s**, uint8_t*)
+ * @fn bool parseFuncArguments(cc_parser_s*, var_s**, uint8_t*)
  * @brief Parsuje argumenty volane funkce.
  *
  * @param _parser Ukazatel na parser.
- * @param phrase_name Asi k nicemu.
- * @param phrase_name_len Asi k nicemu.
  * @param _args Pole ukazatelu na ziskane argumenty.
  * @param _args_count Sem se ulozi pocet ziskanych argumentu.
  *
  * @return TRUE jestli bez problemu, jinak FALSE.
  */
-bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phrase_name_len,
-		var_s **_args, uint8_t *_args_count);
+bool parseFuncArguments(cc_parser_s *_parser, var_s **_args, uint8_t *_args_count);
 
 /////////////////////////////////
 //
@@ -580,27 +571,27 @@ bool parseFuncArguments(parser_s *_parser, const char *phrase_name, size_t phras
 /////////////////////////////////
 
 /**
- * @fn size_t parseGetPos(parser_s*)
+ * @fn size_t parseGetPos(cc_parser_s*)
  * @brief Vrati aktualni pozici v souboru.
  *
  * @param _parser Ukazatel na parser.
  *
  * @return Pozici v souboru, 0 jestli selze.
  */
-size_t parseGetPos(parser_s *_parser);
+size_t parseGetPos(cc_parser_s *_parser);
 
 /**
- * @fn void parseSetErrorPos(parser_s*, size_t)
+ * @fn void parseSetErrorPos(cc_parser_s*, size_t)
  * @brief Nastavi kde, na jake pozici, v souboru doslo k chybe.
  *
  * @param _parser Ukazatel na parser.
  * @param _pos Pozice v souboru.
  */
 
-void parseSetErrorPos(parser_s *_parser, size_t _pos);
+void parseSetErrorPos(cc_parser_s *_parser, size_t _pos);
 
 /**
- * @fn void parseSetError(parser_s*, cc_code_t)
+ * @fn void parseSetError(cc_parser_s*, cc_code_t)
  * @brief Nastavy pracovni staav parseru.
  *
  * @param _parser Ukazatel na parser.
@@ -608,20 +599,7 @@ void parseSetErrorPos(parser_s *_parser, size_t _pos);
  *
  * @see cc_code_t
  */
-void parseSetError(parser_s *_parser, cc_code_t _error);
-
-/**
- * @fn void parseClearScope(parser_s*)
- * @brief Odstrani promenne definovane v zanorennem bloku.
- * @details <pre><code>
- * 			int var1 = 0;
- * 			if(1){ int var2 = 0; }
- * 				   ^^^^^^^^^^^^^
- * 			 </code></pre>
- *
- * @param _parser Ukazatel na parser.
- */
-void parseClearScope(parser_s *_parser);
+void parseSetError(cc_parser_s *_parser, cc_code_t _error);
 
 #ifdef __cplusplus
 }

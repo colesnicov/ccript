@@ -5,9 +5,10 @@
 /**
  * @file cc_parseFloat.c
  * @brief Implementace funkci pro parsovani typu 'FLOAT'.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -28,12 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define OP_SUM	1
-#define OP_SUB	2
-#define OP_MUL	3
-#define OP_DIV	4
 
-bool ParseDefineTypeFloat(parser_s *_parser)
+bool ParseDefineTypeFloat(cc_parser_s *_parser)
 {
 
 	char ch = '\0';
@@ -49,18 +46,9 @@ bool ParseDefineTypeFloat(parser_s *_parser)
 		return false;
 	}
 
-	/**
-	 * @var char identifier_name[CONFIG_CC_KEYWORD_LEN]
-	 * @brief Nazev promenne/funkce
-	 *
-	 */
-	char identifier_name[CONFIG_CC_KEYWORD_LEN] = {
+	char identifier_name[CC_KEYWORD_LEN + 1] = {
 			'\0' };
-	/**
-	 * @var size_t identifier_len
-	 * @brief Delka nazvu promenne/funkce
-	 *
-	 */
+
 	size_t identifier_len = 0;
 
 	if (!parseIdentifier(_parser, identifier_name, &identifier_len))
@@ -102,7 +90,7 @@ bool ParseDefineTypeFloat(parser_s *_parser)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -123,7 +111,7 @@ bool ParseDefineTypeFloat(parser_s *_parser)
 			return false;
 		}
 
-		if (!VarStore(_parser, var))
+		if (!VarStore(_parser, var, false))
 		{
 			VarDestroy(var);
 			return false;
@@ -134,6 +122,13 @@ bool ParseDefineTypeFloat(parser_s *_parser)
 		return true;
 
 	}
+
+	else if (ch == '(')
+	{
+		// definice funkce
+
+		return parseDefineBlock(_parser, CC_TYPE_FLOAT, identifier_name, identifier_len);
+	}
 	else
 	{
 		parseSetError(_parser, CC_CODE_BAD_SYMBOL);
@@ -143,10 +138,10 @@ bool ParseDefineTypeFloat(parser_s *_parser)
 
 }
 
-bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
+bool parseVarArgsFloat(cc_parser_s *_parser, char _symbol_end, float *_value)
 {
 
-	char value_name[CONFIG_CC_NUMERIC_LEN] = {
+	char value_name[CC_VALUE_NUMERIC_LEN + 1] = {
 			'\0' };
 	size_t value_len;
 	float fval = 0;
@@ -245,14 +240,12 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 			}
 
-// fixme proc to nastavuji tady?
-			parseSetErrorPos(_parser, parseGetPos(_parser));
 			file_bufferSkipSpace(_parser->buffer);
 			file_bufferGet(_parser->buffer, &ch);
 
 			if (ch == '[')
 			{
-				parseSetError(_parser, CC_CODE_BAD_SYMBOL);
+				parseSetError(_parser, CC_CODE_NOT_IMPLEMENTED);
 				parseSetErrorPos(_parser, parseGetPos(_parser));
 				return false;
 
@@ -275,7 +268,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 					parseSetError(_parser, CC_CODE_LOGIC);
 					parseSetErrorPos(_parser, pos);
 
-					CC_PRINT("ERROR: function '%s' return 'null'.\n", value_name);
+					CC_VAR_DEBUG("ERROR: function '%s' return 'null'.\n", value_name);
 					return false;
 				}
 
@@ -294,9 +287,8 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 				if (var->type != CC_TYPE_FLOAT)
 				{
-					CC_PRINT("ERROR: function '%s' return bad type.\n", value_name);
-// fixme vracet jiny kod. treba RETURN_BAD_TYPE nebo BAD_RETURN
-					parseSetError(_parser, CC_CODE_LOGIC);
+					CC_VAR_DEBUG("ERROR: function '%s' return bad type.\n", value_name);
+					parseSetError(_parser, CC_CODE_FUNC_RET_BAD_TYPE);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					VarDestroy(var);
 
@@ -346,19 +338,19 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 		if (ch == _symbol_end)
 		{
-			if (last_op == OP_SUM)
+			if (last_op == CC_OP_SUM)
 			{
 				fval += fval_temp;
 			}
-			else if (last_op == OP_SUB)
+			else if (last_op == CC_OP_SUB)
 			{
 				fval -= fval_temp;
 			}
-			else if (last_op == OP_MUL)
+			else if (last_op == CC_OP_MUL)
 			{
 				fval *= fval_temp;
 			}
-			else if (last_op == OP_DIV)
+			else if (last_op == CC_OP_DIV)
 			{
 				fval /= fval_temp;
 			}
@@ -377,7 +369,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
-			CC_PRINT("ERROR: function call?\n");
+			CC_VAR_DEBUG("ERROR: function call?\n");
 
 			return false;
 
@@ -386,7 +378,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 		{
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 			parseSetErrorPos(_parser, parseGetPos(_parser));
-			CC_PRINT("ERROR: array access?\n");
+			CC_VAR_DEBUG("ERROR: array access?\n");
 
 			return false;
 		}
@@ -395,19 +387,19 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM)
+			if (last_op == CC_OP_SUM)
 			{
 				fval += f;
 			}
-			else if (last_op == OP_SUB)
+			else if (last_op == CC_OP_SUB)
 			{
 				fval -= f;
 			}
-			else if (last_op == OP_MUL)
+			else if (last_op == CC_OP_MUL)
 			{
 				fval *= f;
 			}
-			else if (last_op == OP_DIV)
+			else if (last_op == CC_OP_DIV)
 			{
 				fval /= f;
 			}
@@ -416,7 +408,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 				fval = f;
 			}
 
-			last_op = OP_SUM;
+			last_op = CC_OP_SUM;
 
 			file_bufferNext(_parser->buffer);
 
@@ -428,19 +420,19 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM)
+			if (last_op == CC_OP_SUM)
 			{
 				fval += f;
 			}
-			else if (last_op == OP_SUB)
+			else if (last_op == CC_OP_SUB)
 			{
 				fval -= f;
 			}
-			else if (last_op == OP_MUL)
+			else if (last_op == CC_OP_MUL)
 			{
 				fval *= f;
 			}
-			else if (last_op == OP_DIV)
+			else if (last_op == CC_OP_DIV)
 			{
 				fval /= f;
 			}
@@ -449,7 +441,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 				fval = f;
 			}
 
-			last_op = OP_SUB;
+			last_op = CC_OP_SUB;
 
 			file_bufferNext(_parser->buffer);
 
@@ -461,19 +453,19 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM)
+			if (last_op == CC_OP_SUM)
 			{
 				fval += f;
 			}
-			else if (last_op == OP_SUB)
+			else if (last_op == CC_OP_SUB)
 			{
 				fval -= f;
 			}
-			else if (last_op == OP_MUL)
+			else if (last_op == CC_OP_MUL)
 			{
 				fval *= f;
 			}
-			else if (last_op == OP_DIV)
+			else if (last_op == CC_OP_DIV)
 			{
 				fval /= f;
 			}
@@ -482,7 +474,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 				fval = f;
 			}
 
-			last_op = OP_DIV;
+			last_op = CC_OP_DIV;
 
 			file_bufferNext(_parser->buffer);
 
@@ -494,19 +486,19 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 
 			float f = fval_temp;
 
-			if (last_op == OP_SUM)
+			if (last_op == CC_OP_SUM)
 			{
 				fval += f;
 			}
-			else if (last_op == OP_SUB)
+			else if (last_op == CC_OP_SUB)
 			{
 				fval -= f;
 			}
-			else if (last_op == OP_MUL)
+			else if (last_op == CC_OP_MUL)
 			{
 				fval *= f;
 			}
-			else if (last_op == OP_DIV)
+			else if (last_op == CC_OP_DIV)
 			{
 				fval /= f;
 			}
@@ -515,7 +507,7 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 				fval = f;
 			}
 
-			last_op = OP_MUL;
+			last_op = CC_OP_MUL;
 
 			file_bufferNext(_parser->buffer);
 
@@ -526,18 +518,15 @@ bool parseVarArgsFloat(parser_s *_parser, char _symbol_end, float *_value)
 		{
 
 			parseSetError(_parser, CC_CODE_BAD_SYMBOL);
-// fixme odkomentovat?
-			// parseSetErrorPos(_parser, parseGetPos(_parser));
 			return false;
 		}
 	}
 	return false;
 }
 
-bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *_is_float)
+bool parseValueFloat(cc_parser_s *_parser, char *_value, size_t *_value_len, bool *_is_float)
 {
 
-	// todo predelat aby float mel (mohl mit) na konci pismeno 'f'?
 	char ch;
 	bool hasDot = false;
 
@@ -567,7 +556,7 @@ bool parseValueFloat(parser_s *_parser, char *_value, size_t *_value_len, bool *
 			{
 				if (hasDot)
 				{
-					CC_PRINT("ERROR: second dot in the float value");
+					CC_VAR_DEBUG("ERROR: second dot in the float value");
 					parseSetError(_parser, CC_CODE_BAD_SYMBOL);
 					parseSetErrorPos(_parser, parseGetPos(_parser));
 					return false;

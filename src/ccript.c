@@ -5,9 +5,10 @@
 /**
  * @file ccript.c
  * @brief Implementace verejnych funkci pro praci s interpreterem.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -15,6 +16,7 @@
  *
  */
 
+#include <ccript/cc_block.h>
 #include <ccript/cc_configs.h>
 #include <ccript/cc_types.h>
 #include <ccript/cc_function.h>
@@ -32,26 +34,23 @@
 #include <stdbool.h>
 #include <string.h>
 
-bool cc_init(parser_s *_parser)
+bool cc_init(cc_parser_s *_parser)
 {
 
 	do
 	{
 		if (!VarInit(_parser))
 		{
-			CC_PRINT("ccript error 2!\n");
 			break;
 		}
 
 		if (!funcInit(_parser))
 		{
-			CC_PRINT("ccript error 3!\n");
 			break;
 		}
 
 		if (!blockInit(_parser))
 		{
-			CC_PRINT("ccript error 3!\n");
 			break;
 		}
 
@@ -64,20 +63,23 @@ bool cc_init(parser_s *_parser)
 	return false;
 }
 
-void cc_deinit(parser_s *_parser)
+void cc_deinit(cc_parser_s *_parser)
 {
-	blockDeinit(_parser);
-	VarDeinit(_parser);
-	funcDeinit(_parser);
+	if (NULL != _parser)
+	{
+		blockDeinit(_parser);
+		VarDeinit(_parser);
+		funcDeinit(_parser);
+	}
 }
 
-var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _env_count)
+var_s* cc_parse(cc_parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _env_count)
 {
 	_parser->error = CC_CODE_OK;
 	_parser->error_pos = 0;
 	var_s *ret_var = NULL;
 
-	if (FILEBUFFER_OK != file_bufferInit(&_parser->buffer, _path, CONFIG_CC_BUFFER_LEN))
+	if (FILEBUFFER_OK != file_bufferInit(&_parser->buffer, _path, CC_BUFFER_LEN))
 	{
 		parseSetError(_parser, CC_CODE_IO);
 		return ret_var;
@@ -86,7 +88,7 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 	_parser->env_count = _env_count;
 	_parser->env = _env;
 
-#if CONFIG_CC_PRINT_ENV
+#if CC_PRINT_ENV
 	for (uint8_t i = 0; i < _parser->env_count; i++)
 	{
 		if (CC_TYPE_FLOAT == _parser->env[i].type)
@@ -153,17 +155,17 @@ var_s* cc_parse(parser_s *_parser, const char *_path, cc_env_s *_env, uint8_t _e
 	return ret_var;
 }
 
-cc_code_t cc_errorGetCode(parser_s *_parser)
+cc_code_t cc_errorGetCode(cc_parser_s *_parser)
 {
 	return _parser->error;
 }
 
-bool cc_errorHas(parser_s *_parser)
+bool cc_errorHas(cc_parser_s *_parser)
 {
 	return _parser->error >= CC_CODE_ERROR;
 }
 
-size_t cc_errorGetPos(parser_s *_parser)
+size_t cc_errorGetPos(cc_parser_s *_parser)
 {
 	return _parser->error_pos;
 }
@@ -173,115 +175,153 @@ const char* cc_errorToString(cc_code_t _err_code)
 
 	switch (_err_code) {
 
-		case CC_CODE_ARGS_BAD_TYPE:
-			return "CC_CODE_FUNC_ARGS_BAD_TYPE";
-
-		case CC_CODE_FUNC_ARGS_ERROR:
-			return "CC_CODE_FUNC_ARGS_ERROR";
-
-		case CC_CODE_FUNC_BAD_TYPE:
-			return "CC_CODE_FUNC_BAD_TYPE";
-
-		case CC_CODE_NOT_BOOL:
-			return "CC_CODE_NOT_BOOL";
-
-		case CC_CODE_TYPE_UNKNOWN:
-			return "CC_CODE_TYPE_UNKNOWN";
-
-		case CC_CODE_VALUE_EMPTY:
-			return "CC_CODE_VALUE_EMPTY";
-
-		case CC_CODE_STRING_TOO_LONG:
-			return "CC_CODE_STRING_TOO_LONG";
-
 		case CC_CODE_OK:
 			return "CC_CODE_OK";
+			break;
 
 		case CC_CODE_RETURN:
 			return "CC_CODE_RETURN";
+			break;
 
 		case CC_CODE_CONTINUE:
 			return "CC_CODE_CONTINUE";
+			break;
 
 		case CC_CODE_BREAK:
 			return "CC_CODE_BREAK";
+			break;
 
 		case CC_CODE_ERROR:
 			return "CC_CODE_ERROR";
+			break;
 
 		case CC_CODE_BAD_SYMBOL:
 			return "CC_CODE_BAD_SYMBOL";
+			break;
 
 		case CC_CODE_KEYWORD:
 			return "CC_CODE_KEYWORD";
+			break;
+
+		case CC_CODE_KEYWORD_EMPTY:
+			return "CC_CODE_KEYWORD_EMPTY";
+			break;
 
 		case CC_CODE_LOGIC:
 			return "CC_CODE_LOGIC";
-
-		case CC_CODE_IO:
-			return "CC_CODE_IO";
+			break;
 
 		case CC_CODE_NO_FILE:
 			return "CC_CODE_NO_FILE";
+			break;
+
+		case CC_CODE_IO:
+			return "CC_CODE_IO";
+			break;
 
 		case CC_CODE_FUNC_NOT_DEFINED:
 			return "CC_CODE_FUNC_NOT_DEFINED";
+			break;
+
+		case CC_CODE_FUNC_ARGS_ERROR:
+			return "CC_CODE_FUNC_ARGS_ERROR";
+			break;
 
 		case CC_CODE_FUNC_EXISTS:
 			return "CC_CODE_FUNC_EXISTS";
+			break;
+
+		case CC_CODE_FUNC_RET_BAD_TYPE:
+			return "CC_CODE_FUNC_RET_BAD_TYPE";
+			break;
 
 		case CC_CODE_VAR_NOT_DEFINED:
-
 			return "CC_CODE_VAR_NOT_DEFINED";
+			break;
 
 		case CC_CODE_VAR_NOT_ASSIGNED:
-
 			return "CC_CODE_VAR_NOT_ASSIGNED";
+			break;
 
 		case CC_CODE_VAR_BAD_TYPE:
 			return "CC_CODE_VAR_BAD_TYPE";
+			break;
+
+		case CC_CODE_ARGS_BAD_TYPE:
+			return "CC_CODE_ARGS_BAD_TYPE";
+			break;
 
 		case CC_CODE_VAR_EXISTS:
 			return "CC_CODE_VAR_EXISTS";
+			break;
 
 		case CC_CODE_NOT_MEM:
 			return "CC_CODE_NOT_MEM";
+			break;
 
 		case CC_CODE_NOT_COMMENT:
 			return "CC_CODE_NOT_COMMENT";
+			break;
+
+		case CC_CODE_NOT_BOOL:
+			return "CC_CODE_NOT_BOOL";
+			break;
 
 		case CC_CODE_NOT_INTEGER:
 			return "CC_CODE_NOT_INTEGER";
+			break;
 
 		case CC_CODE_NOT_FLOAT:
 			return "CC_CODE_NOT_FLOAT";
+			break;
 
 		case CC_CODE_NOT_CHAR:
 			return "CC_CODE_NOT_CHAR";
+			break;
 
 		case CC_CODE_NOT_STRING:
 			return "CC_CODE_NOT_STRING";
+			break;
 
 		case CC_CODE_NOT_ARRAY:
 			return "CC_CODE_NOT_ARRAY";
+			break;
 
 		case CC_CODE_OUT_OF_LOOP:
 			return "CC_CODE_OUT_OF_LOOP";
+			break;
 
 		case CC_CODE_ABORT:
 			return "CC_CODE_ABORT";
+			break;
+
+		case CC_CODE_TYPE_UNKNOWN:
+			return "CC_CODE_TYPE_UNKNOWN";
+			break;
+
+		case CC_CODE_VALUE_EMPTY:
+			return "CC_CODE_VALUE_EMPTY";
+			break;
+
+		case CC_CODE_STRING_TOO_LONG:
+			return "CC_CODE_STRING_TOO_LONG";
+			break;
+
+		case CC_CODE_ZERO_DIVIDED:
+			return "CC_CODE_ZERO_DIVIDED";
+			break;
 
 		case CC_CODE_NOT_IMPLEMENTED:
 			return "CC_CODE_NOT_IMPLEMENTED";
+			break;
 
+		default:
+			return "unknown";
 	}
-
-	return "?";
 }
 
-void cc_abort(parser_s *_parser)
+void cc_abort(cc_parser_s *_parser)
 {
-	/// fixme tady neco jineho.
 	_parser->error = CC_CODE_ABORT;
 }
 
@@ -395,8 +435,6 @@ cc_code_t cc_varGetString(var_s *_var, char *_val, size_t *_len)
 
 	if (*_len > CC_VALUE_STRING_LEN)
 	{
-		CC_PRINT("ERROR: string is too long\n");
-
 		return CC_CODE_STRING_TOO_LONG;
 	}
 
@@ -405,6 +443,7 @@ cc_code_t cc_varGetString(var_s *_var, char *_val, size_t *_len)
 	return CC_CODE_OK;
 
 }
+
 ///
 ///
 ///

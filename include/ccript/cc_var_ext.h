@@ -5,9 +5,10 @@
 /**
  * @file cc_var_ext.h
  * @brief Definice dodatecnych funkci pro praci s promennymi.
+ * @since 26.06.2022
  *
- * @version 1b1
- * @date 26.06.2022
+ * @version 1r1
+ * @date 08.04.2023
  *
  * @author Denis Colesnicov <eugustus@gmail.com>
  *
@@ -46,12 +47,12 @@ void freeVar(void *item);
 void VarDump(var_s *_var);
 
 /**
- * @fn void VarDumpAll(parser_s*)
+ * @fn void VarDumpAll(cc_parser_s*)
  * @brief Vypise informace o vsech promennych co jsou momentalne definovany.
  *
  * @param _parser Ukazatel na parser.
  */
-void VarDumpAll(parser_s *_parser);
+void VarDumpAll(cc_parser_s *_parser);
 
 /**
  * @fn const char* VarTypeToString(cc_type_t)
@@ -74,18 +75,31 @@ const char* VarTypeToString(cc_type_t _type);
 size_t VarGetSize(var_s *_var);
 
 /**
- * @fn size_t VarGetSizeAll(parser_s*)
+ * @fn size_t VarGetSizeAll(cc_parser_s*)
  * @brief Vrati kolik mista zabiraji vsechny promenne.
  *
- * @note Do tohoto poctu jsou zapoctene pouze promenne z parser_s.vars
+ * @note Do tohoto poctu jsou zapoctene pouze promenne z cc_parser_s.vars
  *
- * fixme Potreba funkci ktera bude umet spocist vsechny promenne, i ty co jsou jako argumenty...
+ * fixme Potreba funkci ktera bude umet spocist vsechny promenne, i ty co jsou jako argumenty...?
  *
  * @param _parser Ukazatel na promennou.
  *
  * @return Pocet bytu, kolik si vyzadali vsechny promenne.
  */
-size_t VarGetSizeAll(parser_s *_parser);
+size_t VarGetSizeAll(cc_parser_s *_parser);
+
+/**
+ * @fn void VarGarbageScope(cc_parser_s*)
+ * @brief Odstrani promenne definovane v zanorennem bloku.
+ * @details <pre><code>
+ * 			int var1 = 0;
+ * 			if(1){ int var2 = 0; }
+ * 				   ^^^^^^^^^^^^^
+ * 			 </code></pre>
+ *
+ * @param _parser Ukazatel na parser.
+ */
+void VarGarbageScope(cc_parser_s *_parser);
 
 #ifdef __cplusplus
 }
